@@ -22,7 +22,7 @@ fun ModelHubScreen(onDownloaded: (File) -> Unit) {
     }
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    var query by remember { mutableStateOf("Llama 3 8B GGUF") }
+    var query by remember { mutableStateOf("Qwen3 4B Instruct 2507 GGUF") }
     var models by remember { mutableStateOf(emptyList<HubModel>()) }
     var selectedModel by remember { mutableStateOf<HubModel?>(null) }
     var files by remember { mutableStateOf(emptyList<HubGgufFile>()) }
