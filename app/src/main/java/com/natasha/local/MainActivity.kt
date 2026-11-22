@@ -474,6 +474,7 @@ private fun ProjectsScreen(projects: List<ProjectEntity>, selectedProjectId: Lon
     val tools = remember { ProjectToolService(context) }
     val buildService = remember { ProjectBuildService(context) }
     val archiveService = remember { ProjectArchiveService(context) }
+    val latestSelectedProjectId by rememberUpdatedState(selectedProjectId)
     var archiveStatus by rememberSaveable { mutableStateOf("") }
     var recentActivity by remember { mutableStateOf(emptyList<ProjectActivity>()) }
     var projectFiles by remember { mutableStateOf(emptyList<WorkspaceFile>()) }
@@ -652,9 +653,11 @@ private fun ProjectsScreen(projects: List<ProjectEntity>, selectedProjectId: Lon
                                         TextButton(onClick = {
                                             scope.launch {
                                                 val result = withContext(Dispatchers.IO) { tools.readFile(p.id, file.path) }
-                                                selectedFile = file.path
-                                                editorContent = result.value.orEmpty()
-                                                editorStatus = result.error.orEmpty()
+                                                if (latestSelectedProjectId == p.id) {
+                                                    selectedFile = file.path
+                                                    editorContent = result.value.orEmpty()
+                                                    editorStatus = result.error.orEmpty()
+                                                }
                                             }
                                         }) { Text("Edit") }
                                         TextButton(onClick = { renameSourcePath = file.path; renameDestinationPath = file.path; showRenameFile = true }) { Text("Move") }
