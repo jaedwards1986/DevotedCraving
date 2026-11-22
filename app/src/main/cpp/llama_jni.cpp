@@ -131,7 +131,7 @@ Java_com_natasha_local_llm_LlamaBridge_generate(
     } else {
         llama_sampler_chain_add(sampler, llama_sampler_init_temp(temp));
         llama_sampler_chain_add(sampler, llama_sampler_init_top_p(top_p > 0.0f ? top_p : 0.9f, 1));
-        llama_sampler_chain_add(sampler, llama_sampler_init_dist(1234));
+        llama_sampler_chain_add(sampler, llama_sampler_init_dist(LLAMA_DEFAULT_SEED));
     }
 
     llama_pos pos = n_prompt;

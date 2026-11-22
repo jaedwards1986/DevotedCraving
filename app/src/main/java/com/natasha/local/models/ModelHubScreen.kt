@@ -17,6 +17,9 @@ import java.io.File
 
 @Composable
 fun ModelHubScreen(onDownloaded: (File) -> Unit) {
+    DisposableEffect(Unit) {
+        onDispose { HuggingFaceModelHub.cancelDownload() }
+    }
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var query by remember { mutableStateOf("Llama 3 8B GGUF") }

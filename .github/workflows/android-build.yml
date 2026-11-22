@@ -52,7 +52,7 @@ jobs:
           sdkmanager --list_installed
 
       - name: Run unit tests and assemble APKs
-        run: gradle testDebugUnitTest assembleDebug assembleRelease --no-daemon --stacktrace
+        run: gradle testDebugUnitTest lintDebug assembleDebug assembleRelease --no-daemon --stacktrace
 
       - name: Upload debug APK
         uses: actions/upload-artifact@v4
