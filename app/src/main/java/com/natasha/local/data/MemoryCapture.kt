@@ -21,7 +21,8 @@ object MemoryCapture {
         if (message.length > 4000 || sensitive.containsMatchIn(message)) return emptyList()
         return cues.mapNotNull { pattern ->
             pattern.find(message)?.let {
-                val sentence = message.substringBefore(Regex("[.!?\\n]")).trim()
+                val sentenceEnd = Regex("[.!?\\n]").find(message)?.range?.first ?: message.length
+                val sentence = message.substring(0, sentenceEnd).trim()
                 sentence.takeIf { value -> value.length in 5..240 }
             }
         }.distinctBy { it.lowercase() }.take(3)
