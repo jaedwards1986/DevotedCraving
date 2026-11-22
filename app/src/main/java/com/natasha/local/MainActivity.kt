@@ -15,6 +15,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.room.withTransaction
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -44,6 +45,7 @@ import com.natasha.local.projects.ProjectContextBuilder
 import com.natasha.local.projects.ProjectContextFile
 import com.natasha.local.projects.ProjectWorkspace
 import com.natasha.local.projects.ProjectPlanParser
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -257,6 +259,12 @@ fun NatashaApp() {
                                         status = "Ready"
                                     }
                                     refresh()
+                                } catch (cancelled: CancellationException) {
+                                    if (conversationId == targetConversationId) {
+                                        messages = messages.filterNot { it.id == -1L }
+                                        status = "Generation stopped"
+                                    }
+                                    throw cancelled
                                 } catch (t: Throwable) {
                                     if (conversationId == targetConversationId) {
                                         messages = db.messages().forConversation(targetConversationId)
@@ -1202,18 +1210,20 @@ private fun MemoryScreen(memories: List<MemoryEntity>, db: AppDatabase, scope: C
             confirmButton = {
                 TextButton(onClick = {
                     scope.launch {
-                        val existing = db.memories().all().map { it.text.trim().lowercase() }.toMutableSet()
-                        val additions = archive.memories.filter { existing.add(it.text.trim().lowercase()) }
-                        if (archive.messages.isNotEmpty()) {
-                            val firstNewId = db.messages().maxConversationId() + 1L
-                            val conversationMap = archive.messages.map { it.conversationId }.distinct()
-                                .sorted().mapIndexed { index, oldId -> oldId to (firstNewId + index) }.toMap()
-                            val safeMessages = archive.messages.map { item ->
-                                item.copy(id = 0L, conversationId = conversationMap.getValue(item.conversationId))
+                        db.withTransaction {
+                            val existing = db.memories().all().map { it.text.trim().lowercase() }.toMutableSet()
+                            val additions = archive.memories.filter { existing.add(it.text.trim().lowercase()) }
+                            if (archive.messages.isNotEmpty()) {
+                                val firstNewId = db.messages().maxConversationId() + 1L
+                                val conversationMap = archive.messages.map { it.conversationId }.distinct()
+                                    .sorted().mapIndexed { index, oldId -> oldId to (firstNewId + index) }.toMap()
+                                val safeMessages = archive.messages.map { item ->
+                                    item.copy(id = 0L, conversationId = conversationMap.getValue(item.conversationId))
+                                }
+                                db.messages().insertAll(safeMessages)
                             }
-                            db.messages().insertAll(safeMessages)
+                            if (additions.isNotEmpty()) db.memories().insertAll(additions)
                         }
-                        if (additions.isNotEmpty()) db.memories().insertAll(additions)
                         pendingImport = null
                         archiveStatus = "Archive restored."
                         refresh()
@@ -1283,7 +1293,7 @@ private fun SettingsScreen(status: String) {
         Spacer(Modifier.height(16.dp))
         SettingRow("Natasha personality", "Version ${NatashaPersonalityUpdates.installedVersion(context)} · natural conversation, no special prompts required")
         SettingRow("Privacy", "Local-first storage and no required account")
-        SettingRow("Updates", "Manual control plus safe update checks")
+        SettingRow("App updates", "Install new APK releases manually; automatic app updates are not implemented")
         SettingRow("Models", "Independent from Natasha's personality and memory")
         Spacer(Modifier.height(18.dp))
         Text("Status: " + status, color = Color(0xFF9B9B9B))

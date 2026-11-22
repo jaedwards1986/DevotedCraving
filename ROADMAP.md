@@ -7,7 +7,7 @@ This roadmap tracks the eight major delivery milestones. A milestone is only mar
 ### 1. Foundation and app identity — in progress
 - [x] ForgeAI product branding in the Android project and launcher label.
 - [x] Preserve the existing Android application ID and Room database identity to avoid an unplanned data migration.
-- [ ] Verify a clean debug and release build.
+- [x] Verify a clean debug and release build in GitHub Actions (run 44983791650).
 
 ### 2. Natasha identity and memory — in progress
 - [x] Keep Natasha's immutable adult character foundation separate from model selection and chat history.
@@ -52,12 +52,12 @@ This roadmap tracks the eight major delivery milestones. A milestone is only mar
 ## Batch 2 — release
 
 ### 8. Release and Pixel verification — not started
-- [ ] Obtain a successful CI run for unit tests and debug/release APK assembly.
-- [ ] Fix all compile/test failures and verify artifact integrity.
+- [x] Obtain a successful CI run for unit tests and debug/release APK assembly (run 44983791650).
+- [x] Fix the compile/test failures observed in earlier runs; run 44983791650 passed tests and both APK assembly tasks.\n- [ ] Download and independently verify APK artifact contents and checksums.
 - [ ] Install and exercise the app on a Google Pixel 9 Pro XL.
 - [ ] Measure model loading, memory pressure, thermal behavior, and sustained inference.
 - [ ] Produce a signed release build and document installation/update steps.
 
 ## Current verification note
 
-GitHub Actions runs have been created, but the latest jobs failed before any runner steps were reported and their job logs were unavailable. Therefore no successful APK build or device installation is claimed yet.
+GitHub Actions run 44983791650 completed successfully on commit 23cbac1389d2596f4b309c02b6935f0e9900e9e9. The unit-test task, native C++ compilation, debug APK assembly, release APK assembly, and both artifact uploads succeeded. Third-party KleidiAI code emitted floating-point promotion warnings; they did not fail the build. The APKs have not yet been installed or exercised on a Pixel 9 Pro XL, and the release APK is not signed for distribution.
