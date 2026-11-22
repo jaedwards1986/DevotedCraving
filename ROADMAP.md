@@ -53,11 +53,12 @@ This roadmap tracks the eight major delivery milestones. A milestone is only mar
 
 ### 8. Release and Pixel verification — not started
 - [x] Obtain a successful CI run for unit tests and debug/release APK assembly (run 44983791650).
-- [x] Fix the compile/test failures observed in earlier runs; run 44983791650 passed tests and both APK assembly tasks.\n- [ ] Download and independently verify APK artifact contents and checksums.
+- [x] Fix the compile/test failures observed in earlier runs; run 44983791650 passed tests and both APK assembly tasks.
+- [ ] Download and independently verify APK artifact contents and checksums.
 - [ ] Install and exercise the app on a Google Pixel 9 Pro XL.
 - [ ] Measure model loading, memory pressure, thermal behavior, and sustained inference.
 - [ ] Produce a signed release build and document installation/update steps.
 
 ## Current verification note
 
-GitHub Actions run 44983791650 completed successfully on commit 23cbac1389d2596f4b309c02b6935f0e9900e9e9. The unit-test task, native C++ compilation, debug APK assembly, release APK assembly, and both artifact uploads succeeded. Third-party KleidiAI code emitted floating-point promotion warnings; they did not fail the build. The APKs have not yet been installed or exercised on a Pixel 9 Pro XL, and the release APK is not signed for distribution.
+GitHub Actions run 44983791650 completed successfully on commit 23cbac1389d2596f4b309c02b6935f0e9900e9e9. A later cancellation/archive recovery fix and Room index alignment are being revalidated on subsequent commits. The unit-test task, native C++ compilation, debug APK assembly, release APK assembly, and both artifact uploads succeeded. Third-party KleidiAI code emitted floating-point promotion warnings; they did not fail the build. The APKs have not yet been installed or exercised on a Pixel 9 Pro XL, and the release APK is not signed for distribution.

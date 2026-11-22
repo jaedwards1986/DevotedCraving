@@ -53,6 +53,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.flow.collect
 import java.io.File
+import java.io.ByteArrayOutputStream
 import java.security.MessageDigest
 import java.util.concurrent.TimeUnit
 
@@ -169,111 +170,111 @@ fun NatashaApp() {
                         },
                         onSend = {
                             if (!input.isBlank() && !generating) {
-                            val text = input.trim()
-                            input = ""
-                            val targetConversationId = conversationId
-                            generationJob = scope.launch {
-                                val profile = db.character().get() ?: CharacterProfileEntity()
-                                val allMemories = db.memories().all()
-                                val recallWords = text.lowercase().split(Regex("\\W+")).filter { it.length > 2 }.toSet()
-                                val rankedMemories = allMemories.map { memory ->
-                                    val haystack = memory.text.lowercase()
-                                    val score = recallWords.count { haystack.contains(it) } * 10 +
-                                        if (memory.kind.equals("pinned", true)) 100 else 0
-                                    score to memory
-                                }.sortedByDescending { it.first }
-                                val matchingMemories = rankedMemories.filter { it.first > 0 }.map { it.second }
-                                val memoriesForPrompt = if (matchingMemories.isNotEmpty()) matchingMemories
-                                    else allMemories.sortedByDescending { it.updatedAt }.take(32)
-                                val history = db.messages().forConversation(targetConversationId).takeLast(64)
-                                db.messages().insert(MessageEntity(conversationId = targetConversationId, role = "user", content = text))
-                                MemoryCapture.extract(text).forEach { candidate ->
-                                    val normalized = candidate.trim().lowercase()
-                                    val exists = db.memories().all().any { it.text.trim().lowercase() == normalized }
-                                    if (!exists) db.memories().insert(MemoryEntity(text = candidate, kind = "auto"))
-                                }
-                                memories = db.memories().all()
-                                if (conversationId == targetConversationId) {
-                                    messages = db.messages().forConversation(targetConversationId)
-                                }
+                                val text = input.trim()
+                                input = ""
+                                val targetConversationId = conversationId
                                 generating = true
                                 status = "Natasha is thinking…"
-
-                                val selectedModelName = db.models().selected()?.name.orEmpty()
-                                val activeProject = selectedProjectId?.let { id ->
-                                    projects.firstOrNull { it.id == id } ?: db.projects().get(id)
-                                }
-                                val projectContext = if (activeProject == null) "" else withContext(Dispatchers.IO) {
-                                    val workspace = ProjectWorkspace(context, activeProject.id)
-                                    val sourceFiles = workspace.list()
-                                        .filter { ProjectContextBuilder.isEligiblePath(it) }
-                                        .take(12)
-                                        .mapNotNull { path ->
-                                            runCatching {
-                                                ProjectContextFile(path, workspace.read(path, 64 * 1024))
-                                            }.getOrNull()
+                                generationJob = scope.launch {
+                                    val assistant = StringBuilder()
+                                    try {
+                                        val profile = db.character().get() ?: CharacterProfileEntity()
+                                        val allMemories = db.memories().all()
+                                        val recallWords = text.lowercase().split(Regex("\\W+")).filter { it.length > 2 }.toSet()
+                                        val rankedMemories = allMemories.map { memory ->
+                                            val haystack = memory.text.lowercase()
+                                            val score = recallWords.count { haystack.contains(it) } * 10 +
+                                                if (memory.kind.equals("pinned", true)) 100 else 0
+                                            score to memory
+                                        }.sortedByDescending { it.first }
+                                        val matchingMemories = rankedMemories.filter { it.first > 0 }.map { it.second }
+                                        val memoriesForPrompt = if (matchingMemories.isNotEmpty()) matchingMemories
+                                            else allMemories.sortedByDescending { it.updatedAt }.take(32)
+                                        val history = db.messages().forConversation(targetConversationId).takeLast(64)
+                                        db.messages().insert(MessageEntity(conversationId = targetConversationId, role = "user", content = text))
+                                        MemoryCapture.extract(text).forEach { candidate ->
+                                            val normalized = candidate.trim().lowercase()
+                                            val exists = db.memories().all().any { it.text.trim().lowercase() == normalized }
+                                            if (!exists) db.memories().insert(MemoryEntity(text = candidate, kind = "auto"))
                                         }
-                                    ProjectContextBuilder.build(
-                                        activeProject.name,
-                                        activeProject.description,
-                                        sourceFiles
-                                    )
-                                }
-                                val prompt = PromptBuilder.build(
-                                    profile, memoriesForPrompt, history, text, selectedModelName, projectContext,
-                                    NatashaPersonalityUpdates.promptFor(context, selectedModelName)
-                                )
-                                val assistant = StringBuilder()
-                                try {
-                                    engine.stream(prompt).collect { token ->
-                                        assistant.append(token)
+                                        memories = db.memories().all()
                                         if (conversationId == targetConversationId) {
-                                            messages = messages.filterNot { it.id == -1L } + MessageEntity(
-                                                id = -1L,
-                                                conversationId = targetConversationId,
-                                                role = "assistant",
-                                                content = assistant.toString()
+                                            messages = db.messages().forConversation(targetConversationId)
+                                        }
+
+                                        val selectedModelName = db.models().selected()?.name.orEmpty()
+                                        val activeProject = selectedProjectId?.let { id ->
+                                            projects.firstOrNull { it.id == id } ?: db.projects().get(id)
+                                        }
+                                        val projectContext = if (activeProject == null) "" else withContext(Dispatchers.IO) {
+                                            val workspace = ProjectWorkspace(context, activeProject.id)
+                                            val sourceFiles = workspace.list()
+                                                .filter { ProjectContextBuilder.isEligiblePath(it) }
+                                                .take(12)
+                                                .mapNotNull { path ->
+                                                    runCatching {
+                                                        ProjectContextFile(path, workspace.read(path, 64 * 1024))
+                                                    }.getOrNull()
+                                                }
+                                            ProjectContextBuilder.build(
+                                                activeProject.name,
+                                                activeProject.description,
+                                                sourceFiles
                                             )
                                         }
-                                    }
-                                    val completeResponse = assistant.toString()
-                                    val proposedPlan = ProjectPlanParser.parse(completeResponse)
-                                    if (proposedPlan != null && activeProject != null) {
-                                        pendingGeneratedPlan = proposedPlan
-                                        pendingPlanProjectId = activeProject.id
-                                    }
-                                    val visibleResponse = completeResponse
-                                        .replace(Regex("(?s)<forgeai_plan>.*?</forgeai_plan>"), "")
-                                        .trim()
-                                    if (visibleResponse.isNotEmpty()) {
-                                        db.messages().insert(
-                                            MessageEntity(
-                                                conversationId = targetConversationId,
-                                                role = "assistant",
-                                                content = visibleResponse
-                                            )
+                                        val prompt = PromptBuilder.build(
+                                            profile, memoriesForPrompt, history, text, selectedModelName, projectContext,
+                                            NatashaPersonalityUpdates.promptFor(context, selectedModelName)
                                         )
+                                        engine.stream(prompt).collect { token ->
+                                            assistant.append(token)
+                                            if (conversationId == targetConversationId) {
+                                                messages = messages.filterNot { it.id == -1L } + MessageEntity(
+                                                    id = -1L,
+                                                    conversationId = targetConversationId,
+                                                    role = "assistant",
+                                                    content = assistant.toString()
+                                                )
+                                            }
+                                        }
+                                        val completeResponse = assistant.toString()
+                                        val proposedPlan = ProjectPlanParser.parse(completeResponse)
+                                        if (proposedPlan != null && activeProject != null) {
+                                            pendingGeneratedPlan = proposedPlan
+                                            pendingPlanProjectId = activeProject.id
+                                        }
+                                        val visibleResponse = completeResponse
+                                            .replace(Regex("(?s)<forgeai_plan>.*?</forgeai_plan>"), "")
+                                            .trim()
+                                        if (visibleResponse.isNotEmpty()) {
+                                            db.messages().insert(
+                                                MessageEntity(
+                                                    conversationId = targetConversationId,
+                                                    role = "assistant",
+                                                    content = visibleResponse
+                                                )
+                                            )
+                                        }
+                                        if (conversationId == targetConversationId) {
+                                            messages = db.messages().forConversation(targetConversationId)
+                                            status = "Ready"
+                                        }
+                                        refresh()
+                                    } catch (cancelled: CancellationException) {
+                                        if (conversationId == targetConversationId) {
+                                            messages = messages.filterNot { it.id == -1L }
+                                            status = "Generation stopped"
+                                        }
+                                        throw cancelled
+                                    } catch (failure: Throwable) {
+                                        if (conversationId == targetConversationId) {
+                                            messages = db.messages().forConversation(targetConversationId)
+                                            status = "Request failed: " + (failure.message ?: "unknown error")
+                                        }
+                                    } finally {
+                                        generating = false
                                     }
-                                    if (conversationId == targetConversationId) {
-                                        messages = db.messages().forConversation(targetConversationId)
-                                        status = "Ready"
-                                    }
-                                    refresh()
-                                } catch (cancelled: CancellationException) {
-                                    if (conversationId == targetConversationId) {
-                                        messages = messages.filterNot { it.id == -1L }
-                                        status = "Generation stopped"
-                                    }
-                                    throw cancelled
-                                } catch (t: Throwable) {
-                                    if (conversationId == targetConversationId) {
-                                        messages = db.messages().forConversation(targetConversationId)
-                                        status = "Inference error: " + (t.message ?: "unknown error")
-                                    }
-                                } finally {
-                                    generating = false
                                 }
-                            }
                             }
                         },
                         onRefresh = { refresh() },
@@ -339,10 +340,8 @@ private fun ChatScreen(
                 require(extension in setOf("txt", "md", "kt", "kts", "java", "py", "js", "ts", "json", "xml", "html", "css", "csv", "yaml", "yml", "gradle", "properties", "sql")) {
                     "Choose a text or source-code file"
                 }
-                require((querySize(context, uri) ?: 0L) <= 200_000L) { "Attachment exceeds the 200 KB text limit" }
-                val content = context.contentResolver.openInputStream(uri)?.bufferedReader()?.use { reader ->
-                    reader.readText().take(200_000)
-                } ?: error("Unable to read attachment")
+                require((querySize(context, uri) ?: 0L) <= 8_000L) { "Attachment exceeds the 8 KB text limit" }
+                val content = readUriTextLimited(context, uri, 8_000)
                 attachmentLabel = name
                 onInput((input + "\n\n[Attached file: " + name + "]\n" + content).trim())
             }.onFailure { attachmentLabel = "Attachment failed: " + (it.message ?: "unknown error") }
@@ -1103,6 +1102,7 @@ private fun MemoryScreen(memories: List<MemoryEntity>, db: AppDatabase, scope: C
         if (uri != null) scope.launch {
             runCatching {
                 val json = MemoryArchiveCodec.encode(db.messages().all(), db.memories().all())
+                require(json.length <= 50_000_000) { "Archive exceeds the 50 MB import safety limit" }
                 context.contentResolver.openOutputStream(uri)?.bufferedWriter()?.use { it.write(json) }
                     ?: error("Unable to write archive")
                 archiveStatus = "Archive exported."
@@ -1114,9 +1114,7 @@ private fun MemoryScreen(memories: List<MemoryEntity>, db: AppDatabase, scope: C
     ) { uri ->
         if (uri != null) scope.launch {
             runCatching {
-                val json = context.contentResolver.openInputStream(uri)?.bufferedReader()?.use { it.readText() }
-                    ?: error("Unable to read archive")
-                require(json.length <= 50_000_000) { "Archive exceeds the 50 MB safety limit" }
+                val json = readUriTextLimited(context, uri, 50_000_000)
                 pendingImport = MemoryArchiveCodec.decode(json)
             }.onFailure { archiveStatus = "Import failed: " + (it.message ?: "invalid archive") }
         }
@@ -1311,6 +1309,24 @@ private fun SettingRow(title: String, detail: String) {
             Text(title, fontWeight = FontWeight.SemiBold)
             Text(detail, color = Color(0xFF9B9B9B))
         }
+    }
+}
+
+private fun readUriTextLimited(context: Context, uri: Uri, maxBytes: Int): String {
+    require(maxBytes > 0) { "Read limit must be positive" }
+    val input = context.contentResolver.openInputStream(uri) ?: error("Unable to open selected file")
+    return input.use { stream ->
+        val output = ByteArrayOutputStream(minOf(maxBytes, 64 * 1024))
+        val buffer = ByteArray(8 * 1024)
+        var total = 0
+        while (true) {
+            val count = stream.read(buffer)
+            if (count < 0) break
+            total += count
+            require(total <= maxBytes) { "Selected file exceeds the ${maxBytes}-byte safety limit" }
+            output.write(buffer, 0, count)
+        }
+        output.toString(Charsets.UTF_8.name())
     }
 }
 

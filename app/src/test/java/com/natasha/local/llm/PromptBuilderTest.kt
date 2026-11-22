@@ -5,6 +5,7 @@ import com.natasha.local.data.MemoryEntity
 import com.natasha.local.data.MessageEntity
 import com.natasha.local.data.NatashaDefaults
 import org.junit.Assert.assertTrue
+import org.junit.Assert.assertThrows
 import org.junit.Test
 
 class PromptBuilderTest {
@@ -75,4 +76,34 @@ class PromptBuilderTest {
         assertTrue(prompt.contains("User likes concise project updates"))
         assertTrue(prompt.contains(NatashaDefaults.CORE_IDENTITY))
     }
+    @Test
+    fun oversizedHistoryAndMemoryAreBoundedWithoutLosingCurrentMessageOrIdentity() {
+        val memories = (1..200).map { MemoryEntity(id = it.toLong(), text = "Preference $it " + "m".repeat(100)) }
+        val history = (1..100).map { MessageEntity(id = it.toLong(), conversationId = 1, role = if (it % 2 == 0) "assistant" else "user", content = "Message $it " + "h".repeat(300)) }
+        val prompt = PromptBuilder.build(
+            profile = CharacterProfileEntity(),
+            memories = memories,
+            history = history,
+            userText = "Keep this latest request",
+            modelName = "Qwen3-8B"
+        )
+        assertTrue(prompt.length <= 12_000)
+        assertTrue(prompt.contains("Keep this latest request"))
+        assertTrue(prompt.contains("Message 100"))
+        assertTrue(prompt.contains(NatashaDefaults.CORE_IDENTITY))
+    }
+
+    @Test
+    fun rejectsUserMessagesThatCannotFitTheLocalPromptBudget() {
+        assertThrows(IllegalArgumentException::class.java) {
+            PromptBuilder.build(
+                profile = CharacterProfileEntity(),
+                memories = emptyList(),
+                history = emptyList(),
+                userText = "x".repeat(8_001),
+                modelName = "Qwen3-8B"
+            )
+        }
+    }
+
 }
