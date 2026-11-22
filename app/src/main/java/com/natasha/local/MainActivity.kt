@@ -138,17 +138,22 @@ fun NatashaApp() {
 
     MaterialTheme(
         colorScheme = darkColorScheme(
-            primary = Color(0xFFE5E5E5),
-            secondary = Color(0xFFB8B8B8),
-            background = Color(0xFF212121),
-            surface = Color(0xFF2F2F2F),
-            surfaceVariant = Color(0xFF383838)
+            primary = Color(0xFF6EA8FF),
+            onPrimary = Color(0xFF07101F),
+            secondary = Color(0xFF9CC2FF),
+            onSecondary = Color(0xFF07101F),
+            background = Color(0xFF0B1220),
+            onBackground = Color(0xFFF4F7FF),
+            surface = Color(0xFF111B2E),
+            onSurface = Color(0xFFF4F7FF),
+            surfaceVariant = Color(0xFF1B2A46),
+            onSurfaceVariant = Color(0xFFAFC7F5)
         )
     ) {
         Scaffold(
-            containerColor = Color(0xFF212121),
+            containerColor = Color(0xFF0B1220),
             bottomBar = {
-                NavigationBar(containerColor = Color(0xFF212121)) {
+                NavigationBar(containerColor = Color(0xFF0B1220)) {
                     AppTab.entries.forEach { item ->
                         NavigationBarItem(
                             selected = tab == item,
@@ -156,11 +161,11 @@ fun NatashaApp() {
                             icon = { Text(item.label.take(1), fontWeight = FontWeight.Medium) },
                             label = { Text(item.label) },
                             colors = NavigationBarItemDefaults.colors(
-                                selectedIconColor = Color(0xFFE5E5E5),
-                                selectedTextColor = Color(0xFFE5E5E5),
-                                indicatorColor = Color(0xFF414141),
-                                unselectedIconColor = Color(0xFF999999),
-                                unselectedTextColor = Color(0xFF999999)
+                                selectedIconColor = Color(0xFFF4F7FF),
+                                selectedTextColor = Color(0xFFF4F7FF),
+                                indicatorColor = Color(0xFF243B63),
+                                unselectedIconColor = Color(0xFF7F96B8),
+                                unselectedTextColor = Color(0xFF7F96B8)
                             )
                         )
                     }
@@ -361,17 +366,17 @@ private fun ChatScreen(
         }
     }
 
-    Column(Modifier.fillMaxSize().background(Color(0xFF212121)).padding(horizontal = 20.dp)) {
+    Column(Modifier.fillMaxSize().background(Color(0xFF0B1220)).padding(horizontal = 20.dp)) {
         Row(
             Modifier.fillMaxWidth().padding(top = 10.dp, bottom = 14.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(Modifier.weight(1f)) {
                 Text("ForgeAI", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-                Text(status, style = MaterialTheme.typography.bodySmall, color = Color(0xFF9B9B9B))
+                Text(status, style = MaterialTheme.typography.bodySmall, color = Color(0xFF8EA6C8))
             }
             TextButton(onClick = onRefresh) { Text("Refresh", color = Color(0xFFBDBDBD)) }
-            TextButton(onClick = onNewChat) { Text("New chat", color = Color(0xFFE5E5E5)) }
+            TextButton(onClick = onNewChat) { Text("New chat", color = Color(0xFFF4F7FF)) }
         }
 
         if (pendingPlanSummary != null) {
@@ -409,9 +414,9 @@ private fun ChatScreen(
         if (messages.isEmpty()) {
             Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("What’s on your mind?", style = MaterialTheme.typography.headlineSmall, color = Color(0xFFE5E5E5))
+                    Text("What’s on your mind?", style = MaterialTheme.typography.headlineSmall, color = Color(0xFFF4F7FF))
                     Spacer(Modifier.height(8.dp))
-                    Text("Your private space to think, create, and talk.", color = Color(0xFF9B9B9B))
+                    Text("Your private space to think, create, and talk.", color = Color(0xFF8EA6C8))
                 }
             }
         } else {
@@ -578,7 +583,7 @@ private fun ProjectsScreen(projects: List<ProjectEntity>, selectedProjectId: Lon
 
     Column(Modifier.fillMaxSize().padding(18.dp)) {
         Text("Projects", style = MaterialTheme.typography.headlineMedium)
-        Text("Keep app ideas, files, decisions and unfinished work together.", color = Color(0xFF9B9B9B))
+        Text("Keep app ideas, files, decisions and unfinished work together.", color = Color(0xFF8EA6C8))
         Spacer(Modifier.height(14.dp))
         Button(onClick = {
             scope.launch {
@@ -595,7 +600,7 @@ private fun ProjectsScreen(projects: List<ProjectEntity>, selectedProjectId: Lon
                 val isSelected = selectedProjectId == p.id
                 val files = if (isSelected) projectFiles else emptyList()
                 Surface(
-                    color = if (isSelected) Color(0xFF3A3A3A) else Color(0xFF2F2F2F),
+                    color = if (isSelected) Color(0xFF3A3A3A) else Color(0xFF111B2E),
                     shape = RoundedCornerShape(16.dp),
                     onClick = { onSelect(if (isSelected) null else p.id) }
                 ) {
@@ -603,7 +608,7 @@ private fun ProjectsScreen(projects: List<ProjectEntity>, selectedProjectId: Lon
                         Text(p.name, fontWeight = FontWeight.SemiBold)
                         Text(
                             p.description.ifBlank { "Ready for requirements and development notes." },
-                            color = Color(0xFF9B9B9B)
+                            color = Color(0xFF8EA6C8)
                         )
                         if (isSelected) {
                             Spacer(Modifier.height(10.dp))
@@ -634,7 +639,7 @@ private fun ProjectsScreen(projects: List<ProjectEntity>, selectedProjectId: Lon
                                 TextButton(onClick = { showNewFile = true }) { Text("New file") }
                             }
                             if (archiveStatus.isNotBlank()) {
-                                Text(archiveStatus, color = Color(0xFFE5E5E5), style = MaterialTheme.typography.bodySmall)
+                                Text(archiveStatus, color = Color(0xFFF4F7FF), style = MaterialTheme.typography.bodySmall)
                             }
                             if (recentActivity.isNotEmpty()) {
                                 Spacer(Modifier.height(8.dp))
@@ -642,13 +647,13 @@ private fun ProjectsScreen(projects: List<ProjectEntity>, selectedProjectId: Lon
                                 recentActivity.take(8).forEach { event ->
                                     Text(
                                         "${event.action} · ${event.path.ifBlank { event.detail }}",
-                                        color = Color(0xFF9B9B9B),
+                                        color = Color(0xFF8EA6C8),
                                         style = MaterialTheme.typography.bodySmall
                                     )
                                 }
                             }
                             if (files.isEmpty()) {
-                                Text("No files yet.", color = Color(0xFF9B9B9B))
+                                Text("No files yet.", color = Color(0xFF8EA6C8))
                             } else {
                                 files.take(30).forEach { file ->
                                     Row(
@@ -702,13 +707,13 @@ private fun ProjectsScreen(projects: List<ProjectEntity>, selectedProjectId: Lon
                                         }
                                     }) { Text("Save") }
                                     Spacer(Modifier.width(8.dp))
-                                    Text(editorStatus, color = Color(0xFF9B9B9B))
+                                    Text(editorStatus, color = Color(0xFF8EA6C8))
                                 }
                             }
                             Spacer(Modifier.height(8.dp))
                             Text(
                                 "Natasha can read, create, edit and safely delete files inside this project workspace.",
-                                color = Color(0xFF9B9B9B),
+                                color = Color(0xFF8EA6C8),
                                 style = MaterialTheme.typography.bodySmall
                             )
                         }
@@ -767,7 +772,7 @@ private fun ProjectsScreen(projects: List<ProjectEntity>, selectedProjectId: Lon
             title = { Text("Move or rename project file") },
             text = {
                 Column {
-                    Text("Choose a new project-relative path. Existing files will never be overwritten.", color = Color(0xFF9B9B9B))
+                    Text("Choose a new project-relative path. Existing files will never be overwritten.", color = Color(0xFF8EA6C8))
                     Spacer(Modifier.height(8.dp))
                     OutlinedTextField(
                         value = renameDestinationPath,
@@ -839,7 +844,7 @@ private fun ProjectsScreen(projects: List<ProjectEntity>, selectedProjectId: Lon
             title = { Text("Prepare project changes") },
             text = {
                 Column {
-                    Text("Review the proposed file change before Natasha writes it.", color = Color(0xFF9B9B9B))
+                    Text("Review the proposed file change before Natasha writes it.", color = Color(0xFF8EA6C8))
                     Spacer(Modifier.height(8.dp))
                     OutlinedTextField(
                         value = buildSummary,
@@ -893,17 +898,17 @@ private fun ProjectsScreen(projects: List<ProjectEntity>, selectedProjectId: Lon
                             ) {
                                 Text(
                                     (if (index == buildSelectedIndex) "Reviewing · " else "Review · ") + change.path,
-                                    color = if (index == buildSelectedIndex) Color(0xFFE5E5E5) else Color(0xFFB8D8FF)
+                                    color = if (index == buildSelectedIndex) Color(0xFFF4F7FF) else Color(0xFFB8D8FF)
                                 )
                             }
                         }
                     }
                     if (buildPreview != null) {
                         Spacer(Modifier.height(8.dp))
-                        Text("Preview ready for: " + buildPreview!!.joinToString(), color = Color(0xFFE5E5E5))
+                        Text("Preview ready for: " + buildPreview!!.joinToString(), color = Color(0xFFF4F7FF))
                     }
                     if (buildStatus.isNotBlank()) {
-                        Text(buildStatus, color = Color(0xFF9B9B9B))
+                        Text(buildStatus, color = Color(0xFF8EA6C8))
                     }
                 }
             },
@@ -1049,8 +1054,8 @@ private fun ModelsScreen(
 
     Column(Modifier.fillMaxSize().padding(18.dp)) {
         Text("Models", style = MaterialTheme.typography.headlineMedium)
-        Text("Switch the AI engine without changing Natasha's identity or stored data.", color = Color(0xFF9B9B9B))
-        Text("Available storage: " + formatBytes(android.os.StatFs(context.filesDir.path).availableBytes), color = Color(0xFF9B9B9B))
+        Text("Switch the AI engine without changing Natasha's identity or stored data.", color = Color(0xFF8EA6C8))
+        Text("Available storage: " + formatBytes(android.os.StatFs(context.filesDir.path).availableBytes), color = Color(0xFF8EA6C8))
         Spacer(Modifier.height(14.dp))
         Button(onClick = { picker.launch(arrayOf("application/octet-stream", "application/*", "*/*")) }) {
             Text("Import GGUF")
@@ -1087,7 +1092,7 @@ private fun ModelsScreen(
         Spacer(Modifier.height(12.dp))
         LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             items(models, key = { it.path }) { model ->
-                Surface(color = Color(0xFF2F2F2F), shape = RoundedCornerShape(16.dp)) {
+                Surface(color = Color(0xFF111B2E), shape = RoundedCornerShape(16.dp)) {
                     Column(Modifier.fillMaxWidth().padding(14.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Column(Modifier.weight(1f)) {
@@ -1095,7 +1100,7 @@ private fun ModelsScreen(
                                 Text(
                                     formatBytes(model.sizeBytes) + " · " + model.quantization + " · " +
                                         if (model.selected) "Selected" else "Available",
-                                    color = if (model.selected) Color(0xFFBDBDBD) else Color(0xFF9B9B9B)
+                                    color = if (model.selected) Color(0xFFBDBDBD) else Color(0xFF8EA6C8)
                                 )
                             }
                             if (!model.selected) {
@@ -1232,7 +1237,7 @@ private fun MemoryScreen(memories: List<MemoryEntity>, db: AppDatabase, scope: C
 
     Column(Modifier.fillMaxSize().padding(18.dp)) {
         Text("Memory", style = MaterialTheme.typography.headlineMedium)
-        Text("Long-term memory archive · ${memories.size} saved memories. Stored locally and retained until you delete them.", color = Color(0xFF9B9B9B))
+        Text("Long-term memory archive · ${memories.size} saved memories. Stored locally and retained until you delete them.", color = Color(0xFF8EA6C8))
         Spacer(Modifier.height(12.dp))
         OutlinedTextField(
             value = query,
@@ -1257,16 +1262,16 @@ private fun MemoryScreen(memories: List<MemoryEntity>, db: AppDatabase, scope: C
             OutlinedButton(onClick = { importLauncher.launch(arrayOf("application/json", "text/json")) }) { Text("Import archive") }
         }
         if (archiveStatus.isNotBlank()) {
-            Text(archiveStatus, color = Color(0xFF9B9B9B), style = MaterialTheme.typography.bodySmall)
+            Text(archiveStatus, color = Color(0xFF8EA6C8), style = MaterialTheme.typography.bodySmall)
         }
         Spacer(Modifier.height(12.dp))
         LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             items(visible, key = { it.id }) { memory ->
-                Surface(color = Color(0xFF2F2F2F), shape = RoundedCornerShape(16.dp)) {
+                Surface(color = Color(0xFF111B2E), shape = RoundedCornerShape(16.dp)) {
                     Row(Modifier.fillMaxWidth().padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {
                             Text(memory.text)
-                            Text(memory.kind, color = Color(0xFF9B9B9B), style = MaterialTheme.typography.bodySmall)
+                            Text(memory.kind, color = Color(0xFF8EA6C8), style = MaterialTheme.typography.bodySmall)
                         }
                         TextButton(onClick = {
                             scope.launch {
@@ -1402,7 +1407,7 @@ private fun SettingsScreen(status: String) {
             manualStatus = "Manual maintenance check queued."
         }) { Text("Run maintenance now") }
         if (manualStatus.isNotBlank()) {
-            Text(manualStatus, color = Color(0xFF9B9B9B), style = MaterialTheme.typography.bodySmall)
+            Text(manualStatus, color = Color(0xFF8EA6C8), style = MaterialTheme.typography.bodySmall)
         }
         Spacer(Modifier.height(16.dp))
         SettingRow("Natasha personality", "Version ${NatashaPersonalityUpdates.installedVersion(context)} · natural conversation, no special prompts required")
@@ -1410,20 +1415,20 @@ private fun SettingsScreen(status: String) {
         SettingRow("App updates", "Install new APK releases manually; automatic app updates are not implemented")
         SettingRow("Models", "Independent from Natasha's personality and memory")
         Spacer(Modifier.height(18.dp))
-        Text("Status: " + status, color = Color(0xFF9B9B9B))
+        Text("Status: " + status, color = Color(0xFF8EA6C8))
     }
 }
 
 @Composable
 private fun SettingRow(title: String, detail: String) {
     Surface(
-        color = Color(0xFF2F2F2F),
+        color = Color(0xFF111B2E),
         shape = RoundedCornerShape(16.dp),
         modifier = Modifier.fillMaxWidth().padding(bottom = 10.dp)
     ) {
         Column(Modifier.padding(16.dp)) {
             Text(title, fontWeight = FontWeight.SemiBold)
-            Text(detail, color = Color(0xFF9B9B9B))
+            Text(detail, color = Color(0xFF8EA6C8))
         }
     }
 }
