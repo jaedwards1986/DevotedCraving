@@ -676,14 +676,18 @@ private fun ProjectsScreen(projects: List<ProjectEntity>, selectedProjectId: Lon
                                 )
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Button(onClick = {
+                                        val path = selectedFile ?: return@Button
+                                        val content = editorContent
                                         scope.launch {
                                             val result = withContext(Dispatchers.IO) {
-                                                tools.writeFile(p.id, selectedFile!!, editorContent)
+                                                tools.writeFile(p.id, path, content)
                                             }
-                                            editorStatus = if (result.ok) "Saved" else result.error.orEmpty()
-                                            if (result.ok) {
-                                                recentActivity = withContext(Dispatchers.IO) { ProjectActivityStore(context, p.id).recent(12) }
-                                                filesRefreshKey++
+                                            if (latestSelectedProjectId == p.id) {
+                                                editorStatus = if (result.ok) "Saved" else result.error.orEmpty()
+                                                if (result.ok) {
+                                                    recentActivity = withContext(Dispatchers.IO) { ProjectActivityStore(context, p.id).recent(12) }
+                                                    filesRefreshKey++
+                                                }
                                             }
                                         }
                                     }) { Text("Save") }
@@ -769,17 +773,20 @@ private fun ProjectsScreen(projects: List<ProjectEntity>, selectedProjectId: Lon
                     val destination = renameDestinationPath.trim()
                     if (id != null && destination.isNotBlank()) {
                         scope.launch {
+                            val source = renameSourcePath
                             val result = withContext(Dispatchers.IO) {
-                                tools.renameFile(id, renameSourcePath, destination)
+                                tools.renameFile(id, source, destination)
                             }
-                            editorStatus = if (result.ok) "Moved to $destination" else result.error.orEmpty()
-                            if (result.ok && selectedFile == renameSourcePath) selectedFile = destination
-                            if (result.ok) {
-                                recentActivity = withContext(Dispatchers.IO) { ProjectActivityStore(context, id).recent(12) }
-                                filesRefreshKey++
+                            if (latestSelectedProjectId == id) {
+                                editorStatus = if (result.ok) "Moved to $destination" else result.error.orEmpty()
+                                if (result.ok && selectedFile == source) selectedFile = destination
+                                if (result.ok) {
+                                    recentActivity = withContext(Dispatchers.IO) { ProjectActivityStore(context, id).recent(12) }
+                                    filesRefreshKey++
+                                }
+                                showRenameFile = false
+                                refresh()
                             }
-                            showRenameFile = false
-                            refresh()
                         }
                     } else {
                         editorStatus = "Enter a valid project-relative destination."
@@ -960,17 +967,19 @@ private fun ProjectsScreen(projects: List<ProjectEntity>, selectedProjectId: Lon
             confirmButton = {
                 TextButton(onClick = {
                     val id = selectedProjectId
-                    if (id != null && newFilePath.isNotBlank()) {
+                    val path = newFilePath.trim()
+                    val content = newFileContent
+                    if (id != null && path.isNotBlank()) {
                         scope.launch {
-                            val result = withContext(Dispatchers.IO) {
-                                tools.writeFile(id, newFilePath.trim(), newFileContent)
-                            }
-                            editorStatus = if (result.ok) "Created " + newFilePath.trim() else result.error.orEmpty()
-                            if (result.ok) {
-                                newFilePath = ""
-                                newFileContent = ""
-                                showNewFile = false
-                                filesRefreshKey++
+                            val result = withContext(Dispatchers.IO) { tools.writeFile(id, path, content) }
+                            if (latestSelectedProjectId == id) {
+                                editorStatus = if (result.ok) "Created $path" else result.error.orEmpty()
+                                if (result.ok) {
+                                    newFilePath = ""
+                                    newFileContent = ""
+                                    showNewFile = false
+                                    filesRefreshKey++
+                                }
                             }
                         }
                     }
@@ -1182,10 +1191,14 @@ private fun MemoryScreen(memories: List<MemoryEntity>, db: AppDatabase, scope: C
     ) { uri ->
         if (uri != null) scope.launch {
             runCatching {
-                val json = MemoryArchiveCodec.encode(db.messages().all(), db.memories().all())
+                val json = withContext(Dispatchers.IO) {
+                    MemoryArchiveCodec.encode(db.messages().all(), db.memories().all())
+                }
                 require(json.length <= 50_000_000) { "Archive exceeds the 50 MB import safety limit" }
-                context.contentResolver.openOutputStream(uri)?.bufferedWriter()?.use { it.write(json) }
-                    ?: error("Unable to write archive")
+                withContext(Dispatchers.IO) {
+                    context.contentResolver.openOutputStream(uri)?.bufferedWriter()?.use { it.write(json) }
+                        ?: error("Unable to write archive")
+                }
                 archiveStatus = "Archive exported."
             }.onFailure { archiveStatus = "Export failed: " + (it.message ?: "unknown error") }
         }
@@ -1195,8 +1208,10 @@ private fun MemoryScreen(memories: List<MemoryEntity>, db: AppDatabase, scope: C
     ) { uri ->
         if (uri != null) scope.launch {
             runCatching {
-                val json = readUriTextLimited(context, uri, 50_000_000)
-                pendingImport = MemoryArchiveCodec.decode(json)
+                val archive = withContext(Dispatchers.IO) {
+                    MemoryArchiveCodec.decode(readUriTextLimited(context, uri, 50_000_000))
+                }
+                pendingImport = archive
             }.onFailure { archiveStatus = "Import failed: " + (it.message ?: "invalid archive") }
         }
     }
