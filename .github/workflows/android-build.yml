@@ -56,8 +56,8 @@ jobs:
           set -euo pipefail
           mkdir -p app/src/main/assets/models
           MODEL_NAME="Qwen3-4B-Instruct-2507-Q4_K_M.gguf"
-          MODEL_URL="https://huggingface.co/bartowski/Qwen_Qwen3-4B-Instruct-2507-GGUF/resolve/main/$MODEL_NAME?download=true"
-          curl --fail --location --retry 5 --retry-all-errors --connect-timeout 30 --max-time 5400 "$MODEL_URL" -o "app/src/main/assets/models/$MODEL_NAME"
+          python -m pip install --upgrade "huggingface_hub[hf_xet]"
+          hf download bartowski/Qwen_Qwen3-4B-Instruct-2507-GGUF "$MODEL_NAME" --local-dir app/src/main/assets/models
           MODEL_SIZE=$(stat -c%s "app/src/main/assets/models/$MODEL_NAME")
           echo "Bundled model size: $MODEL_SIZE bytes"
           test "$MODEL_SIZE" -ge 2350000000
