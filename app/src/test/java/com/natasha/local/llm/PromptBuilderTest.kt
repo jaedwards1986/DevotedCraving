@@ -30,7 +30,7 @@ class PromptBuilderTest {
 
     @Test
     fun version70NaturalConversationPackIsInjectedAcrossModelTemplates() {
-        val pack = NatashaDefaults.CORE_IDENTITY + "\\nNATASHA VERSION 70: ordinary natural conversation; no prompt engineering required."
+        val pack = NatashaDefaults.CORE_IDENTITY + "\nNATASHA VERSION 70: ordinary natural conversation; no prompt engineering required."
         listOf("Qwen3-8B", "Llama-3.1-8B", "generic-local-model").forEach { model ->
             val prompt = PromptBuilder.build(
                 profile = CharacterProfileEntity(),
@@ -54,10 +54,10 @@ class PromptBuilderTest {
             userText = "Hello",
             modelName = "Aion RP Llama 3.1 8B"
         )
-        assertTrue(prompt.startsWith("__SYSTEM__:\\n"))
-        assertTrue(prompt.contains("__USER__:\\nHello"))
-        assertTrue(prompt.contains("__ASSISTANT__:\\nPrevious reply"))
-        assertTrue(prompt.endsWith("__ASSISTANT__:\\n"))
+        assertTrue(prompt.startsWith("__SYSTEM__:\n"))
+        assertTrue(prompt.contains("__USER__:\nHello"))
+        assertTrue(prompt.contains("__ASSISTANT__:\nPrevious reply"))
+        assertTrue(prompt.endsWith("__ASSISTANT__:\n"))
     }
 
     @Test
