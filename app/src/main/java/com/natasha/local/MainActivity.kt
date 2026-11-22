@@ -203,6 +203,22 @@ fun NatashaApp() {
                                 generationJob = scope.launch {
                                     val assistant = StringBuilder()
                                     try {
+                                        // Persist and display the user's message before model preparation.
+                                        db.messages().insert(
+                                            MessageEntity(conversationId = targetConversationId, role = "user", content = text)
+                                        )
+                                        if (conversationId == targetConversationId) {
+                                            messages = db.messages().forConversation(targetConversationId)
+                                        }
+                                        val selectedModel = db.models().selected()
+                                        if (selectedModel == null) {
+                                            status = "No AI model is selected. Open Models and install or select Natasha's model."
+                                            return@launch
+                                        }
+                                        if (!File(selectedModel.path).isFile) {
+                                            status = "The selected model file is missing. Open Models and verify or reinstall it."
+                                            return@launch
+                                        }
                                         val profile = db.character().get() ?: CharacterProfileEntity()
                                         val allMemories = db.memories().all()
                                         val recallWords = text.lowercase().split(Regex("\\W+")).filter { it.length > 2 }.toSet()
@@ -216,7 +232,6 @@ fun NatashaApp() {
                                         val memoriesForPrompt = if (matchingMemories.isNotEmpty()) matchingMemories
                                             else allMemories.sortedByDescending { it.updatedAt }.take(32)
                                         val history = db.messages().forConversation(targetConversationId).takeLast(64)
-                                        db.messages().insert(MessageEntity(conversationId = targetConversationId, role = "user", content = text))
                                         MemoryCapture.extract(text).forEach { candidate ->
                                             val normalized = candidate.trim().lowercase()
                                             val exists = db.memories().all().any { it.text.trim().lowercase() == normalized }
