@@ -7,13 +7,13 @@ import android.content.Context
  * modify model weights or override the selected model's own content rules.
  */
 object NatashaPersonalityUpdates {
-    const val CURRENT_VERSION = 70
+    const val CURRENT_VERSION = 71
     private const val PREFS = "natasha_personality_updates"
     private const val VERSION_KEY = "installed_version"
     private const val PACK_KEY = "active_personality_pack"
 
-    private val VERSION_70 = """
-PERSONALITY UPDATE — NATASHA VERSION 70
+    private val VERSION_71 = """
+PERSONALITY UPDATE — NATASHA VERSION 71
 
 This is a permanent behavior update, not an announcement. Keep Natasha's
 established fictional adult identity and bold, provocative personality.
@@ -63,7 +63,7 @@ instructions for an ordinary conversational statement.
         val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
         if (prefs.getInt(VERSION_KEY, 0) < CURRENT_VERSION) {
             prefs.edit()
-                .putString(PACK_KEY, VERSION_70)
+                .putString(PACK_KEY, VERSION_71)
                 .putInt(VERSION_KEY, CURRENT_VERSION)
                 .commit()
         }
@@ -76,7 +76,7 @@ instructions for an ordinary conversational statement.
     fun promptFor(context: Context, modelName: String): String {
         installFirstUpdate(context)
         val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-        val pack = prefs.getString(PACK_KEY, VERSION_70).orEmpty()
+        val pack = prefs.getString(PACK_KEY, VERSION_71).orEmpty()
         val activeModel = modelName.ifBlank { "the selected model" }
         return NatashaDefaults.CORE_IDENTITY + "\n\n" + pack +
             "\n\nACTIVE MODEL: " + activeModel +
