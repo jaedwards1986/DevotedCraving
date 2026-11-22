@@ -55,14 +55,15 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p app/src/main/assets/models
-          MODEL_NAME="Qwen3-4B-Instruct-2507-Q4_K_M.gguf"
+          MODEL_NAME="Qwen_Qwen3-4B-Instruct-2507-Q4_K_M.gguf"
           python -m pip install --upgrade "huggingface_hub[hf_xet]"
           hf download bartowski/Qwen_Qwen3-4B-Instruct-2507-GGUF "$MODEL_NAME" --local-dir app/src/main/assets/models
           MODEL_SIZE=$(stat -c%s "app/src/main/assets/models/$MODEL_NAME")
           echo "Bundled model size: $MODEL_SIZE bytes"
-          test "$MODEL_SIZE" -ge 2350000000
-          test "$MODEL_SIZE" -le 2650000000
-          sha256sum "app/src/main/assets/models/$MODEL_NAME" | awk '{print $1}' > app/src/main/assets/models/model.sha256
+          test "$MODEL_SIZE" -ge 2300000000
+          test "$MODEL_SIZE" -le 2800000000
+          echo "2fde00ce69dd4899c70d020845e2638353015bba0fdf161b3eb965f2bca4464e  app/src/main/assets/models/$MODEL_NAME" | sha256sum --check
+          echo "2fde00ce69dd4899c70d020845e2638353015bba0fdf161b3eb965f2bca4464e" > app/src/main/assets/models/model.sha256
 
       - name: Run unit tests and assemble APKs
         run: gradle testDebugUnitTest lintDebug assembleDebug assembleRelease --no-daemon --stacktrace
@@ -71,7 +72,7 @@ jobs:
         run: |
           set -euo pipefail
           APK=app/build/outputs/apk/debug/app-debug.apk
-          unzip -l "$APK" | grep -F "assets/models/Qwen3-4B-Instruct-2507-Q4_K_M.gguf"
+          unzip -l "$APK" | grep -F "assets/models/Qwen_Qwen3-4B-Instruct-2507-Q4_K_M.gguf"
           APK_SIZE=$(stat -c%s "$APK")
           echo "Installable APK size: $APK_SIZE bytes"
           test "$APK_SIZE" -gt 1800000000
