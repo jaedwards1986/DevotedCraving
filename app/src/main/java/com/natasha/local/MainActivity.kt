@@ -171,14 +171,17 @@ fun NatashaApp() {
                             val targetConversationId = conversationId
                             generationJob = scope.launch {
                                 val profile = db.character().get() ?: CharacterProfileEntity()
-                                val memoriesForPrompt = db.memories().all().filter {
-                                    text.lowercase().split(" ").any { word -> word.length > 2 && it.text.lowercase().contains(word) }
-                                }.sortedByDescending { memory ->
-                                    val words = text.lowercase().split(Regex("\\W+")).filter { it.length > 2 }.toSet()
+                                val allMemories = db.memories().all()
+                                val recallWords = text.lowercase().split(Regex("\\W+")).filter { it.length > 2 }.toSet()
+                                val rankedMemories = allMemories.map { memory ->
                                     val haystack = memory.text.lowercase()
-                                    words.count { haystack.contains(it) } * 10 +
+                                    val score = recallWords.count { haystack.contains(it) } * 10 +
                                         if (memory.kind.equals("pinned", true)) 100 else 0
-                                }
+                                    score to memory
+                                }.sortedByDescending { it.first }
+                                val matchingMemories = rankedMemories.filter { it.first > 0 }.map { it.second }
+                                val memoriesForPrompt = if (matchingMemories.isNotEmpty()) matchingMemories
+                                    else allMemories.sortedByDescending { it.updatedAt }.take(32)
                                 val history = db.messages().forConversation(targetConversationId).takeLast(64)
                                 db.messages().insert(MessageEntity(conversationId = targetConversationId, role = "user", content = text))
                                 if (conversationId == targetConversationId) {
