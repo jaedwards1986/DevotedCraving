@@ -22,7 +22,7 @@ ForgeAI is a private, local-first Android AI workspace targeting the Google Pixe
 - Reviewed project build plans with path validation, file-size limits and rollback on failed application.
 - Project ZIP export/import with traversal checks, bounded archive sizes, staged restore, rollback on failure, and binary-safe file copying.
 - Persistent project activity journal for file edits, build plans, archive imports/exports, with bounded journal growth.
-- Model manager with GGUF import, free-space reserve, SHA-256 verification, safe removal and recoverable model switching.
+- Model manager with GGUF import, public Hugging Face catalog search, in-app GGUF downloads, free-space reserve, size checks, SHA-256 verification when the hub supplies an LFS digest, safe removal and recoverable model switching.
 - Daily WorkManager maintenance scheduling, database integrity checks, low-storage reporting, safe cleanup of abandoned temporary imports, and a manual maintenance trigger.
 - Classy neutral dark ForgeAI interface; Natasha's adult personality stays in the chat rather than the visual branding.
 - Android CI workflow configured for unit tests, debug/release APK assembly, and debug APK artifact upload.
@@ -33,7 +33,7 @@ No model is bundled. Import a compatible GGUF file from the Models tab. Qwen3 8B
 
 ## Privacy and connectivity
 
-The app currently has no network permission, disables Android cloud backup and rejects cleartext traffic. Model inference and app data are local. In-app model discovery/downloads and automatic app binary updates are not implemented yet; these remain planned ForgeAI features, not external-app requirements. Full-device backup/restore is still being expanded.
+The app uses HTTPS network access only for public Hugging Face model discovery and downloads; inference and stored chat data remain local. Android cloud backup is disabled and cleartext traffic is rejected. Public gated repositories that require authentication are not downloadable through the current anonymous catalog flow. Automatic app binary updates are not implemented. Full-device backup/restore is still being expanded.
 
 ## Build and verification
 
@@ -41,4 +41,4 @@ Open the repository in Android Studio with a compatible Android SDK and NDK. The
 
 ## Important current limits
 
-Project build plans write reviewed files inside the app-private project workspace; they do not yet execute Gradle or produce an APK on the phone. Model-generated plans depend on the selected local model following the structured proposal format, and every proposal still requires manual review and approval. Chat attachments currently accept bounded text/source files. Image generation, full voice interaction, online model discovery/downloads, and a complete signed updater are not implemented yet.
+Project build plans write reviewed files inside the app-private project workspace; they do not yet execute Gradle or produce an APK on the phone. Model-generated plans depend on the selected local model following the structured proposal format, and every proposal still requires manual review and approval. Chat attachments currently accept bounded text/source files. Image generation, full voice interaction, authenticated gated-model downloads and a complete signed app updater are not implemented yet.

@@ -30,6 +30,7 @@ import androidx.work.WorkManager
 import com.natasha.local.data.*
 import com.natasha.local.llm.LocalLlmEngine
 import com.natasha.local.llm.PromptBuilder
+import com.natasha.local.models.ModelHubScreen
 import com.natasha.local.maintenance.MaintenanceWorker
 import com.natasha.local.projects.ProjectToolService
 import com.natasha.local.projects.ProjectBuildService
@@ -931,6 +932,35 @@ private fun ModelsScreen(
         Spacer(Modifier.height(14.dp))
         Button(onClick = { picker.launch(arrayOf("application/octet-stream", "application/*", "*/*")) }) {
             Text("Import GGUF")
+        }
+        ModelHubScreen { downloadedFile ->
+            scope.launch {
+                try {
+                    val hash = withContext(Dispatchers.IO) { sha256(downloadedFile) }
+                    val hadSelectedModel = db.models().selected() != null
+                    db.models().save(
+                        ModelEntity(
+                            path = downloadedFile.absolutePath,
+                            name = downloadedFile.name,
+                            sizeBytes = downloadedFile.length(),
+                            sha256 = hash,
+                            quantization = detectQuantization(downloadedFile.name),
+                            selected = false
+                        )
+                    )
+                    val loaded = if (!hadSelectedModel) {
+                        withContext(Dispatchers.Default) { engine.load(downloadedFile.absolutePath) }
+                    } else false
+                    if (loaded) {
+                        db.models().clearSelection()
+                        db.models().select(downloadedFile.absolutePath)
+                    }
+                    refresh()
+                    setStatus(if (loaded) "Downloaded, verified and loaded ${downloadedFile.name}" else "Downloaded and verified ${downloadedFile.name}; choose Use to load it")
+                } catch (failure: Throwable) {
+                    setStatus("Model registration failed: " + (failure.message ?: "unknown error"))
+                }
+            }
         }
         Spacer(Modifier.height(12.dp))
         LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
