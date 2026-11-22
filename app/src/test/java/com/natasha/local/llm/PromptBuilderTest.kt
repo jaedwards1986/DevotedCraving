@@ -11,7 +11,7 @@ import org.junit.Test
 class PromptBuilderTest {
     @Test
     fun coreIdentitySurvivesNewChatsAndEverySupportedTemplate() {
-        val models = listOf("Qwen3-8B", "Llama-3.1-8B", "generic-local-model")
+        val models = listOf("Aion RP Llama 3.1 8B", "Qwen3-8B", "Llama-3.1-8B", "generic-local-model")
 
         models.forEach { model ->
             val prompt = PromptBuilder.build(
@@ -43,6 +43,21 @@ class PromptBuilderTest {
             assertTrue(prompt.contains("NATASHA VERSION 70"))
             assertTrue(prompt.contains("ordinary natural conversation; no prompt engineering required"))
         }
+    }
+
+    @Test
+    fun aionRpUsesItsNativeSystemUserAssistantPromptFormat() {
+        val prompt = PromptBuilder.build(
+            profile = CharacterProfileEntity(),
+            memories = emptyList(),
+            history = listOf(MessageEntity(conversationId = 1, role = "assistant", content = "Previous reply")),
+            userText = "Hello",
+            modelName = "Aion RP Llama 3.1 8B"
+        )
+        assertTrue(prompt.startsWith("__SYSTEM__:\\n"))
+        assertTrue(prompt.contains("__USER__:\\nHello"))
+        assertTrue(prompt.contains("__ASSISTANT__:\\nPrevious reply"))
+        assertTrue(prompt.endsWith("__ASSISTANT__:\\n"))
     }
 
     @Test
