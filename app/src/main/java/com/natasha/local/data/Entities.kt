@@ -1,9 +1,10 @@
 package com.natasha.local.data
 
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
 
-@Entity(tableName = "messages")
+@Entity(tableName = "messages", indices = [Index(value = ["conversationId", "createdAt"])])
 data class MessageEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val conversationId: Long,
@@ -12,7 +13,7 @@ data class MessageEntity(
     val createdAt: Long = System.currentTimeMillis()
 )
 
-@Entity(tableName = "memories")
+@Entity(tableName = "memories", indices = [Index(value = ["updatedAt"])])
 data class MemoryEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val text: String,
