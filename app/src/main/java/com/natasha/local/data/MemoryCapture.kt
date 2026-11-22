@@ -19,11 +19,15 @@ object MemoryCapture {
 
     fun extract(message: String): List<String> {
         if (message.length > 4000 || sensitive.containsMatchIn(message)) return emptyList()
+        val delimiters = Regex("[.!?\\\\n]")
         return cues.mapNotNull { pattern ->
-            pattern.find(message)?.let {
-                val sentenceEnd = Regex("[.!?\\n]").find(message)?.range?.first ?: message.length
-                val sentence = message.substring(0, sentenceEnd).trim()
-                sentence.takeIf { value -> value.length in 5..240 }
+            pattern.find(message)?.let { match ->
+                val previousEnd = delimiters.findAll(message.substring(0, match.range.first))
+                    .lastOrNull()?.range?.last ?: -1
+                val start = previousEnd + 1
+                val end = delimiters.find(message, match.range.last + 1)?.range?.first ?: message.length
+                message.substring(start, end).trim()
+                    .takeIf { value -> value.length in 5..240 }
             }
         }.distinctBy { it.lowercase() }.take(3)
     }

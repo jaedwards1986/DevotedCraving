@@ -7,6 +7,7 @@ import androidx.room.*
     suspend fun forConversation(id:Long):List<MessageEntity>
     @Query("SELECT * FROM messages ORDER BY createdAt") suspend fun all():List<MessageEntity>
     @Insert suspend fun insertAll(items:List<MessageEntity>):List<Long>
+    @Query("SELECT COALESCE(MAX(conversationId), 0) FROM messages") suspend fun maxConversationId():Long
     @Query("SELECT conversationId FROM messages GROUP BY conversationId ORDER BY MAX(createdAt) DESC")
     suspend fun conversationIds():List<Long>
     @Query("SELECT * FROM messages WHERE conversationId=:id ORDER BY createdAt DESC LIMIT 1")

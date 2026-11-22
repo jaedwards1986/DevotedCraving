@@ -17,6 +17,13 @@ class MemoryCaptureTest {
         assertTrue(MemoryCapture.extract("I take medication for my diagnosis.").isEmpty())
     }
 
+    @Test fun capturesTheSentenceContainingThePreference() {
+        assertEquals(
+            listOf("The weather is nice", "I prefer short answers"),
+            MemoryCapture.extract("The weather is nice. I prefer short answers.")
+        )
+    }
+
     @Test fun ignoresOrdinaryChatWithoutMemoryCue() {
         assertTrue(MemoryCapture.extract("That was a funny movie.").isEmpty())
     }

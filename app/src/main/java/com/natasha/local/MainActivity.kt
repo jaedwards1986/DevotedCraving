@@ -1203,7 +1203,15 @@ private fun MemoryScreen(memories: List<MemoryEntity>, db: AppDatabase, scope: C
                     scope.launch {
                         val existing = db.memories().all().map { it.text.trim().lowercase() }.toMutableSet()
                         val additions = archive.memories.filter { existing.add(it.text.trim().lowercase()) }
-                        if (archive.messages.isNotEmpty()) db.messages().insertAll(archive.messages)
+                        if (archive.messages.isNotEmpty()) {
+                            val firstNewId = db.messages().maxConversationId() + 1L
+                            val conversationMap = archive.messages.map { it.conversationId }.distinct()
+                                .sorted().mapIndexed { index, oldId -> oldId to (firstNewId + index) }.toMap()
+                            val safeMessages = archive.messages.map { item ->
+                                item.copy(id = 0L, conversationId = conversationMap.getValue(item.conversationId))
+                            }
+                            db.messages().insertAll(safeMessages)
+                        }
                         if (additions.isNotEmpty()) db.memories().insertAll(additions)
                         pendingImport = null
                         archiveStatus = "Archive restored."

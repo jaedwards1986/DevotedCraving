@@ -54,8 +54,10 @@ object MemoryArchiveCodec {
             require(role == "user" || role == "assistant") { "Invalid message role" }
             val content = item.getString("content")
             require(content.length <= 1_000_000) { "Message is too large" }
+            val conversationId = item.getLong("conversationId")
+            require(conversationId > 0L) { "Invalid conversation ID" }
             MessageEntity(
-                conversationId = item.getLong("conversationId").coerceAtLeast(1L),
+                conversationId = conversationId,
                 role = role,
                 content = content,
                 createdAt = item.optLong("createdAt", System.currentTimeMillis())

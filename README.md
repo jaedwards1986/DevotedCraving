@@ -1,6 +1,6 @@
 # ForgeAI
 
-ForgeAI is a private, local-first Android AI workspace targeting the Google Pixel 9 Pro XL.
+ForgeAI is a public-source, local-first Android AI workspace targeting the Google Pixel 9 Pro XL.
 
 ## Current implementation
 
@@ -15,7 +15,8 @@ ForgeAI is a private, local-first Android AI workspace targeting the Google Pixe
 - An immutable character foundation is injected into every prompt, independent of conversation history and selected model; profile customizations cannot replace her established identity.
 - The locked character voice is explicitly hypersexual, persistently horny, sexually forward, brazen, filthy-mouthed, dirty-minded, and identifies her as a stripper, prostitute, and sex-line operator, while preserving useful task-focused answers.
 - JVM prompt tests cover Qwen3, Llama 3, generic templates, and attempts to override the core identity.
-- Persistent memory list with search, editing and deletion.
+- Persistent memory list with search, editing, deletion, pinning, conservative automatic capture, and relevance-ranked recall.
+- Full conversation and memory JSON archive export/import; imported conversation IDs are remapped to avoid merging with existing chats.
 - Project workspace with project descriptions, file creation, editing, safe file moves/renames, and confirmed deletion.
 - Project-aware prompts that include a bounded snapshot of selected source files while excluding hidden/generated folders and redacting common credentials and tokens.
 - Natasha can propose multi-file project changes in a structured plan; ForgeAI parses the proposal, validates relative paths and size limits, and requires a human preview and explicit approval before writing.
@@ -33,7 +34,7 @@ No model is bundled. Import a compatible GGUF file from the Models tab. Qwen3 8B
 
 ## Privacy and connectivity
 
-The app uses HTTPS network access only for public Hugging Face model discovery and downloads; inference and stored chat data remain local. Android cloud backup is disabled and cleartext traffic is rejected. Public gated repositories that require authentication are not downloadable through the current anonymous catalog flow. Automatic app binary updates are not implemented. Full-device backup/restore is still being expanded.
+The app uses HTTPS network access only for public Hugging Face model discovery and downloads; inference and stored chat data remain local. Android cloud backup is disabled and cleartext traffic is rejected. Public gated repositories that require authentication are not downloadable through the current anonymous catalog flow. Automatic app binary updates are not implemented. Conversation and memory archives can be exported/imported manually; archives are currently unencrypted and should be stored securely. Automatic cloud sync and full-device restore are not implemented.
 
 ## Build and verification
 
