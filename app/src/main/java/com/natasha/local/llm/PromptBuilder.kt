@@ -82,6 +82,7 @@ object PromptBuilder {
         }
 
         val prompt = when {
+            isAionRp(modelName) -> aionRp(messages)
             isQwen3(modelName) -> qwen3(messages)
             isLlama3(modelName) -> llama3(messages)
             else -> generic(messages)
@@ -92,12 +93,28 @@ object PromptBuilder {
         return prompt
     }
 
+    private fun isAionRp(name: String): Boolean =
+        name.contains("aion", ignoreCase = true) && name.contains("rp", ignoreCase = true)
+
     private fun isQwen3(name: String): Boolean =
         name.contains("qwen3", ignoreCase = true)
 
     private fun isLlama3(name: String): Boolean =
         name.contains("llama-3", ignoreCase = true) ||
             name.contains("llama3", ignoreCase = true)
+
+    private fun aionRp(messages: List<Pair<String, String>>): String =
+        buildString {
+            messages.forEach { (role, content) ->
+                val marker = when (role) {
+                    "system" -> "__SYSTEM__:"
+                    "user" -> "__USER__:"
+                    else -> "__ASSISTANT__:"
+                }
+                append(marker).append("\\n").append(content).append("\\n")
+            }
+            append("__ASSISTANT__:\\n")
+        }
 
     private fun qwen3(messages: List<Pair<String, String>>): String =
         buildString {
