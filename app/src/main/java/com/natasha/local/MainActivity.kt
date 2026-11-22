@@ -1560,10 +1560,10 @@ private fun readUriTextLimited(context: Context, uri: Uri, maxBytes: Int): Strin
     }
 }
 
-private const val PREFERRED_MODEL_FILE = "Qwen3-4B-Instruct-2507-IQ3_M.gguf"
+private const val PREFERRED_MODEL_FILE = "Qwen3-4B-Instruct-2507-Q4_K_M.gguf"
 private const val PREFERRED_MODEL_ASSET = "models/$PREFERRED_MODEL_FILE"
-private const val PREFERRED_MODEL_MIN_BYTES = 1_850_000_000L
-private const val PREFERRED_MODEL_MAX_BYTES = 2_050_000_000L
+private const val PREFERRED_MODEL_MIN_BYTES = 2_350_000_000L
+private const val PREFERRED_MODEL_MAX_BYTES = 2_650_000_000L
 
 private suspend fun ensurePreferredModel(
     context: Context,
@@ -1626,10 +1626,10 @@ private suspend fun ensurePreferredModel(
     val existing = db.models().all().firstOrNull { it.path == target.absolutePath }
     val model = ModelEntity(
         path = target.absolutePath,
-        name = "Qwen3-4B-Instruct-2507 · IQ3_M",
+        name = "Qwen3-4B-Instruct-2507 · Q4_K_M",
         sizeBytes = target.length(),
         sha256 = digest,
-        quantization = "IQ3_M",
+        quantization = "Q4_K_M",
         selected = true
     )
     db.models().clearSelection()
