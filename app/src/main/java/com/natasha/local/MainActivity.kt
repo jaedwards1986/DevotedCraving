@@ -387,7 +387,7 @@ private fun ChatScreen(
                 Modifier.fillMaxWidth().heightIn(max = 70.dp),
                 horizontalAlignment = Alignment.End
             ) {
-                items(conversations.reversed(), key = { it }) { id ->
+                items(conversations, key = { it }) { id ->
                     TextButton(onClick = { onConversationSelected(id) }) {
                         Text(if (id == 1L) "Chat 1" else "Chat $id")
                     }
