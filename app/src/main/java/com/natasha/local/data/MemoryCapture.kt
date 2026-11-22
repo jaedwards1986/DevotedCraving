@@ -19,7 +19,7 @@ object MemoryCapture {
 
     fun extract(message: String): List<String> {
         if (message.length > 4000 || sensitive.containsMatchIn(message)) return emptyList()
-        val delimiters = Regex("[.!?\\\\n]")
+        val delimiters = Regex("[.!?]")
         return cues.mapNotNull { pattern ->
             pattern.find(message)?.let { match ->
                 val previousEnd = delimiters.findAll(message.substring(0, match.range.first))
