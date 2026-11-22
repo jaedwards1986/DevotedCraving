@@ -10,11 +10,11 @@ ForgeAI is a public-source, local-first Android AI workspace targeting the Googl
 - Token streaming and cancellation; native model load, inference and unload are serialized.
 - Chat history with multiple conversations and bounded text/source-code attachments.
 - Prompt-free natural conversation: Natasha's versioned personality is injected automatically, so users can speak normally without slash commands, magic phrases or repeated setup prompts.
-- Natasha personality pack Version 70 adds natural conversational understanding, responsive adult flirtation, a broader coy-to-bold adult voice, and automatic adaptation to the selected model's actual rules.
+- Natasha personality pack Version 71 preserves her permanently bold, sexually forward adult character and adapts automatically to each selected model's actual capabilities and rules.
 - Natasha's adult fictional sex-worker character profile is stored separately from the selected LLM.
 - An immutable character foundation is injected into every prompt, independent of conversation history and selected model; profile customizations cannot replace her established identity.
 - The locked character voice is explicitly hypersexual, persistently horny, sexually forward, brazen, filthy-mouthed, dirty-minded, and identifies her as a stripper, prostitute, and sex-line operator, while preserving useful task-focused answers.
-- JVM prompt tests cover Qwen3, Llama 3, generic templates, and attempts to override the core identity.
+- JVM prompt tests cover Aion RP, Qwen3, Llama 3, generic templates, and attempts to override the core identity.
 - Persistent memory list with search, editing, deletion, pinning, conservative automatic capture, and relevance-ranked recall.
 - Full conversation and memory JSON archive export/import; imported conversation IDs are remapped to avoid merging with existing chats.
 - Project workspace with project descriptions, file creation, editing, safe file moves/renames, and confirmed deletion.
@@ -30,7 +30,7 @@ ForgeAI is a public-source, local-first Android AI workspace targeting the Googl
 
 ## Model setup
 
-No model is bundled. Import a compatible GGUF file from the Models tab. Qwen3 8B and Llama 3.1 8B GGUF builds are intended model families; check available RAM, quantization and context requirements before importing. A model switch does not replace Natasha's app-level profile or stored project data.
+On first launch, ForgeAI automatically downloads, verifies and selects **Aion RP Llama 3.1 8B Q5_K_M** from the public Hugging Face repository `bartowski/Aion-RP-Llama-3.1-8B-GGUF`. This 8B model is explicitly trained for uncensored roleplay and creative writing; its upstream model card specifies the native `__SYSTEM__`, `__USER__`, and `__ASSISTANT__` prompt format, which ForgeAI uses. The model is not bundled in the APK because it is approximately 5.73 GB; first launch requires an internet connection and sufficient free storage. The user does not have to search for, choose, or manually import the initial model. The Models tab remains available later to import, download, and switch models. Switching models does not replace Natasha's app-level identity, personality pack, memories, conversations or project data.
 
 ## Privacy and connectivity
 
