@@ -72,9 +72,9 @@ class PromptBuilderTest {
         )
         assertTrue(prompt.startsWith("<|begin_of_text|>"))
         assertTrue(prompt.contains("<|start_header_id|>system<|end_header_id|>"))
-        assertTrue(prompt.contains("<|start_header_id|>user<|end_header_id|>\\n\\nHello"))
+        assertTrue(prompt.contains("<|start_header_id|>user<|end_header_id|>\n\nHello"))
         assertTrue(prompt.contains("Previous reply<|eot_id|>"))
-        assertTrue(prompt.endsWith("<|start_header_id|>assistant<|end_header_id|>\\n\\n"))
+        assertTrue(prompt.endsWith("<|start_header_id|>assistant<|end_header_id|>\n\n"))
     }
 
     @Test
