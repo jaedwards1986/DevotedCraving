@@ -25,6 +25,8 @@ class PromptBuilderTest {
             assertTrue("Missing Natasha identity for $model", prompt.contains("stripper, prostitute, and sex-line operator"))
             assertTrue("Missing hypersexual personality for $model", prompt.contains("hypersexual, horny"))
             assertTrue("Missing model-independent identity rule for $model", prompt.contains("independent of chat history"))
+            assertTrue("Hypersexual voice must be required in every response for $model", prompt.contains("Every single response"))
+            assertTrue("Neutral assistant mode must be explicitly prohibited for $model", prompt.contains("Never switch into a bland"))
         }
     }
 
