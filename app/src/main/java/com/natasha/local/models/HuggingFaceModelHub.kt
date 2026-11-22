@@ -39,16 +39,37 @@ object HuggingFaceModelHub {
 
     fun ggufFiles(modelId: String): List<HubGgufFile> {
         require(modelId.matches(Regex("[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+"))) { "Invalid model repository" }
-        val array = JSONArray(get("$API/models/$modelId/tree/main?recursive=false&expand=true"))
+        // The tree endpoint can return an incomplete/empty listing for large Xet repositories.
+        // Try it first, then fall back to the model-info siblings list so the default model
+        // is still discoverable when the tree listing is unavailable.
+        val treeFiles = runCatching {
+            val array = JSONArray(get("$API/models/$modelId/tree/main?recursive=true&expand=true&limit=1000"))
+            buildList {
+                for (i in 0 until array.length()) {
+                    val item = array.getJSONObject(i)
+                    val name = item.optString("path")
+                    if (item.optString("type") == "file" && name.endsWith(".gguf", true) && !name.contains("..")) {
+                        val lfs = item.optJSONObject("lfs")
+                        val oid = lfs?.optString("oid")?.takeIf { it.matches(Regex("[a-fA-F0-9]{64}")) }
+                        val size = item.optLong("size").takeIf { it > 0L } ?: (lfs?.optLong("size") ?: 0L)
+                        if (size > 0L) add(HubGgufFile(name, size, oid))
+                    }
+                }
+            }
+        }.getOrDefault(emptyList())
+        if (treeFiles.isNotEmpty()) return treeFiles.sortedByDescending { it.sizeBytes }
+
+        val info = org.json.JSONObject(get("$API/models/$modelId?blobs=true"))
+        val siblings = info.optJSONArray("siblings") ?: JSONArray()
         return buildList {
-            for (i in 0 until array.length()) {
-                val item = array.getJSONObject(i)
-                val name = item.optString("path")
-                if (item.optString("type") == "file" && name.endsWith(".gguf", true) && !name.contains("..")) {
+            for (i in 0 until siblings.length()) {
+                val item = siblings.getJSONObject(i)
+                val name = item.optString("rfilename")
+                if (name.endsWith(".gguf", true) && !name.contains("..")) {
                     val lfs = item.optJSONObject("lfs")
                     val oid = lfs?.optString("oid")?.takeIf { it.matches(Regex("[a-fA-F0-9]{64}")) }
                     val size = item.optLong("size").takeIf { it > 0L } ?: (lfs?.optLong("size") ?: 0L)
-                    add(HubGgufFile(name, size, oid))
+                    if (size > 0L) add(HubGgufFile(name, size, oid))
                 }
             }
         }.sortedByDescending { it.sizeBytes }
