@@ -528,6 +528,7 @@ private fun ProjectsScreen(projects: List<ProjectEntity>, selectedProjectId: Lon
     }
     var buildSummary by rememberSaveable { mutableStateOf("") }
     var buildChanges by remember { mutableStateOf<List<ProjectFileChange>>(emptyList()) }
+    var buildSelectedIndex by rememberSaveable { mutableIntStateOf(0) }
     var buildPath by rememberSaveable { mutableStateOf("") }
     var buildContent by rememberSaveable { mutableStateOf("") }
     var showBuildPlan by rememberSaveable { mutableStateOf(false) }
@@ -551,6 +552,7 @@ private fun ProjectsScreen(projects: List<ProjectEntity>, selectedProjectId: Lon
         if (incomingPlan != null && incomingPlanProjectId != null && selectedProjectId == incomingPlanProjectId) {
             buildSummary = incomingPlan.summary
             buildChanges = incomingPlan.changes
+            buildSelectedIndex = 0
             buildPath = incomingPlan.changes.first().path
             buildContent = incomingPlan.changes.first().content
             buildPreview = null
@@ -598,7 +600,15 @@ private fun ProjectsScreen(projects: List<ProjectEntity>, selectedProjectId: Lon
                                     projectNameDraft = p.name
                                     projectDescriptionDraft = p.description
                                 }) { Text("Details") }
-                                TextButton(onClick = { buildChanges = emptyList(); showBuildPlan = true; buildPreview = null }) { Text("Build plan") }
+                                TextButton(onClick = {
+                                    buildChanges = emptyList()
+                                    buildSelectedIndex = 0
+                                    buildSummary = ""
+                                    buildPath = ""
+                                    buildContent = ""
+                                    showBuildPlan = true
+                                    buildPreview = null
+                                }) { Text("Build plan") }
                             }
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
@@ -802,7 +812,7 @@ private fun ProjectsScreen(projects: List<ProjectEntity>, selectedProjectId: Lon
 
     if (showBuildPlan) {
         AlertDialog(
-            onDismissRequest = { showBuildPlan = false; buildPreview = null; buildChanges = emptyList(); onPlanConsumed() },
+            onDismissRequest = { showBuildPlan = false; buildPreview = null; buildChanges = emptyList(); buildSelectedIndex = 0; onPlanConsumed() },
             title = { Text("Prepare project changes") },
             text = {
                 Column {
@@ -817,7 +827,15 @@ private fun ProjectsScreen(projects: List<ProjectEntity>, selectedProjectId: Lon
                     Spacer(Modifier.height(8.dp))
                     OutlinedTextField(
                         value = buildPath,
-                        onValueChange = { value -> buildPath = value; buildPreview = null; if (buildChanges.isNotEmpty()) buildChanges = buildChanges.mapIndexed { index, change -> if (index == 0) change.copy(path = value) else change } },
+                        onValueChange = { value ->
+                            buildPath = value
+                            buildPreview = null
+                            if (buildChanges.isNotEmpty() && buildSelectedIndex in buildChanges.indices) {
+                                buildChanges = buildChanges.mapIndexed { index, change ->
+                                    if (index == buildSelectedIndex) change.copy(path = value) else change
+                                }
+                            }
+                        },
                         label = { Text("Project-relative file path") },
                         placeholder = { Text("app/src/Main.kt") },
                         singleLine = true
@@ -825,16 +843,36 @@ private fun ProjectsScreen(projects: List<ProjectEntity>, selectedProjectId: Lon
                     Spacer(Modifier.height(8.dp))
                     OutlinedTextField(
                         value = buildContent,
-                        onValueChange = { value -> buildContent = value; buildPreview = null; if (buildChanges.isNotEmpty()) buildChanges = buildChanges.mapIndexed { index, change -> if (index == 0) change.copy(content = value) else change } },
+                        onValueChange = { value ->
+                            buildContent = value
+                            buildPreview = null
+                            if (buildChanges.isNotEmpty() && buildSelectedIndex in buildChanges.indices) {
+                                buildChanges = buildChanges.mapIndexed { index, change ->
+                                    if (index == buildSelectedIndex) change.copy(content = value) else change
+                                }
+                            }
+                        },
                         label = { Text("Complete file contents") },
                         modifier = Modifier.fillMaxWidth().heightIn(min = 140.dp, max = 280.dp),
                         maxLines = 16
                     )
                     if (buildChanges.size > 1) {
                         Spacer(Modifier.height(8.dp))
-                        Text("Additional files in this proposal:", fontWeight = FontWeight.SemiBold)
-                        buildChanges.drop(1).forEach { change ->
-                            Text(change.path, color = Color(0xFFB8D8FF), style = MaterialTheme.typography.bodySmall)
+                        Text("Review each proposed file:", fontWeight = FontWeight.SemiBold)
+                        buildChanges.forEachIndexed { index, change ->
+                            TextButton(
+                                onClick = {
+                                    buildSelectedIndex = index
+                                    buildPath = change.path
+                                    buildContent = change.content
+                                    buildPreview = null
+                                }
+                            ) {
+                                Text(
+                                    (if (index == buildSelectedIndex) "Reviewing · " else "Review · ") + change.path,
+                                    color = if (index == buildSelectedIndex) Color(0xFFE5E5E5) else Color(0xFFB8D8FF)
+                                )
+                            }
                         }
                     }
                     if (buildPreview != null) {
@@ -885,7 +923,7 @@ private fun ProjectsScreen(projects: List<ProjectEntity>, selectedProjectId: Lon
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showBuildPlan = false; buildPreview = null; buildChanges = emptyList(); onPlanConsumed() }) { Text("Cancel") }
+                TextButton(onClick = { showBuildPlan = false; buildPreview = null; buildChanges = emptyList(); buildSelectedIndex = 0; onPlanConsumed() }) { Text("Cancel") }
             }
         )
     }
