@@ -84,6 +84,9 @@ fun NatashaApp() {
     var input by rememberSaveable { mutableStateOf("") }
     var messages by remember { mutableStateOf(emptyList<MessageEntity>()) }
     var status by remember { mutableStateOf("Ready") }
+    var startupLoading by remember { mutableStateOf(true) }
+    var startupStage by remember { mutableStateOf("Starting ForgeAI…") }
+    var startupProgress by remember { mutableStateOf<Float?>(null) }
     var models by remember { mutableStateOf(emptyList<ModelEntity>()) }
     var memories by remember { mutableStateOf(emptyList<MemoryEntity>()) }
     var projects by remember { mutableStateOf(emptyList<ProjectEntity>()) }
@@ -106,38 +109,63 @@ fun NatashaApp() {
     }
 
     LaunchedEffect(Unit) {
-        val latestConversation = db.messages().conversationIds().firstOrNull()
-        if (latestConversation != null) conversationId = latestConversation
-        refresh()
-        val selectedBeforeInstall = db.models().selected()
-        val needsPreferredModel = selectedBeforeInstall == null ||
-            selectedBeforeInstall.name.contains("Llama 3.2 1B", ignoreCase = true) ||
-            selectedBeforeInstall.path.contains("llama-3.2-1b", ignoreCase = true) ||
-            selectedBeforeInstall.name.contains("Lexi Uncensored", ignoreCase = true) ||
-            selectedBeforeInstall.path.contains("Llama-3.1-8B-Lexi", ignoreCase = true) ||
-            selectedBeforeInstall.name.contains("Aion RP", ignoreCase = true) ||
-            selectedBeforeInstall.path.contains("Aion-RP-Llama-3.1-8B", ignoreCase = true) ||
-            selectedBeforeInstall.name.contains("Dirty Harry", ignoreCase = true) ||
-            selectedBeforeInstall.path.contains("L3.1-RP-Hero-Dirty_Harry", ignoreCase = true)
-        val selected = if (needsPreferredModel) {
-            status = if (selectedBeforeInstall == null) "Installing ForgeAI's recommended model…" else "Replacing the old undersized model…"
-            runCatching {
-                withContext(Dispatchers.IO) { ensurePreferredModel(context, db) }
-            }.getOrElse {
-                status = "Model setup failed: " + (it.message ?: "unknown error")
-                selectedBeforeInstall
+        startupLoading = true
+        startupStage = "Preparing Natasha…"
+        startupProgress = null
+        try {
+            val latestConversation = db.messages().conversationIds().firstOrNull()
+            if (latestConversation != null) conversationId = latestConversation
+            refresh()
+            val selectedBeforeInstall = db.models().selected()
+            val needsPreferredModel = selectedBeforeInstall == null ||
+                selectedBeforeInstall.name.contains("Llama 3.2 1B", ignoreCase = true) ||
+                selectedBeforeInstall.path.contains("llama-3.2-1b", ignoreCase = true) ||
+                selectedBeforeInstall.name.contains("Lexi Uncensored", ignoreCase = true) ||
+                selectedBeforeInstall.path.contains("Llama-3.1-8B-Lexi", ignoreCase = true) ||
+                selectedBeforeInstall.name.contains("Aion RP", ignoreCase = true) ||
+                selectedBeforeInstall.path.contains("Aion-RP-Llama-3.1-8B", ignoreCase = true) ||
+                selectedBeforeInstall.name.contains("Dirty Harry", ignoreCase = true) ||
+                selectedBeforeInstall.path.contains("L3.1-RP-Hero-Dirty_Harry", ignoreCase = true)
+            val selected = if (needsPreferredModel) {
+                status = "Setting up Natasha's recommended model…"
+                runCatching {
+                    withContext(Dispatchers.IO) {
+                        ensurePreferredModel(
+                            context, db,
+                            onStage = { stage -> startupStage = stage; status = stage; startupProgress = null },
+                            onProgress = { downloaded, total ->
+                                startupProgress = if (total > 0L) downloaded.toFloat() / total.toFloat() else null
+                                startupStage = if (total > 0L) "Downloading model · " +
+                                    "%.0f".format(downloaded.toDouble() * 100.0 / total.toDouble()) + "%"
+                                    else "Downloading model…"
+                                status = startupStage
+                            }
+                        )
+                    }
+                }.getOrElse {
+                    status = "Model setup failed: " + (it.message ?: "unknown error")
+                    startupStage = status
+                    selectedBeforeInstall
+                }
+            } else selectedBeforeInstall
+
+            if (selected != null) {
+                startupStage = "Loading model into memory…"
+                startupProgress = null
+                status = "Loading " + selected.name + " into memory…"
+                val ok = withContext(Dispatchers.Default) {
+                    engine.load(selected.path, contextSize = 2048, threads = 4)
+                }
+                status = if (ok) "Ready · " + selected.name else "Model failed to load"
+                startupStage = status
+            } else if (status.startsWith("Ready")) {
+                status = "Ready · import a GGUF model"
+                startupStage = status
             }
-        } else selectedBeforeInstall
-        if (selected != null) {
-            status = "Loading " + selected.name + "…"
-            val ok = withContext(Dispatchers.Default) {
-                engine.load(selected.path, contextSize = 2048, threads = 4)
-            }
-            status = if (ok) "Ready · " + selected.name else "Model failed to load"
-        } else if (status.startsWith("Ready")) {
-            status = "Ready · import a GGUF model"
+            refresh()
+        } finally {
+            startupLoading = false
         }
-        refresh()
     }
 
     DisposableEffect(Unit) {
@@ -350,6 +378,46 @@ fun NatashaApp() {
                     AppTab.Models -> ModelsScreen(models, db, scope, engine, ::refresh) { status = it }
                     AppTab.Memory -> MemoryScreen(memories, db, scope, ::refresh)
                     AppTab.Settings -> SettingsScreen(status)
+                }
+
+                if (startupLoading) {
+                    Box(Modifier.fillMaxSize().background(Color(0xF20B1220)), contentAlignment = Alignment.Center) {
+                        Surface(
+                            modifier = Modifier.fillMaxWidth().padding(horizontal = 28.dp),
+                            color = Color(0xFF111B2E),
+                            shape = RoundedCornerShape(22.dp),
+                            tonalElevation = 8.dp
+                        ) {
+                            Column(
+                                Modifier.fillMaxWidth().padding(24.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(16.dp)
+                            ) {
+                                Text("Natasha is getting ready", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold, color = Color(0xFFF4F7FF))
+                                Text(startupStage, style = MaterialTheme.typography.bodyMedium, color = Color(0xFFB9CBE7))
+                                if (startupProgress != null) {
+                                    LinearProgressIndicator(
+                                        progress = { startupProgress!!.coerceIn(0f, 1f) },
+                                        modifier = Modifier.fillMaxWidth(),
+                                        color = Color(0xFF6EA8FF),
+                                        trackColor = Color(0xFF263B5B)
+                                    )
+                                    Text("%.0f%%".format(startupProgress!!.coerceIn(0f, 1f) * 100f), style = MaterialTheme.typography.titleMedium, color = Color(0xFFF4F7FF))
+                                } else {
+                                    LinearProgressIndicator(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        color = Color(0xFF6EA8FF),
+                                        trackColor = Color(0xFF263B5B)
+                                    )
+                                }
+                                Text(
+                                    "The first download can take a while. Keep ForgeAI open while the model downloads and loads.",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = Color(0xFF8EA6C8)
+                                )
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -1482,8 +1550,14 @@ private const val PREFERRED_MODEL_FILE = "Qwen3-4B-Instruct-2507-Q4_K_M.gguf"
 private const val PREFERRED_MODEL_MIN_BYTES = 2_300_000_000L
 private const val PREFERRED_MODEL_MAX_BYTES = 2_800_000_000L
 
-private suspend fun ensurePreferredModel(context: Context, db: AppDatabase): ModelEntity {
+private suspend fun ensurePreferredModel(
+    context: Context,
+    db: AppDatabase,
+    onStage: (String) -> Unit,
+    onProgress: (Long, Long) -> Unit
+): ModelEntity {
     val dir = File(context.filesDir, "models").apply { mkdirs() }
+    onStage("Checking the model download source…")
     val candidate = withContext(Dispatchers.IO) {
         com.natasha.local.models.HuggingFaceModelHub
             .ggufFiles(PREFERRED_MODEL_REPO)
@@ -1504,16 +1578,19 @@ private suspend fun ensurePreferredModel(context: Context, db: AppDatabase): Mod
         require(available >= required) {
             "Natasha's Qwen3 model needs about 3 GB of free storage, including download space. Free up space and reopen ForgeAI."
         }
+        onStage("Downloading Natasha's model…")
         withContext(Dispatchers.IO) {
             com.natasha.local.models.HuggingFaceModelHub.download(
-                context, PREFERRED_MODEL_REPO, candidate
-            ) { _, _ -> }
+                context, PREFERRED_MODEL_REPO, candidate, onProgress
+            )
         }
     }
+    onStage("Verifying model file…")
     require(target.length() == candidate.sizeBytes) {
         "The downloaded Qwen3 model is incomplete. Reopen ForgeAI to retry the download."
     }
 
+    onStage("Checking model integrity…")
     val digest = sha256(target)
     val existing = db.models().all().firstOrNull { it.path == target.absolutePath }
     val model = ModelEntity(
@@ -1525,6 +1602,7 @@ private suspend fun ensurePreferredModel(context: Context, db: AppDatabase): Mod
         selected = true
     )
     db.models().clearSelection()
+    onStage("Finishing model setup…")
     db.models().save(existing?.copy(
         name = model.name,
         sizeBytes = model.sizeBytes,
