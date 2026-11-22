@@ -101,7 +101,8 @@ object PromptBuilder {
 
     private fun isLlama3(name: String): Boolean =
         name.contains("llama-3", ignoreCase = true) ||
-            name.contains("llama3", ignoreCase = true)
+            name.contains("llama3", ignoreCase = true) ||
+            name.contains("llama-3.1", ignoreCase = true)
 
     private fun aionRp(messages: List<Pair<String, String>>): String =
         buildString {
