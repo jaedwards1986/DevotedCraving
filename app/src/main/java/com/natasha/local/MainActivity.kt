@@ -516,6 +516,9 @@ private fun ProjectsScreen(projects: List<ProjectEntity>, selectedProjectId: Lon
     }
     LaunchedEffect(selectedProjectId) {
         val id = selectedProjectId
+        selectedFile = null
+        editorContent = ""
+        editorStatus = ""
         recentActivity = if (id == null) emptyList() else withContext(Dispatchers.IO) {
             ProjectActivityStore(context, id).recent(12)
         }
