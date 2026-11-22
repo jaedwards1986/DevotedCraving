@@ -7,6 +7,8 @@ import java.io.File
 import java.net.HttpURLConnection
 import java.net.URL
 import java.security.MessageDigest
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicReference
 
 data class HubModel(val id: String, val downloads: Long)
 data class HubGgufFile(val name: String, val sizeBytes: Long, val sha256: String?)
@@ -14,6 +16,13 @@ data class HubGgufFile(val name: String, val sizeBytes: Long, val sha256: String
 object HuggingFaceModelHub {
     private const val API = "https://huggingface.co/api"
     private const val MAX_MODEL_BYTES = 20L * 1024L * 1024L * 1024L
+    private val cancelled = AtomicBoolean(false)
+    private val activeConnection = AtomicReference<HttpURLConnection?>(null)
+
+    fun cancelDownload() {
+        cancelled.set(true)
+        activeConnection.getAndSet(null)?.disconnect()
+    }
 
     fun search(query: String): List<HubModel> {
         require(query.trim().length >= 2) { "Enter at least two search characters" }
@@ -61,6 +70,7 @@ object HuggingFaceModelHub {
         val encodedPath = file.name.split('/').joinToString("/") { Uri.encode(it) }
         val url = "https://huggingface.co/$modelId/resolve/main/$encodedPath?download=true"
         val partial = File(directory, safeName + ".download")
+        cancelled.set(false)
         try {
             val connection = (URL(url).openConnection() as HttpURLConnection).apply {
                 connectTimeout = 20_000
@@ -68,6 +78,7 @@ object HuggingFaceModelHub {
                 instanceFollowRedirects = true
                 setRequestProperty("User-Agent", "ForgeAI-Android/1.0")
             }
+            activeConnection.set(connection)
             try {
                 val code = connection.responseCode
                 require(code in 200..299) { "Model host returned HTTP $code. Gated models may require authentication." }
@@ -78,6 +89,7 @@ object HuggingFaceModelHub {
                         val buffer = ByteArray(1024 * 1024)
                         var total = 0L
                         while (true) {
+                            check(!cancelled.get()) { "Download cancelled" }
                             val count = input.read(buffer)
                             if (count < 0) break
                             total += count
@@ -95,6 +107,7 @@ object HuggingFaceModelHub {
                 require(partial.renameTo(destination)) { "Unable to move verified model into storage" }
                 return destination
             } finally {
+                activeConnection.compareAndSet(connection, null)
                 connection.disconnect()
             }
         } catch (failure: Throwable) {

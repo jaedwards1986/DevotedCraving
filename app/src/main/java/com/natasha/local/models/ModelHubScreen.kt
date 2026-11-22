@@ -4,6 +4,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
+import android.os.Handler
+import android.os.Looper
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -23,6 +25,7 @@ fun ModelHubScreen(onDownloaded: (File) -> Unit) {
     var files by remember { mutableStateOf(emptyList<HubGgufFile>()) }
     var busy by remember { mutableStateOf(false) }
     var progress by remember { mutableFloatStateOf(0f) }
+    var pendingDownload by remember { mutableStateOf<HubGgufFile?>(null) }
     var status by remember { mutableStateOf("Search public Hugging Face GGUF repositories. Gated repositories may require an account and are not downloadable anonymously.") }
 
     Column(Modifier.fillMaxWidth().padding(top = 18.dp)) {
@@ -58,6 +61,7 @@ fun ModelHubScreen(onDownloaded: (File) -> Unit) {
         ) { Text("Search catalog") }
         if (busy) LinearProgressIndicator(Modifier.fillMaxWidth())
         Text(status, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        if (busy && progress > 0f) OutlinedButton(onClick = { HuggingFaceModelHub.cancelDownload() }) { Text("Cancel download") }
         Spacer(Modifier.height(8.dp))
         LazyColumn(
             modifier = Modifier.fillMaxWidth().heightIn(max = 260.dp),
@@ -105,26 +109,7 @@ fun ModelHubScreen(onDownloaded: (File) -> Unit) {
                             )
                             Button(
                                 enabled = !busy && file.sizeBytes > 0,
-                                onClick = {
-                                    busy = true
-                                    progress = 0f
-                                    status = "Downloading ${file.name}…"
-                                    scope.launch {
-                                        try {
-                                            val downloaded = withContext(Dispatchers.IO) {
-                                                HuggingFaceModelHub.download(context, selected.id, file) { done, total ->
-                                                    progress = if (total > 0) done.toFloat() / total.toFloat() else 0f
-                                                }
-                                            }
-                                            status = "Downloaded and verified ${downloaded.name}. Adding it to your models…"
-                                            onDownloaded(downloaded)
-                                        } catch (failure: Throwable) {
-                                            status = failure.message ?: "Model download failed"
-                                        } finally {
-                                            busy = false
-                                        }
-                                    }
-                                }
+                                onClick = { pendingDownload = file }
                             ) { Text("Download into ForgeAI") }
                         }
                     }
@@ -134,6 +119,40 @@ fun ModelHubScreen(onDownloaded: (File) -> Unit) {
         if (busy && progress > 0f) {
             LinearProgressIndicator(progress = { progress }, modifier = Modifier.fillMaxWidth())
             Text("${(progress * 100).toInt()}%", style = MaterialTheme.typography.bodySmall)
+        }
+        pendingDownload?.let { file ->
+            AlertDialog(
+                onDismissRequest = { pendingDownload = null },
+                title = { Text("Review model download") },
+                text = { Text("Download " + file.name + "? Check the model card and license at the source repository before use. ForgeAI does not grant rights to third-party model files.") },
+                confirmButton = {
+                    TextButton(onClick = {
+                        val model = selectedModel ?: return@TextButton
+                        pendingDownload = null
+                        busy = true
+                        progress = 0f
+                        status = "Downloading " + file.name + "…"
+                        scope.launch {
+                            try {
+                                val downloaded = withContext(Dispatchers.IO) {
+                                    HuggingFaceModelHub.download(context, model.id, file) { done, total ->
+                                        val value = if (total > 0) done.toFloat() / total.toFloat() else 0f
+                                        Handler(Looper.getMainLooper()).post { progress = value }
+                                    }
+                                }
+                                status = "Downloaded " + downloaded.name + ". Adding it to your models…"
+                                onDownloaded(downloaded)
+                            } catch (failure: Throwable) {
+                                status = failure.message ?: "Model download failed"
+                            } finally {
+                                busy = false
+                                progress = 0f
+                            }
+                        }
+                    }) { Text("Download") }
+                },
+                dismissButton = { TextButton(onClick = { pendingDownload = null }) { Text("Not now") } }
+            )
         }
     }
 }
