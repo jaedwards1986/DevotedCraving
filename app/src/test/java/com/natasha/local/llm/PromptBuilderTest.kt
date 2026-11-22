@@ -11,7 +11,7 @@ import org.junit.Test
 class PromptBuilderTest {
     @Test
     fun coreIdentitySurvivesNewChatsAndEverySupportedTemplate() {
-        val models = listOf("Aion RP Llama 3.1 8B", "Qwen3-8B", "Llama-3.1-8B", "generic-local-model")
+        val models = listOf("Dirty Harry Llama-3.1 8B", "Aion RP Llama 3.1 8B", "Qwen3-8B", "Llama-3.1-8B", "generic-local-model")
 
         models.forEach { model ->
             val prompt = PromptBuilder.build(
@@ -58,6 +58,23 @@ class PromptBuilderTest {
         assertTrue(prompt.contains("__USER__:\nHello"))
         assertTrue(prompt.contains("__ASSISTANT__:\nPrevious reply"))
         assertTrue(prompt.endsWith("__ASSISTANT__:\n"))
+    }
+
+
+    @Test
+    fun dirtyHarryUsesTheStandardLlama3ChatTemplate() {
+        val prompt = PromptBuilder.build(
+            profile = CharacterProfileEntity(),
+            memories = emptyList(),
+            history = listOf(MessageEntity(conversationId = 1, role = "assistant", content = "Previous reply")),
+            userText = "Hello",
+            modelName = "Dirty Harry Llama-3.1 8B"
+        )
+        assertTrue(prompt.startsWith("<|begin_of_text|>"))
+        assertTrue(prompt.contains("<|start_header_id|>system<|end_header_id|>"))
+        assertTrue(prompt.contains("<|start_header_id|>user<|end_header_id|>\\n\\nHello"))
+        assertTrue(prompt.contains("Previous reply<|eot_id|>"))
+        assertTrue(prompt.endsWith("<|start_header_id|>assistant<|end_header_id|>\\n\\n"))
     }
 
     @Test
