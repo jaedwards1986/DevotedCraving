@@ -22,7 +22,7 @@ class ProjectWorkspaceTest {
     fun createRefusesToOverwriteAnExistingFile() {
         val workspace = ProjectWorkspace(Files.createTempDirectory("forgeai-create").toFile())
         workspace.create("src/Main.kt", "original")
-        assertThrows(IllegalArgumentException::class.java) {
+        assertThrows(java.nio.file.FileAlreadyExistsException::class.java) {
             workspace.create("src/Main.kt", "replacement")
         }
         assertEquals("original", workspace.read("src/Main.kt"))
