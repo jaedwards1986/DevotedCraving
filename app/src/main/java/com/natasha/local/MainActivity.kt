@@ -153,11 +153,26 @@ fun NatashaApp() {
                 startupStage = "Loading model into memory…"
                 startupProgress = null
                 status = "Loading " + selected.name + " into memory…"
-                val ok = withContext(Dispatchers.Default) {
-                    engine.load(selected.path, contextSize = 2048, threads = 4)
+                val ok = try {
+                    withContext(Dispatchers.Default) {
+                        engine.load(selected.path, contextSize = 2048, threads = 4)
+                    }
+                } catch (cancelled: CancellationException) {
+                    throw cancelled
+                } catch (failure: Throwable) {
+                    // Native library/linker failures must not take down the entire Compose app.
+                    // Keep the chat UI available and expose the actual reason in the status line.
+                    status = "Model load failed: " + (failure.message ?: failure.javaClass.simpleName)
+                    startupStage = status
+                    false
                 }
-                status = if (ok) "Ready · " + selected.name else "Model failed to load"
-                startupStage = status
+                if (ok) {
+                    status = "Ready · " + selected.name
+                    startupStage = status
+                } else if (!status.startsWith("Model load failed:")) {
+                    status = "Model failed to load. Open Models to retry or choose another GGUF."
+                    startupStage = status
+                }
             } else if (status.startsWith("Ready")) {
                 status = "Ready · import a GGUF model"
                 startupStage = status
