@@ -12,6 +12,11 @@ android {
         ndk { abiFilters += "arm64-v8a" }
         externalNativeBuild { cmake { cppFlags += "-std=c++17" } }
     }
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+    kotlinOptions { jvmTarget = "17" }
     buildTypes { release { isMinifyEnabled=false } }
     buildFeatures { compose=true; buildConfig=true }
     externalNativeBuild { cmake { path=file("src/main/cpp/CMakeLists.txt") } }
