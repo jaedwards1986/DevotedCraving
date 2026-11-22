@@ -19,6 +19,7 @@ android {
     kotlinOptions { jvmTarget = "17" }
     buildTypes { release { isMinifyEnabled=false } }
     buildFeatures { compose=true; buildConfig=true }
+    androidResources { noCompress += "gguf" }
     externalNativeBuild { cmake { path=file("src/main/cpp/CMakeLists.txt") } }
 }
 dependencies {
