@@ -6,11 +6,11 @@ import com.natasha.local.data.MessageEntity
 import com.natasha.local.data.NatashaDefaults
 
 object PromptBuilder {
-    private const val MAX_PROMPT_CHARS = 12_000
-    private const val MAX_MEMORY_CHARS = 1_500
-    private const val MAX_PROJECT_CHARS = 2_500
-    private const val MAX_HISTORY_CHARS = 2_500
-    private const val MAX_HISTORY_MESSAGES = 24
+    private const val MAX_PROMPT_CHARS = 6_000
+    private const val MAX_MEMORY_CHARS = 900
+    private const val MAX_PROJECT_CHARS = 1_000
+    private const val MAX_HISTORY_CHARS = 1_200
+    private const val MAX_HISTORY_MESSAGES = 12
 
     fun build(
         @Suppress("UNUSED_PARAMETER") profile: CharacterProfileEntity,
