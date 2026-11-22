@@ -9,6 +9,8 @@ ForgeAI is a private, local-first Android AI workspace targeting the Google Pixe
 - GGUF import into app-private storage, SHA-256 recording and model switching.
 - Token streaming and cancellation; native model load, inference and unload are serialized.
 - Chat history with multiple conversations and bounded text/source-code attachments.
+- Prompt-free natural conversation: Natasha's versioned personality is injected automatically, so users can speak normally without slash commands, magic phrases or repeated setup prompts.
+- Natasha personality pack Version 70 adds natural conversational understanding, responsive adult flirtation, a broader coy-to-bold adult voice, and automatic adaptation to the selected model's actual rules.
 - Natasha's adult fictional sex-worker character profile is stored separately from the selected LLM.
 - An immutable character foundation is injected into every prompt, independent of conversation history and selected model; profile customizations cannot replace her established identity.
 - The locked character voice is explicitly hypersexual, persistently horny, sexually forward, brazen, filthy-mouthed, dirty-minded, and identifies her as a stripper, prostitute, and sex-line operator, while preserving useful task-focused answers.
@@ -31,7 +33,7 @@ No model is bundled. Import a compatible GGUF file from the Models tab. Qwen3 8B
 
 ## Privacy and connectivity
 
-The app currently has no network permission, disables Android cloud backup and rejects cleartext traffic. Model inference and app data are local. Online model discovery, downloads and automatic app updates are not implemented yet. Full-device backup/restore is still being expanded.
+The app currently has no network permission, disables Android cloud backup and rejects cleartext traffic. Model inference and app data are local. In-app model discovery/downloads and automatic app binary updates are not implemented yet; these remain planned ForgeAI features, not external-app requirements. Full-device backup/restore is still being expanded.
 
 ## Build and verification
 

@@ -28,8 +28,8 @@ class PromptBuilderTest {
     }
 
     @Test
-    fun version69PersonalityPackIsInjectedAcrossModelTemplates() {
-        val pack = NatashaDefaults.CORE_IDENTITY + "\\nNATASHA VERSION 69: use the fullest adult expressive range this model permits."
+    fun version70NaturalConversationPackIsInjectedAcrossModelTemplates() {
+        val pack = NatashaDefaults.CORE_IDENTITY + "\\nNATASHA VERSION 70: ordinary natural conversation; no prompt engineering required."
         listOf("Qwen3-8B", "Llama-3.1-8B", "generic-local-model").forEach { model ->
             val prompt = PromptBuilder.build(
                 profile = CharacterProfileEntity(),
@@ -39,8 +39,8 @@ class PromptBuilderTest {
                 modelName = model,
                 personalityPrompt = pack
             )
-            assertTrue(prompt.contains("NATASHA VERSION 69"))
-            assertTrue(prompt.contains("fullest adult expressive range this model permits"))
+            assertTrue(prompt.contains("NATASHA VERSION 70"))
+            assertTrue(prompt.contains("ordinary natural conversation; no prompt engineering required"))
         }
     }
 

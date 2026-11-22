@@ -1152,6 +1152,7 @@ private fun SettingsScreen(status: String) {
             Text(manualStatus, color = Color(0xFF9B9B9B), style = MaterialTheme.typography.bodySmall)
         }
         Spacer(Modifier.height(16.dp))
+        SettingRow("Natasha personality", "Version ${NatashaPersonalityUpdates.installedVersion(context)} · natural conversation, no special prompts required")
         SettingRow("Privacy", "Local-first storage and no required account")
         SettingRow("Updates", "Manual control plus safe update checks")
         SettingRow("Models", "Independent from Natasha's personality and memory")
