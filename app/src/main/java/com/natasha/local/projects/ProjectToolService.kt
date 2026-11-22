@@ -36,6 +36,12 @@ class ProjectToolService(private val context: Context) {
         WorkspaceResult(ok = true, value = ProjectWorkspace(context, projectId).read(relativePath))
     }.getOrElse { WorkspaceResult(false, error = it.message ?: "Unable to read project file") }
 
+    fun createFile(projectId: Long, relativePath: String, content: String): WorkspaceResult<Unit> = runCatching {
+        ProjectWorkspace(context, projectId).create(relativePath, content)
+        runCatching { ProjectActivityStore(context, projectId).record("CREATE", relativePath) }
+        WorkspaceResult(ok = true, value = Unit)
+    }.getOrElse { WorkspaceResult(false, error = it.message ?: "Unable to create project file") }
+
     fun writeFile(projectId: Long, relativePath: String, content: String): WorkspaceResult<Unit> = runCatching {
         val workspace = ProjectWorkspace(context, projectId)
         val action = if (workspace.exists(relativePath)) "UPDATE" else "CREATE"

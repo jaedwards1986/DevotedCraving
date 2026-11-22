@@ -19,6 +19,16 @@ class ProjectWorkspaceTest {
     }
 
     @Test
+    fun createRefusesToOverwriteAnExistingFile() {
+        val workspace = ProjectWorkspace(Files.createTempDirectory("forgeai-create").toFile())
+        workspace.create("src/Main.kt", "original")
+        assertThrows(IllegalArgumentException::class.java) {
+            workspace.create("src/Main.kt", "replacement")
+        }
+        assertEquals("original", workspace.read("src/Main.kt"))
+    }
+
+    @Test
     fun traversalOutsideWorkspaceIsRejected() {
         val workspace = ProjectWorkspace(Files.createTempDirectory("natasha-workspace").toFile())
 

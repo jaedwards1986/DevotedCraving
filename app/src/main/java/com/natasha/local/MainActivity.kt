@@ -971,7 +971,7 @@ private fun ProjectsScreen(projects: List<ProjectEntity>, selectedProjectId: Lon
                     val content = newFileContent
                     if (id != null && path.isNotBlank()) {
                         scope.launch {
-                            val result = withContext(Dispatchers.IO) { tools.writeFile(id, path, content) }
+                            val result = withContext(Dispatchers.IO) { tools.createFile(id, path, content) }
                             if (latestSelectedProjectId == id) {
                                 editorStatus = if (result.ok) "Created $path" else result.error.orEmpty()
                                 if (result.ok) {

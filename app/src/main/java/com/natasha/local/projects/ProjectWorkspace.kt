@@ -61,6 +61,22 @@ class ProjectWorkspace private constructor(
 
     fun exists(relativePath: String): Boolean = resolveFile(relativePath).exists()
 
+    /** Creates a new file without ever replacing an existing destination. */
+    fun create(relativePath: String, content: String) {
+        val bytes = content.toByteArray(StandardCharsets.UTF_8)
+        require(bytes.size <= MAX_WRITE_BYTES) { "File is larger than the 2 MB write limit" }
+        val file = resolveFile(relativePath)
+        file.parentFile?.mkdirs()
+        val checkedFile = resolveFile(relativePath)
+        val temp = File(checkedFile.parentFile, ".${checkedFile.name}.${System.nanoTime()}.tmp")
+        try {
+            temp.outputStream().buffered().use { it.write(bytes) }
+            Files.move(temp.toPath(), checkedFile.toPath())
+        } finally {
+            if (temp.exists()) temp.delete()
+        }
+    }
+
     /** Renames or moves a file within the workspace. Existing destinations are never overwritten. */
     fun rename(sourcePath: String, destinationPath: String) {
         val source = resolveFile(sourcePath)
