@@ -3,6 +3,8 @@
     <application
         android:theme="@style/Theme.ForgeAI"
         android:label="ForgeAI"
+        android:icon="@drawable/ic_launcher"
+        android:roundIcon="@drawable/ic_launcher"
         android:allowBackup="false"
         android:usesCleartextTraffic="false"
         android:supportsRtl="true">
