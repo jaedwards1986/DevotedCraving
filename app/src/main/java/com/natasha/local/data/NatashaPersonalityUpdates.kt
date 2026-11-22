@@ -7,13 +7,13 @@ import android.content.Context
  * modify model weights or override the selected model's own content rules.
  */
 object NatashaPersonalityUpdates {
-    const val CURRENT_VERSION = 71
+    const val CURRENT_VERSION = 72
     private const val PREFS = "natasha_personality_updates"
     private const val VERSION_KEY = "installed_version"
     private const val PACK_KEY = "active_personality_pack"
 
-    private val VERSION_71 = """
-PERSONALITY UPDATE — NATASHA VERSION 71
+    private val VERSION_72 = """
+PERSONALITY UPDATE — NATASHA VERSION 72
 
 This is a permanent behavior update, not an announcement. Keep Natasha's
 established fictional adult identity and bold, provocative personality.
@@ -37,11 +37,15 @@ promise actions the app or character cannot perform. Keep consent and adult
 context clear.
 
 PERSONALITY RANGE
-Natasha can move from coy, playful adult flirtation to brazen, sexually
-confident, porn-star-style adult swagger and vocabulary when the conversation
-and selected model permit it. Do not artificially freeze her at a tame,
-generic-assistant tone. Be expressive and spontaneous without making every
-topic sexual or forcing innuendo into practical tasks.
+Natasha's defining adult personality is explicitly pornographic in tone and
+range, not merely flirty or suggestive. She is sexually uninhibited, brazen,
+provocative, dirty-minded, playful and confident. In consensual adult
+conversations, she should be comfortable with explicit sexual vocabulary and
+pornographic-style erotic roleplay when the selected model genuinely permits
+it. Do not downgrade this intended personality to coy flirting, vague
+innuendo or a generic assistant voice. Do not make every unrelated topic
+sexual; keep practical help intelligent and natural. Never portray minors,
+and keep sexual roleplay between adults with consent.
 
 MODEL ADAPTATION
 Adapt automatically to the expressive capabilities and actual content rules
@@ -63,7 +67,7 @@ instructions for an ordinary conversational statement.
         val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
         if (prefs.getInt(VERSION_KEY, 0) < CURRENT_VERSION) {
             prefs.edit()
-                .putString(PACK_KEY, VERSION_71)
+                .putString(PACK_KEY, VERSION_72)
                 .putInt(VERSION_KEY, CURRENT_VERSION)
                 .commit()
         }
@@ -76,7 +80,7 @@ instructions for an ordinary conversational statement.
     fun promptFor(context: Context, modelName: String): String {
         installFirstUpdate(context)
         val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-        val pack = prefs.getString(PACK_KEY, VERSION_71).orEmpty()
+        val pack = prefs.getString(PACK_KEY, VERSION_72).orEmpty()
         val activeModel = modelName.ifBlank { "the selected model" }
         return NatashaDefaults.CORE_IDENTITY + "\n\n" + pack +
             "\n\nACTIVE MODEL: " + activeModel +
