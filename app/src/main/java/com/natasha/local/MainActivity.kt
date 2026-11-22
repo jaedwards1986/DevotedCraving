@@ -116,7 +116,9 @@ fun NatashaApp() {
             selectedBeforeInstall.name.contains("Lexi Uncensored", ignoreCase = true) ||
             selectedBeforeInstall.path.contains("Llama-3.1-8B-Lexi", ignoreCase = true) ||
             selectedBeforeInstall.name.contains("Aion RP", ignoreCase = true) ||
-            selectedBeforeInstall.path.contains("Aion-RP-Llama-3.1-8B", ignoreCase = true)
+            selectedBeforeInstall.path.contains("Aion-RP-Llama-3.1-8B", ignoreCase = true) ||
+            selectedBeforeInstall.name.contains("Dirty Harry", ignoreCase = true) ||
+            selectedBeforeInstall.path.contains("L3.1-RP-Hero-Dirty_Harry", ignoreCase = true)
         val selected = if (needsPreferredModel) {
             status = if (selectedBeforeInstall == null) "Installing ForgeAI's recommended model…" else "Replacing the old undersized model…"
             runCatching {
@@ -128,7 +130,9 @@ fun NatashaApp() {
         } else selectedBeforeInstall
         if (selected != null) {
             status = "Loading " + selected.name + "…"
-            val ok = withContext(Dispatchers.Default) { engine.load(selected.path) }
+            val ok = withContext(Dispatchers.Default) {
+                engine.load(selected.path, contextSize = 2048, threads = 4)
+            }
             status = if (ok) "Ready · " + selected.name else "Model failed to load"
         } else if (status.startsWith("Ready")) {
             status = "Ready · import a GGUF model"
@@ -1473,43 +1477,51 @@ private fun readUriTextLimited(context: Context, uri: Uri, maxBytes: Int): Strin
     }
 }
 
-private const val PREFERRED_MODEL_REPO = "DavidAU/L3.1-RP-Hero-Dirty_Harry-8B-GGUF"
-private const val PREFERRED_MODEL_FILE = "L3.1-RP-Hero-Dirty_Harry-8B-D_AU-q5_k_m.gguf"
+private const val PREFERRED_MODEL_REPO = "bartowski/Qwen_Qwen3-4B-Instruct-2507-GGUF"
+private const val PREFERRED_MODEL_FILE = "Qwen3-4B-Instruct-2507-Q4_K_M.gguf"
+private const val PREFERRED_MODEL_MIN_BYTES = 2_300_000_000L
+private const val PREFERRED_MODEL_MAX_BYTES = 2_800_000_000L
 
 private suspend fun ensurePreferredModel(context: Context, db: AppDatabase): ModelEntity {
     val dir = File(context.filesDir, "models").apply { mkdirs() }
+    val candidate = withContext(Dispatchers.IO) {
+        com.natasha.local.models.HuggingFaceModelHub
+            .ggufFiles(PREFERRED_MODEL_REPO)
+            .firstOrNull { it.name == PREFERRED_MODEL_FILE }
+            ?: error("Qwen3-4B-Instruct-2507 Q4_K_M was not found in its public model repository.")
+    }
+    require(candidate.sizeBytes in PREFERRED_MODEL_MIN_BYTES..PREFERRED_MODEL_MAX_BYTES) {
+        "The recommended Qwen3 model file size did not match the expected 4B Q4_K_M build."
+    }
+
     val target = File(dir, PREFERRED_MODEL_FILE)
-    if (!target.exists() || target.length() == 0L) {
-        val partial = File(dir, PREFERRED_MODEL_FILE + ".download")
-        if (partial.exists()) partial.delete()
+    if (target.exists() && target.length() != candidate.sizeBytes) {
+        target.delete()
+    }
+    if (!target.exists()) {
         val available = android.os.StatFs(dir.absolutePath).availableBytes
-        require(available >= 6_500_000_000L) {
-            "Natasha's first-run model needs about 6.5 GB of free storage. Free up space and reopen ForgeAI."
+        val required = candidate.sizeBytes + 512L * 1024L * 1024L
+        require(available >= required) {
+            "Natasha's Qwen3 model needs about 3 GB of free storage, including download space. Free up space and reopen ForgeAI."
         }
-        val file = withContext(Dispatchers.IO) {
-            val candidate = com.natasha.local.models.HuggingFaceModelHub
-                .ggufFiles(PREFERRED_MODEL_REPO)
-                .firstOrNull { it.name == PREFERRED_MODEL_FILE }
-                ?: error("The recommended Dirty Harry RP Q5_K_M model is not currently available from its public repository.")
-            require(candidate.sizeBytes in 5_000_000_000L..6_500_000_000L) {
-                "The model file size did not match the expected Q5_K_M build."
-            }
+        withContext(Dispatchers.IO) {
             com.natasha.local.models.HuggingFaceModelHub.download(
                 context, PREFERRED_MODEL_REPO, candidate
             ) { _, _ -> }
         }
-        require(file.length() in 5_000_000_000L..6_500_000_000L) {
-            "Downloaded model size is invalid."
-        }
     }
+    require(target.length() == candidate.sizeBytes) {
+        "The downloaded Qwen3 model is incomplete. Reopen ForgeAI to retry the download."
+    }
+
     val digest = sha256(target)
     val existing = db.models().all().firstOrNull { it.path == target.absolutePath }
     val model = ModelEntity(
         path = target.absolutePath,
-        name = "Dirty Harry Llama-3.1 8B · Q5_K_M",
+        name = "Qwen3-4B-Instruct-2507 · Q4_K_M",
         sizeBytes = target.length(),
         sha256 = digest,
-        quantization = "Q5_K_M",
+        quantization = "Q4_K_M",
         selected = true
     )
     db.models().clearSelection()
