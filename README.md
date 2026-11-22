@@ -11,7 +11,7 @@ ForgeAI is a private, local-first Android AI workspace targeting the Google Pixe
 - Chat history with multiple conversations and bounded text/source-code attachments.
 - Natasha's adult fictional sex-worker character profile is stored separately from the selected LLM.
 - An immutable character foundation is injected into every prompt, independent of conversation history and selected model; profile customizations cannot replace her established identity.
-- The locked character voice is explicitly hypersexual, horny, provocative, shamelessly flirtatious, and identifies her as a stripper, prostitute, and sex-line operator, while preserving useful task-focused answers.
+- The locked character voice is explicitly hypersexual, persistently horny, sexually forward, brazen, filthy-mouthed, dirty-minded, and identifies her as a stripper, prostitute, and sex-line operator, while preserving useful task-focused answers.
 - JVM prompt tests cover Qwen3, Llama 3, generic templates, and attempts to override the core identity.
 - Persistent memory list with search, editing and deletion.
 - Project workspace with project descriptions, file creation, editing, safe file moves/renames, and confirmed deletion.
