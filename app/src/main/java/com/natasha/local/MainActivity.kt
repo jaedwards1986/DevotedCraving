@@ -1083,7 +1083,34 @@ private fun MemoryScreen(memories: List<MemoryEntity>, db: AppDatabase, scope: C
     var query by rememberSaveable { mutableStateOf("") }
     var editingId by rememberSaveable { mutableStateOf<Long?>(null) }
     var draft by rememberSaveable { mutableStateOf("") }
+    var pendingImport by remember { mutableStateOf<MemoryArchive?>(null) }
+    var archiveStatus by rememberSaveable { mutableStateOf("") }
+    var showClearConfirmation by rememberSaveable { mutableStateOf(false) }
     val editing = memories.firstOrNull { it.id == editingId }
+    val exportLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        ActivityResultContracts.CreateDocument("application/json")
+    ) { uri ->
+        if (uri != null) scope.launch {
+            runCatching {
+                val json = MemoryArchiveCodec.encode(db.messages().all(), db.memories().all())
+                context.contentResolver.openOutputStream(uri)?.bufferedWriter()?.use { it.write(json) }
+                    ?: error("Unable to write archive")
+                archiveStatus = "Archive exported."
+            }.onFailure { archiveStatus = "Export failed: " + (it.message ?: "unknown error") }
+        }
+    }
+    val importLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        if (uri != null) scope.launch {
+            runCatching {
+                val json = context.contentResolver.openInputStream(uri)?.bufferedReader()?.use { it.readText() }
+                    ?: error("Unable to read archive")
+                require(json.length <= 50_000_000) { "Archive exceeds the 50 MB safety limit" }
+                pendingImport = MemoryArchiveCodec.decode(json)
+            }.onFailure { archiveStatus = "Import failed: " + (it.message ?: "invalid archive") }
+        }
+    }
 
     val visible = if (query.isBlank()) memories else memories.filter {
         it.text.contains(query, ignoreCase = true) || it.kind.contains(query, ignoreCase = true)
@@ -1109,9 +1136,14 @@ private fun MemoryScreen(memories: List<MemoryEntity>, db: AppDatabase, scope: C
                 }
             }) { Text("Add memory") }
             Spacer(Modifier.width(8.dp))
-            OutlinedButton(onClick = {
-                scope.launch { db.memories().clear(); refresh() }
-            }) { Text("Clear all") }
+            OutlinedButton(onClick = { showClearConfirmation = true }) { Text("Clear all") }
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            OutlinedButton(onClick = { exportLauncher.launch("forgeai-memory-archive.json") }) { Text("Export archive") }
+            OutlinedButton(onClick = { importLauncher.launch(arrayOf("application/json", "text/json")) }) { Text("Import archive") }
+        }
+        if (archiveStatus.isNotBlank()) {
+            Text(archiveStatus, color = Color(0xFF9B9B9B), style = MaterialTheme.typography.bodySmall)
         }
         Spacer(Modifier.height(12.dp))
         LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -1147,6 +1179,40 @@ private fun MemoryScreen(memories: List<MemoryEntity>, db: AppDatabase, scope: C
         }
     }
 
+    if (showClearConfirmation) {
+        AlertDialog(
+            onDismissRequest = { showClearConfirmation = false },
+            title = { Text("Delete all saved memories?") },
+            text = { Text("This permanently deletes the memory archive from this device. Export a backup first if you may need it.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    scope.launch { db.memories().clear(); showClearConfirmation = false; refresh() }
+                }) { Text("Delete all") }
+            },
+            dismissButton = { TextButton(onClick = { showClearConfirmation = false }) { Text("Cancel") } }
+        )
+    }
+    pendingImport?.let { archive ->
+        AlertDialog(
+            onDismissRequest = { pendingImport = null },
+            title = { Text("Restore ForgeAI archive?") },
+            text = { Text("Import ${archive.messages.size} messages and ${archive.memories.size} memories. Existing conversations stay in place; duplicate memories are skipped.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    scope.launch {
+                        val existing = db.memories().all().map { it.text.trim().lowercase() }.toMutableSet()
+                        val additions = archive.memories.filter { existing.add(it.text.trim().lowercase()) }
+                        if (archive.messages.isNotEmpty()) db.messages().insertAll(archive.messages)
+                        if (additions.isNotEmpty()) db.memories().insertAll(additions)
+                        pendingImport = null
+                        archiveStatus = "Archive restored."
+                        refresh()
+                    }
+                }) { Text("Restore") }
+            },
+            dismissButton = { TextButton(onClick = { pendingImport = null }) { Text("Cancel") } }
+        )
+    }
     editing?.let { memory ->
         AlertDialog(
             onDismissRequest = { editingId = null },

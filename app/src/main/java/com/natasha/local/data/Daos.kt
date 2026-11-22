@@ -5,6 +5,8 @@ import androidx.room.*
 @Dao interface MessageDao {
     @Query("SELECT * FROM messages WHERE conversationId=:id ORDER BY createdAt")
     suspend fun forConversation(id:Long):List<MessageEntity>
+    @Query("SELECT * FROM messages ORDER BY createdAt") suspend fun all():List<MessageEntity>
+    @Insert suspend fun insertAll(items:List<MessageEntity>):List<Long>
     @Query("SELECT conversationId FROM messages GROUP BY conversationId ORDER BY MAX(createdAt) DESC")
     suspend fun conversationIds():List<Long>
     @Query("SELECT * FROM messages WHERE conversationId=:id ORDER BY createdAt DESC LIMIT 1")
@@ -20,6 +22,7 @@ import androidx.room.*
     @Query("SELECT * FROM memories WHERE text LIKE '%' || :q || '%' ORDER BY updatedAt DESC") suspend fun search(q:String):List<MemoryEntity>
     @Query("SELECT * FROM memories WHERE id=:id LIMIT 1") suspend fun get(id:Long):MemoryEntity?
     @Insert suspend fun insert(m:MemoryEntity):Long
+    @Insert suspend fun insertAll(items:List<MemoryEntity>):List<Long>
     @Update suspend fun update(m:MemoryEntity)
     @Delete suspend fun delete(m:MemoryEntity)
     @Query("DELETE FROM memories") suspend fun clear():Int
