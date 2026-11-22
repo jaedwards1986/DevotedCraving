@@ -117,7 +117,7 @@ fun NatashaApp() {
             if (latestConversation != null) conversationId = latestConversation
             refresh()
             val selectedBeforeInstall = db.models().selected()
-            val needsPreferredModel = selectedBeforeInstall == null ||
+            val needsPreferredModel = selectedBeforeInstall == null || !File(selectedBeforeInstall.path).isFile ||
                 selectedBeforeInstall.name.contains("Llama 3.2 1B", ignoreCase = true) ||
                 selectedBeforeInstall.path.contains("llama-3.2-1b", ignoreCase = true) ||
                 selectedBeforeInstall.name.contains("Lexi Uncensored", ignoreCase = true) ||
@@ -127,7 +127,7 @@ fun NatashaApp() {
                 selectedBeforeInstall.name.contains("Dirty Harry", ignoreCase = true) ||
                 selectedBeforeInstall.path.contains("L3.1-RP-Hero-Dirty_Harry", ignoreCase = true)
             val selected = if (needsPreferredModel) {
-                status = "Setting up Natasha's recommended model…"
+                status = "Preparing Natasha's included model…"
                 runCatching {
                     withContext(Dispatchers.IO) {
                         ensurePreferredModel(
@@ -135,9 +135,9 @@ fun NatashaApp() {
                             onStage = { stage -> startupStage = stage; status = stage; startupProgress = null },
                             onProgress = { downloaded, total ->
                                 startupProgress = if (total > 0L) downloaded.toFloat() / total.toFloat() else null
-                                startupStage = if (total > 0L) "Downloading model · " +
+                                startupStage = if (total > 0L) "Installing included model · " +
                                     "%.0f".format(downloaded.toDouble() * 100.0 / total.toDouble()) + "%"
-                                    else "Downloading model…"
+                                    else "Preparing included model…"
                                 status = startupStage
                             }
                         )
@@ -1560,10 +1560,10 @@ private fun readUriTextLimited(context: Context, uri: Uri, maxBytes: Int): Strin
     }
 }
 
-private const val PREFERRED_MODEL_REPO = "bartowski/Qwen_Qwen3-4B-Instruct-2507-GGUF"
-private const val PREFERRED_MODEL_FILE = "Qwen3-4B-Instruct-2507-Q4_K_M.gguf"
-private const val PREFERRED_MODEL_MIN_BYTES = 2_300_000_000L
-private const val PREFERRED_MODEL_MAX_BYTES = 2_800_000_000L
+private const val PREFERRED_MODEL_FILE = "Qwen3-4B-Instruct-2507-IQ3_M.gguf"
+private const val PREFERRED_MODEL_ASSET = "models/$PREFERRED_MODEL_FILE"
+private const val PREFERRED_MODEL_MIN_BYTES = 1_850_000_000L
+private const val PREFERRED_MODEL_MAX_BYTES = 2_050_000_000L
 
 private suspend fun ensurePreferredModel(
     context: Context,
@@ -1572,52 +1572,68 @@ private suspend fun ensurePreferredModel(
     onProgress: (Long, Long) -> Unit
 ): ModelEntity {
     val dir = File(context.filesDir, "models").apply { mkdirs() }
-    onStage("Checking the model download source…")
-    val candidate = withContext(Dispatchers.IO) {
-        com.natasha.local.models.HuggingFaceModelHub
-            .ggufFiles(PREFERRED_MODEL_REPO)
-            .firstOrNull { it.name == PREFERRED_MODEL_FILE }
-            ?: error("Qwen3-4B-Instruct-2507 Q4_K_M was not found in its public model repository.")
+    val expectedSize = context.assets.openFd(PREFERRED_MODEL_ASSET).use { it.length }
+    require(expectedSize in PREFERRED_MODEL_MIN_BYTES..PREFERRED_MODEL_MAX_BYTES) {
+        "The bundled Qwen3 4B model asset is missing or has an unexpected size."
     }
-    require(candidate.sizeBytes in PREFERRED_MODEL_MIN_BYTES..PREFERRED_MODEL_MAX_BYTES) {
-        "The recommended Qwen3 model file size did not match the expected 4B Q4_K_M build."
-    }
-
     val target = File(dir, PREFERRED_MODEL_FILE)
-    if (target.exists() && target.length() != candidate.sizeBytes) {
-        target.delete()
-    }
+    if (target.exists() && target.length() != expectedSize) target.delete()
+
     if (!target.exists()) {
         val available = android.os.StatFs(dir.absolutePath).availableBytes
-        val required = candidate.sizeBytes + 512L * 1024L * 1024L
+        val required = expectedSize + 512L * 1024L * 1024L
         require(available >= required) {
-            "Natasha's Qwen3 model needs about 3 GB of free storage, including download space. Free up space and reopen ForgeAI."
+            "ForgeAI needs about 2.5 GB of free storage to prepare its included model. Free up storage and reopen ForgeAI."
         }
-        onStage("Downloading Natasha's model…")
-        withContext(Dispatchers.IO) {
-            com.natasha.local.models.HuggingFaceModelHub.download(
-                context, PREFERRED_MODEL_REPO, candidate, onProgress
-            )
+        onStage("Preparing the model included with ForgeAI…")
+        val partial = File(dir, "$PREFERRED_MODEL_FILE.installing")
+        try {
+            context.assets.open(PREFERRED_MODEL_ASSET).buffered().use { input ->
+                partial.outputStream().buffered().use { output ->
+                    val buffer = ByteArray(1024 * 1024)
+                    var copied = 0L
+                    while (true) {
+                        val count = input.read(buffer)
+                        if (count < 0) break
+                        copied += count
+                        require(copied <= expectedSize) { "Bundled model asset exceeded its expected size." }
+                        output.write(buffer, 0, count)
+                        onProgress(copied, expectedSize)
+                    }
+                }
+            }
+            require(partial.length() == expectedSize) { "The included model could not be fully installed." }
+            onStage("Verifying the included model…")
+            val actualHash = sha256(partial)
+            val expectedHash = context.assets.open("models/model.sha256")
+                .bufferedReader().use { it.readText().trim().substringBefore(' ') }
+            require(expectedHash.matches(Regex("[a-fA-F0-9]{64}")) && actualHash.equals(expectedHash, true)) {
+                "The included model failed its SHA-256 integrity check."
+            }
+            require(partial.renameTo(target)) { "Unable to finish installing the included model." }
+        } finally {
+            if (partial.exists()) partial.delete()
         }
-    }
-    onStage("Verifying model file…")
-    require(target.length() == candidate.sizeBytes) {
-        "The downloaded Qwen3 model is incomplete. Reopen ForgeAI to retry the download."
     }
 
-    onStage("Checking model integrity…")
+    onStage("Checking the included model…")
+    require(target.length() == expectedSize) { "The included model file is incomplete; reinstall ForgeAI." }
     val digest = sha256(target)
+    val expectedHash = context.assets.open("models/model.sha256")
+        .bufferedReader().use { it.readText().trim().substringBefore(' ') }
+    require(digest.equals(expectedHash, true)) { "The included model failed its SHA-256 integrity check." }
+
     val existing = db.models().all().firstOrNull { it.path == target.absolutePath }
     val model = ModelEntity(
         path = target.absolutePath,
-        name = "Qwen3-4B-Instruct-2507 · Q4_K_M",
+        name = "Qwen3-4B-Instruct-2507 · IQ3_M",
         sizeBytes = target.length(),
         sha256 = digest,
-        quantization = "Q4_K_M",
+        quantization = "IQ3_M",
         selected = true
     )
     db.models().clearSelection()
-    onStage("Finishing model setup…")
+    onStage("Finishing Natasha's setup…")
     db.models().save(existing?.copy(
         name = model.name,
         sizeBytes = model.sizeBytes,
