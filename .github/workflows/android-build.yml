@@ -55,13 +55,13 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p app/src/main/assets/models
-          MODEL_NAME="Qwen3-4B-Instruct-2507-IQ3_M.gguf"
+          MODEL_NAME="Qwen3-4B-Instruct-2507-Q4_K_M.gguf"
           MODEL_URL="https://huggingface.co/bartowski/Qwen_Qwen3-4B-Instruct-2507-GGUF/resolve/main/$MODEL_NAME?download=true"
           curl --fail --location --retry 5 --retry-all-errors --connect-timeout 30 --max-time 5400 "$MODEL_URL" -o "app/src/main/assets/models/$MODEL_NAME"
           MODEL_SIZE=$(stat -c%s "app/src/main/assets/models/$MODEL_NAME")
           echo "Bundled model size: $MODEL_SIZE bytes"
-          test "$MODEL_SIZE" -ge 1850000000
-          test "$MODEL_SIZE" -le 2050000000
+          test "$MODEL_SIZE" -ge 2350000000
+          test "$MODEL_SIZE" -le 2650000000
           sha256sum "app/src/main/assets/models/$MODEL_NAME" | awk '{print $1}' > app/src/main/assets/models/model.sha256
 
       - name: Run unit tests and assemble APKs
@@ -71,7 +71,7 @@ jobs:
         run: |
           set -euo pipefail
           APK=app/build/outputs/apk/debug/app-debug.apk
-          unzip -l "$APK" | grep -F "assets/models/Qwen3-4B-Instruct-2507-IQ3_M.gguf"
+          unzip -l "$APK" | grep -F "assets/models/Qwen3-4B-Instruct-2507-Q4_K_M.gguf"
           APK_SIZE=$(stat -c%s "$APK")
           echo "Installable APK size: $APK_SIZE bytes"
           test "$APK_SIZE" -gt 1800000000
