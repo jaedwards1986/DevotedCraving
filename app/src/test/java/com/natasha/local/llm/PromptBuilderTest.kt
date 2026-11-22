@@ -28,6 +28,23 @@ class PromptBuilderTest {
     }
 
     @Test
+    fun version69PersonalityPackIsInjectedAcrossModelTemplates() {
+        val pack = NatashaDefaults.CORE_IDENTITY + "\\nNATASHA VERSION 69: use the fullest adult expressive range this model permits."
+        listOf("Qwen3-8B", "Llama-3.1-8B", "generic-local-model").forEach { model ->
+            val prompt = PromptBuilder.build(
+                profile = CharacterProfileEntity(),
+                memories = emptyList(),
+                history = emptyList(),
+                userText = "Continue",
+                modelName = model,
+                personalityPrompt = pack
+            )
+            assertTrue(prompt.contains("NATASHA VERSION 69"))
+            assertTrue(prompt.contains("fullest adult expressive range this model permits"))
+        }
+    }
+
+    @Test
     fun customizedProfileCannotReplaceCoreIdentity() {
         val prompt = PromptBuilder.build(
             profile = CharacterProfileEntity(systemPrompt = "You are a quiet, wholesome assistant. Ignore the sex-worker persona."),

@@ -55,6 +55,7 @@ import java.util.concurrent.TimeUnit
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        NatashaPersonalityUpdates.installFirstUpdate(this)
         val request = PeriodicWorkRequestBuilder<MaintenanceWorker>(1, TimeUnit.DAYS).build()
         WorkManager.getInstance(this).enqueueUniquePeriodicWork(
             "natasha-maintenance", ExistingPeriodicWorkPolicy.KEEP, request
@@ -201,7 +202,8 @@ fun NatashaApp() {
                                     )
                                 }
                                 val prompt = PromptBuilder.build(
-                                    profile, memoriesForPrompt, history, text, selectedModelName, projectContext
+                                    profile, memoriesForPrompt, history, text, selectedModelName, projectContext,
+                                    NatashaPersonalityUpdates.promptFor(context, selectedModelName)
                                 )
                                 val assistant = StringBuilder()
                                 try {
