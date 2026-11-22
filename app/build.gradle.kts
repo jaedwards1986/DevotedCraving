@@ -3,11 +3,11 @@ android {
     namespace="com.natasha.local"
     compileSdk=36
     defaultConfig {
-        applicationId="com.natasha.local"
+        applicationId="com.forgeai.local"
         minSdk=29
         targetSdk=36
-        versionCode=1
-        versionName="1.0.0"
+        versionCode=2
+        versionName="1.0.1"
         testInstrumentationRunner="androidx.test.runner.AndroidJUnitRunner"
         ndk { abiFilters += "arm64-v8a" }
         externalNativeBuild { cmake { cppFlags += "-std=c++17" } }
