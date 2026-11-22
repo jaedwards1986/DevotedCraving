@@ -114,7 +114,9 @@ fun NatashaApp() {
             selectedBeforeInstall.name.contains("Llama 3.2 1B", ignoreCase = true) ||
             selectedBeforeInstall.path.contains("llama-3.2-1b", ignoreCase = true) ||
             selectedBeforeInstall.name.contains("Lexi Uncensored", ignoreCase = true) ||
-            selectedBeforeInstall.path.contains("Llama-3.1-8B-Lexi", ignoreCase = true)
+            selectedBeforeInstall.path.contains("Llama-3.1-8B-Lexi", ignoreCase = true) ||
+            selectedBeforeInstall.name.contains("Aion RP", ignoreCase = true) ||
+            selectedBeforeInstall.path.contains("Aion-RP-Llama-3.1-8B", ignoreCase = true)
         val selected = if (needsPreferredModel) {
             status = if (selectedBeforeInstall == null) "Installing ForgeAI's recommended model…" else "Replacing the old undersized model…"
             runCatching {
@@ -1456,8 +1458,8 @@ private fun readUriTextLimited(context: Context, uri: Uri, maxBytes: Int): Strin
     }
 }
 
-private const val PREFERRED_MODEL_REPO = "bartowski/Aion-RP-Llama-3.1-8B-GGUF"
-private const val PREFERRED_MODEL_FILE = "Aion-RP-Llama-3.1-8B-Q5_K_M.gguf"
+private const val PREFERRED_MODEL_REPO = "DavidAU/L3.1-RP-Hero-Dirty_Harry-8B-GGUF"
+private const val PREFERRED_MODEL_FILE = "L3.1-RP-Hero-Dirty_Harry-8B-D_AU-q5_k_m.gguf"
 
 private suspend fun ensurePreferredModel(context: Context, db: AppDatabase): ModelEntity {
     val dir = File(context.filesDir, "models").apply { mkdirs() }
@@ -1473,7 +1475,7 @@ private suspend fun ensurePreferredModel(context: Context, db: AppDatabase): Mod
             val candidate = com.natasha.local.models.HuggingFaceModelHub
                 .ggufFiles(PREFERRED_MODEL_REPO)
                 .firstOrNull { it.name == PREFERRED_MODEL_FILE }
-                ?: error("The recommended Aion RP Q5_K_M model is not currently available from its public repository.")
+                ?: error("The recommended Dirty Harry RP Q5_K_M model is not currently available from its public repository.")
             require(candidate.sizeBytes in 5_000_000_000L..6_500_000_000L) {
                 "The model file size did not match the expected Q5_K_M build."
             }
@@ -1489,7 +1491,7 @@ private suspend fun ensurePreferredModel(context: Context, db: AppDatabase): Mod
     val existing = db.models().all().firstOrNull { it.path == target.absolutePath }
     val model = ModelEntity(
         path = target.absolutePath,
-        name = "Aion RP Llama 3.1 8B · Q5_K_M",
+        name = "Dirty Harry Llama-3.1 8B · Q5_K_M",
         sizeBytes = target.length(),
         sha256 = digest,
         quantization = "Q5_K_M",
