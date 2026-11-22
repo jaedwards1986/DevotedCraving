@@ -13,7 +13,7 @@ class LocalLlmEngine {
     @Volatile private var loadedPath: String? = null
     private val nativeMutex = Mutex()
 
-    suspend fun load(path: String, contextSize: Int = 4096, threads: Int = 6): Boolean {
+    suspend fun load(path: String, contextSize: Int = 2048, threads: Int = 4): Boolean {
         LlamaBridge.cancel()
         return withContext(Dispatchers.IO) {
             nativeMutex.withLock {
