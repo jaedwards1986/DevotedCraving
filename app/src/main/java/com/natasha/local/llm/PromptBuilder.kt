@@ -111,9 +111,9 @@ object PromptBuilder {
                     "user" -> "__USER__:"
                     else -> "__ASSISTANT__:"
                 }
-                append(marker).append("\\n").append(content).append("\\n")
+                append(marker).append("\n").append(content).append("\n")
             }
-            append("__ASSISTANT__:\\n")
+            append("__ASSISTANT__:\n")
         }
 
     private fun qwen3(messages: List<Pair<String, String>>): String =
