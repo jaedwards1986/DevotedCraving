@@ -267,6 +267,13 @@ fun NatashaApp() {
                                             return@launch
                                         }
                                         val profile = db.character().get() ?: CharacterProfileEntity()
+                                        // Capture explicit user facts before retrieval so a newly learned fact
+                                        // is available to the very response that learned it.
+                                        MemoryCapture.extract(text).forEach { candidate ->
+                                            val normalized = candidate.trim().lowercase()
+                                            val exists = db.memories().all().any { it.text.trim().lowercase() == normalized }
+                                            if (!exists) db.memories().insert(MemoryEntity(text = candidate, kind = "auto"))
+                                        }
                                         val allMemories = db.memories().all()
                                         val recallWords = text.lowercase().split(Regex("\\W+")).filter { it.length > 2 }.toSet()
                                         val rankedMemories = allMemories.map { memory ->
@@ -279,12 +286,7 @@ fun NatashaApp() {
                                         val memoriesForPrompt = if (matchingMemories.isNotEmpty()) matchingMemories
                                             else allMemories.sortedByDescending { it.updatedAt }.take(32)
                                         val history = db.messages().forConversation(targetConversationId).takeLast(64)
-                                        MemoryCapture.extract(text).forEach { candidate ->
-                                            val normalized = candidate.trim().lowercase()
-                                            val exists = db.memories().all().any { it.text.trim().lowercase() == normalized }
-                                            if (!exists) db.memories().insert(MemoryEntity(text = candidate, kind = "auto"))
-                                        }
-                                        memories = db.memories().all()
+                                        memories = allMemories
                                         if (conversationId == targetConversationId) {
                                             messages = db.messages().forConversation(targetConversationId)
                                         }
