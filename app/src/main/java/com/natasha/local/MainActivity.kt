@@ -1334,17 +1334,22 @@ private fun MemoryScreen(memories: List<MemoryEntity>, db: AppDatabase, scope: C
             text = {
                 OutlinedTextField(
                     value = draft,
-                    onValueChange = { draft = it },
+                    onValueChange = { if (it.length <= 10_000) draft = it },
                     modifier = Modifier.fillMaxWidth(),
                     minLines = 4
                 )
             },
             confirmButton = {
                 TextButton(onClick = {
-                    scope.launch {
-                        db.memories().update(memory.copy(text = draft.trim(), updatedAt = System.currentTimeMillis()))
-                        editingId = null
-                        refresh()
+                    val text = draft.trim()
+                    if (text.isBlank() || text.length > 10_000) {
+                        archiveStatus = "Memory text must contain 1 to 10,000 characters."
+                    } else {
+                        scope.launch {
+                            db.memories().update(memory.copy(text = text, updatedAt = System.currentTimeMillis()))
+                            editingId = null
+                            refresh()
+                        }
                     }
                 }) { Text("Save") }
             },
