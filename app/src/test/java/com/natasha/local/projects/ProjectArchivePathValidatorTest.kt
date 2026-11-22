@@ -17,6 +17,10 @@ class ProjectArchivePathValidatorTest {
         assertEquals("Archive contains an absolute path", ProjectArchivePathValidator.validate("/tmp/outside.txt"))
     }
 
+    @Test fun acceptsBackslashSeparatorsForPortableArchivePaths() {
+        assertEquals(null, ProjectArchivePathValidator.validate("src\\\\Main.kt"))
+    }
+
     @Test fun rejectsWindowsDrivePath() {
         assertEquals("Archive contains an absolute path", ProjectArchivePathValidator.validate("C:\\temp\\outside.txt"))
     }

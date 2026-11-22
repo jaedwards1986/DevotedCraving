@@ -55,11 +55,12 @@ class ProjectArchiveService(private val context: Context) {
                         zip.closeEntry()
                         continue
                     }
-                    val invalid = ProjectArchivePathValidator.validate(entry.name)
+                    val normalizedPath = entry.name.replace('\\\\', '/')
+                    val invalid = ProjectArchivePathValidator.validate(normalizedPath)
                     require(invalid == null) { invalid ?: "Unsafe archive path" }
                     count++
                     require(count <= MAX_FILES) { "Archive contains too many files" }
-                    val target = java.io.File(payload, entry.name).canonicalFile
+                    val target = java.io.File(payload, normalizedPath).canonicalFile
                     require(target.path.startsWith(payload.canonicalPath + java.io.File.separator)) { "Archive path escapes staging area" }
                     require(!target.exists()) { "Archive contains duplicate file paths" }
                     target.parentFile?.mkdirs()
