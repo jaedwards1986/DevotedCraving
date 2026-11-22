@@ -14,7 +14,7 @@ ForgeAI is a public-source, local-first Android AI workspace targeting the Googl
 - Natasha's adult fictional sex-worker character profile is stored separately from the selected LLM.
 - An immutable character foundation is injected into every prompt, independent of conversation history and selected model; profile customizations cannot replace her established identity.
 - The locked character voice is explicitly hypersexual, persistently horny, sexually forward, brazen, filthy-mouthed, dirty-minded, and identifies her as a stripper, prostitute, and sex-line operator, while preserving useful task-focused answers.
-- JVM prompt tests cover Aion RP, Qwen3, Llama 3, generic templates, and attempts to override the core identity.
+- JVM prompt tests cover Dirty Harry RP, Aion RP, Qwen3, Llama 3, generic templates, and attempts to override the core identity.
 - Persistent memory list with search, editing, deletion, pinning, conservative automatic capture, and relevance-ranked recall.
 - Full conversation and memory JSON archive export/import; imported conversation IDs are remapped to avoid merging with existing chats.
 - Project workspace with project descriptions, file creation, editing, safe file moves/renames, and confirmed deletion.
@@ -30,7 +30,7 @@ ForgeAI is a public-source, local-first Android AI workspace targeting the Googl
 
 ## Model setup
 
-On first launch, ForgeAI automatically downloads, verifies and selects **Aion RP Llama 3.1 8B Q5_K_M** from the public Hugging Face repository `bartowski/Aion-RP-Llama-3.1-8B-GGUF`. This 8B model is explicitly trained for uncensored roleplay and creative writing; its upstream model card specifies the native `__SYSTEM__`, `__USER__`, and `__ASSISTANT__` prompt format, which ForgeAI uses. The model is not bundled in the APK because it is approximately 5.73 GB; first launch requires an internet connection and sufficient free storage. The user does not have to search for, choose, or manually import the initial model. The Models tab remains available later to import, download, and switch models. Switching models does not replace Natasha's app-level identity, personality pack, memories, conversations or project data.
+On first launch, ForgeAI automatically downloads, verifies and selects **L3.1-RP-Hero Dirty Harry 8B Q5_K_M** from the public Hugging Face repository `DavidAU/L3.1-RP-Hero-Dirty_Harry-8B-GGUF` (file `L3.1-RP-Hero-Dirty_Harry-8B-D_AU-q5_k_m.gguf`). Its author describes it as an uncensored NSFW roleplay model; the published Q5_K_M file is approximately 5.73 GB. It uses the standard Llama 3 chat template, which ForgeAI selects automatically. The model is not bundled in the APK; first launch requires an internet connection and sufficient free storage. The user does not have to search for, choose, or manually import the initial model. The Models tab remains available later to import, download, and switch models. Switching models does not replace Natasha's app-level identity, personality pack, memories, conversations or project data.
 
 ## Privacy and connectivity
 
