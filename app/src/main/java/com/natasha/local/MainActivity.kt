@@ -184,6 +184,12 @@ fun NatashaApp() {
                                     else allMemories.sortedByDescending { it.updatedAt }.take(32)
                                 val history = db.messages().forConversation(targetConversationId).takeLast(64)
                                 db.messages().insert(MessageEntity(conversationId = targetConversationId, role = "user", content = text))
+                                MemoryCapture.extract(text).forEach { candidate ->
+                                    val normalized = candidate.trim().lowercase()
+                                    val exists = db.memories().all().any { it.text.trim().lowercase() == normalized }
+                                    if (!exists) db.memories().insert(MemoryEntity(text = candidate, kind = "auto"))
+                                }
+                                memories = db.memories().all()
                                 if (conversationId == targetConversationId) {
                                     messages = db.messages().forConversation(targetConversationId)
                                 }
@@ -1116,6 +1122,15 @@ private fun MemoryScreen(memories: List<MemoryEntity>, db: AppDatabase, scope: C
                             Text(memory.text)
                             Text(memory.kind, color = Color(0xFF9B9B9B), style = MaterialTheme.typography.bodySmall)
                         }
+                        TextButton(onClick = {
+                            scope.launch {
+                                db.memories().update(memory.copy(
+                                    kind = if (memory.kind == "pinned") "auto" else "pinned",
+                                    updatedAt = System.currentTimeMillis()
+                                ))
+                                refresh()
+                            }
+                        }) { Text(if (memory.kind == "pinned") "Unpin" else "Pin") }
                         TextButton(onClick = {
                             editingId = memory.id
                             draft = memory.text

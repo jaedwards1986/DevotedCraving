@@ -9,13 +9,15 @@ import androidx.room.*
     suspend fun conversationIds():List<Long>
     @Query("SELECT * FROM messages WHERE conversationId=:id ORDER BY createdAt DESC LIMIT 1")
     suspend fun latest(id:Long):MessageEntity?
+    @Query("SELECT * FROM messages WHERE content LIKE '%' || :q || '%' ORDER BY createdAt DESC")
+    suspend fun searchAll(q:String):List<MessageEntity>
     @Insert suspend fun insert(m:MessageEntity):Long
     @Query("DELETE FROM messages WHERE conversationId=:id")
     suspend fun deleteConversation(id:Long):Int
 }
 @Dao interface MemoryDao {
     @Query("SELECT * FROM memories ORDER BY updatedAt DESC") suspend fun all():List<MemoryEntity>
-    @Query("SELECT * FROM memories WHERE text LIKE '%' || :q || '%' ORDER BY updatedAt DESC LIMIT 20") suspend fun search(q:String):List<MemoryEntity>
+    @Query("SELECT * FROM memories WHERE text LIKE '%' || :q || '%' ORDER BY updatedAt DESC") suspend fun search(q:String):List<MemoryEntity>
     @Query("SELECT * FROM memories WHERE id=:id LIMIT 1") suspend fun get(id:Long):MemoryEntity?
     @Insert suspend fun insert(m:MemoryEntity):Long
     @Update suspend fun update(m:MemoryEntity)
