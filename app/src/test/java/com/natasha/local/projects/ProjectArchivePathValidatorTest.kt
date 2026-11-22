@@ -18,7 +18,7 @@ class ProjectArchivePathValidatorTest {
     }
 
     @Test fun acceptsBackslashSeparatorsForPortableArchivePaths() {
-        assertEquals(null, ProjectArchivePathValidator.validate("src\\\\Main.kt"))
+        assertEquals(null, ProjectArchivePathValidator.validate("src\\Main.kt"))
     }
 
     @Test fun rejectsWindowsDrivePath() {

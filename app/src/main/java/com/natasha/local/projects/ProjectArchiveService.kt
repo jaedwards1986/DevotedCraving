@@ -80,7 +80,7 @@ class ProjectArchiveService(private val context: Context) {
                         zip.closeEntry()
                         continue
                     }
-                    val normalizedPath = entry.name.replace('\\\\', '/')
+                    val normalizedPath = entry.name.replace('\\', '/')
                     val invalid = ProjectArchivePathValidator.validate(normalizedPath)
                     require(invalid == null) { invalid ?: "Unsafe archive path" }
                     count++
