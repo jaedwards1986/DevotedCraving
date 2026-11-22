@@ -514,15 +514,6 @@ private fun ProjectsScreen(projects: List<ProjectEntity>, selectedProjectId: Lon
             }
         }
     }
-    LaunchedEffect(selectedProjectId) {
-        val id = selectedProjectId
-        selectedFile = null
-        editorContent = ""
-        editorStatus = ""
-        recentActivity = if (id == null) emptyList() else withContext(Dispatchers.IO) {
-            ProjectActivityStore(context, id).recent(12)
-        }
-    }
     LaunchedEffect(selectedProjectId, filesRefreshKey) {
         val id = selectedProjectId
         projectFiles = if (id == null) emptyList() else withContext(Dispatchers.IO) {
@@ -551,6 +542,15 @@ private fun ProjectsScreen(projects: List<ProjectEntity>, selectedProjectId: Lon
     var renameDestinationPath by rememberSaveable { mutableStateOf("") }
     var showRenameFile by rememberSaveable { mutableStateOf(false) }
 
+    LaunchedEffect(selectedProjectId) {
+        val id = selectedProjectId
+        selectedFile = null
+        editorContent = ""
+        editorStatus = ""
+        recentActivity = if (id == null) emptyList() else withContext(Dispatchers.IO) {
+            ProjectActivityStore(context, id).recent(12)
+        }
+    }
     LaunchedEffect(incomingPlan, incomingPlanProjectId, selectedProjectId) {
         if (incomingPlan != null && incomingPlanProjectId != null && selectedProjectId == incomingPlanProjectId) {
             buildSummary = incomingPlan.summary
