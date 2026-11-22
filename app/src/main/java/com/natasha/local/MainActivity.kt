@@ -173,8 +173,13 @@ fun NatashaApp() {
                                 val profile = db.character().get() ?: CharacterProfileEntity()
                                 val memoriesForPrompt = db.memories().all().filter {
                                     text.lowercase().split(" ").any { word -> word.length > 2 && it.text.lowercase().contains(word) }
-                                }.take(20)
-                                val history = db.messages().forConversation(targetConversationId).takeLast(20)
+                                }.sortedByDescending { memory ->
+                                    val words = text.lowercase().split(Regex("\\W+")).filter { it.length > 2 }.toSet()
+                                    val haystack = memory.text.lowercase()
+                                    words.count { haystack.contains(it) } * 10 +
+                                        if (memory.kind.equals("pinned", true)) 100 else 0
+                                }
+                                val history = db.messages().forConversation(targetConversationId).takeLast(64)
                                 db.messages().insert(MessageEntity(conversationId = targetConversationId, role = "user", content = text))
                                 if (conversationId == targetConversationId) {
                                     messages = db.messages().forConversation(targetConversationId)
@@ -1077,7 +1082,7 @@ private fun MemoryScreen(memories: List<MemoryEntity>, db: AppDatabase, scope: C
 
     Column(Modifier.fillMaxSize().padding(18.dp)) {
         Text("Memory", style = MaterialTheme.typography.headlineMedium)
-        Text("Persistent memories stay separate from the selected model.", color = Color(0xFF9B9B9B))
+        Text("Long-term memory archive · ${memories.size} saved memories. Stored locally and retained until you delete them.", color = Color(0xFF9B9B9B))
         Spacer(Modifier.height(12.dp))
         OutlinedTextField(
             value = query,
