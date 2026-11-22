@@ -113,7 +113,7 @@ fun NatashaApp() {
         val selected = if (selectedBeforeInstall == null) {
             status = "Installing built-in Natasha model…"
             runCatching {
-                withContext(Dispatchers.IO) { ensureBundledModel(context, db) }
+                withContext(Dispatchers.IO) { ensurePreferredModel(context, db) }
             }.getOrElse {
                 status = "Built-in model install failed: " + (it.message ?: "unknown error")
                 null
@@ -1451,33 +1451,43 @@ private fun readUriTextLimited(context: Context, uri: Uri, maxBytes: Int): Strin
     }
 }
 
-private const val BUNDLED_MODEL_ASSET = "Llama-3.2-1B-Instruct-Q4_K_S.gguf"
+private const val PREFERRED_MODEL_REPO = "bartowski/Llama-3.1-8B-Lexi-Uncensored-GGUF"
+private const val PREFERRED_MODEL_FILE = "Llama-3.1-8B-Lexi-Uncensored-Q5_K_M.gguf"
 
-private suspend fun ensureBundledModel(context: Context, db: AppDatabase): ModelEntity {
+private suspend fun ensurePreferredModel(context: Context, db: AppDatabase): ModelEntity {
     val dir = File(context.filesDir, "models").apply { mkdirs() }
-    val target = File(dir, BUNDLED_MODEL_ASSET)
+    val target = File(dir, PREFERRED_MODEL_FILE)
     if (!target.exists() || target.length() == 0L) {
-        val partial = File(dir, BUNDLED_MODEL_ASSET + ".partial")
-        try {
-            context.assets.open(BUNDLED_MODEL_ASSET).use { input ->
-                partial.outputStream().buffered().use { output ->
-                    input.copyTo(output, 1024 * 1024)
-                }
+        val partial = File(dir, PREFERRED_MODEL_FILE + ".download")
+        if (partial.exists()) partial.delete()
+        val available = android.os.StatFs(dir.absolutePath).availableBytes
+        require(available >= 6_500_000_000L) {
+            "Natasha's first-run model needs about 6.5 GB of free storage. Free up space and reopen ForgeAI."
+        }
+        val file = withContext(Dispatchers.IO) {
+            val candidate = com.natasha.local.models.HuggingFaceModelHub
+                .ggufFiles(PREFERRED_MODEL_REPO)
+                .firstOrNull { it.name == PREFERRED_MODEL_FILE }
+                ?: error("The recommended Lexi Q5_K_M model is not currently available from its public repository.")
+            require(candidate.sizeBytes in 5_000_000_000L..6_500_000_000L) {
+                "The model file size did not match the expected Q5_K_M build."
             }
-            require(partial.length() > 0L) { "Bundled model asset is empty" }
-            require(partial.renameTo(target)) { "Unable to finalize bundled model" }
-        } finally {
-            if (partial.exists()) partial.delete()
+            com.natasha.local.models.HuggingFaceModelHub.download(
+                context, PREFERRED_MODEL_REPO, candidate
+            ) { _, _ -> }
+        }
+        require(file.length() in 5_000_000_000L..6_500_000_000L) {
+            "Downloaded model size is invalid."
         }
     }
     val digest = sha256(target)
     val existing = db.models().all().firstOrNull { it.path == target.absolutePath }
     val model = ModelEntity(
         path = target.absolutePath,
-        name = "Llama 3.2 1B Instruct · built-in Q4_K_S",
+        name = "Llama 3.1 8B Lexi Uncensored · Q5_K_M",
         sizeBytes = target.length(),
         sha256 = digest,
-        quantization = "Q4_K_S",
+        quantization = "Q5_K_M",
         selected = true
     )
     db.models().clearSelection()
