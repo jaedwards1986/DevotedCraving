@@ -109,14 +109,24 @@ fun NatashaApp() {
         val latestConversation = db.messages().conversationIds().firstOrNull()
         if (latestConversation != null) conversationId = latestConversation
         refresh()
-        val selected = db.models().selected()
+        val selectedBeforeInstall = db.models().selected()
+        val selected = if (selectedBeforeInstall == null) {
+            status = "Installing built-in Natasha model…"
+            runCatching {
+                withContext(Dispatchers.IO) { ensureBundledModel(context, db) }
+            }.getOrElse {
+                status = "Built-in model install failed: " + (it.message ?: "unknown error")
+                null
+            }
+        } else selectedBeforeInstall
         if (selected != null) {
             status = "Loading " + selected.name + "…"
             val ok = withContext(Dispatchers.Default) { engine.load(selected.path) }
             status = if (ok) "Ready · " + selected.name else "Model failed to load"
-        } else {
+        } else if (status.startsWith("Ready")) {
             status = "Ready · import a GGUF model"
         }
+        refresh()
     }
 
     DisposableEffect(Unit) {
@@ -1434,6 +1444,46 @@ private fun readUriTextLimited(context: Context, uri: Uri, maxBytes: Int): Strin
         }
         output.toString(Charsets.UTF_8.name())
     }
+}
+
+private const val BUNDLED_MODEL_ASSET = "Llama-3.2-1B-Instruct-Q4_K_S.gguf"
+
+private suspend fun ensureBundledModel(context: Context, db: AppDatabase): ModelEntity {
+    val dir = File(context.filesDir, "models").apply { mkdirs() }
+    val target = File(dir, BUNDLED_MODEL_ASSET)
+    if (!target.exists() || target.length() == 0L) {
+        val partial = File(dir, BUNDLED_MODEL_ASSET + ".partial")
+        try {
+            context.assets.open(BUNDLED_MODEL_ASSET).use { input ->
+                partial.outputStream().buffered().use { output ->
+                    input.copyTo(output, 1024 * 1024)
+                }
+            }
+            require(partial.length() > 0L) { "Bundled model asset is empty" }
+            require(partial.renameTo(target)) { "Unable to finalize bundled model" }
+        } finally {
+            if (partial.exists()) partial.delete()
+        }
+    }
+    val digest = sha256(target)
+    val existing = db.models().all().firstOrNull { it.path == target.absolutePath }
+    val model = ModelEntity(
+        path = target.absolutePath,
+        name = "Llama 3.2 1B Instruct · built-in Q4_K_S",
+        sizeBytes = target.length(),
+        sha256 = digest,
+        quantization = "Q4_K_S",
+        selected = true
+    )
+    db.models().clearSelection()
+    db.models().save(existing?.copy(
+        name = model.name,
+        sizeBytes = model.sizeBytes,
+        sha256 = model.sha256,
+        quantization = model.quantization,
+        selected = true
+    ) ?: model)
+    return model
 }
 
 private fun managedModelFile(context: Context, path: String): File? {
