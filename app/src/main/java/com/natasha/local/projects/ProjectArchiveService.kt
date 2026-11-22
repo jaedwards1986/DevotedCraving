@@ -22,17 +22,42 @@ object ProjectArchivePathValidator {
 class ProjectArchiveService(private val context: Context) {
     fun export(projectId: Long, output: OutputStream): WorkspaceResult<Int> = runCatching {
         val workspace = ProjectWorkspace(context, projectId)
+        val root = workspaceRoot(projectId)
+        val files = workspace.list()
+        require(files.size <= MAX_FILES) { "Project has more than $MAX_FILES files; split it into smaller archives" }
         var count = 0
-        ZipOutputStream(output.buffered()).use { zip ->
-            workspace.list().forEach { path ->
-                val source = java.io.File(workspaceRoot(projectId), path).canonicalFile
-                require(source.path.startsWith(workspaceRoot(projectId).canonicalPath + java.io.File.separator))
-                zip.putNextEntry(ZipEntry(path))
-                source.inputStream().use { it.copyTo(zip) }
-                zip.closeEntry()
-                count++
+        var totalBytes = 0L
+        val tempArchive = java.io.File.createTempFile("project-export-$projectId-", ".zip", context.cacheDir)
+        try {
+            ZipOutputStream(tempArchive.outputStream().buffered()).use { zip ->
+                files.forEach { path ->
+                    val source = java.io.File(root, path).canonicalFile
+                    require(source.path.startsWith(root.canonicalPath + java.io.File.separator))
+                    require(source.isFile) { "Project file disappeared during export: $path" }
+                    require(source.length() <= MAX_FILE_BYTES) { "Project file exceeds 2 MB: $path" }
+                    zip.putNextEntry(ZipEntry(path))
+                    source.inputStream().use { input ->
+                        val buffer = ByteArray(32 * 1024)
+                        var fileBytes = 0L
+                        while (true) {
+                            val read = input.read(buffer)
+                            if (read < 0) break
+                            fileBytes += read
+                            totalBytes += read
+                            require(fileBytes <= MAX_FILE_BYTES) { "Project file exceeds 2 MB: $path" }
+                            require(totalBytes <= MAX_TOTAL_BYTES) { "Project exceeds 50 MB; split it into smaller archives" }
+                            zip.write(buffer, 0, read)
+                        }
+                    }
+                    zip.closeEntry()
+                    count++
+                }
+                zip.finish()
             }
-            zip.finish()
+            tempArchive.inputStream().use { it.copyTo(output) }
+            output.flush()
+        } finally {
+            tempArchive.delete()
         }
         runCatching { ProjectActivityStore(context, projectId).record("EXPORT_ARCHIVE", "", "$count files exported") }
         count
