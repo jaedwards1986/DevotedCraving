@@ -45,6 +45,7 @@ import com.natasha.local.projects.ProjectContextBuilder
 import com.natasha.local.projects.ProjectContextFile
 import com.natasha.local.projects.ProjectWorkspace
 import com.natasha.local.projects.ProjectPlanParser
+import com.natasha.local.projects.WorkspaceFile
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -475,6 +476,8 @@ private fun ProjectsScreen(projects: List<ProjectEntity>, selectedProjectId: Lon
     val archiveService = remember { ProjectArchiveService(context) }
     var archiveStatus by rememberSaveable { mutableStateOf("") }
     var recentActivity by remember { mutableStateOf(emptyList<ProjectActivity>()) }
+    var projectFiles by remember { mutableStateOf(emptyList<WorkspaceFile>()) }
+    var filesRefreshKey by remember { mutableIntStateOf(0) }
     val exportPicker = androidx.activity.compose.rememberLauncherForActivityResult(
         ActivityResultContracts.CreateDocument("application/zip")
     ) { uri: Uri? ->
@@ -505,6 +508,7 @@ private fun ProjectsScreen(projects: List<ProjectEntity>, selectedProjectId: Lon
                 archiveStatus = if (result.ok) "Imported ${result.value} files" else result.error.orEmpty()
                 if (result.ok) {
                     recentActivity = withContext(Dispatchers.IO) { ProjectActivityStore(context, id).recent(12) }
+                    filesRefreshKey++
                     refresh()
                 }
             }
@@ -514,6 +518,12 @@ private fun ProjectsScreen(projects: List<ProjectEntity>, selectedProjectId: Lon
         val id = selectedProjectId
         recentActivity = if (id == null) emptyList() else withContext(Dispatchers.IO) {
             ProjectActivityStore(context, id).recent(12)
+        }
+    }
+    LaunchedEffect(selectedProjectId, filesRefreshKey) {
+        val id = selectedProjectId
+        projectFiles = if (id == null) emptyList() else withContext(Dispatchers.IO) {
+            tools.listFiles(id).value.orEmpty()
         }
     }
     var buildSummary by rememberSaveable { mutableStateOf("") }
@@ -567,7 +577,7 @@ private fun ProjectsScreen(projects: List<ProjectEntity>, selectedProjectId: Lon
         LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             items(projects, key = { it.id }) { p ->
                 val isSelected = selectedProjectId == p.id
-                val files = if (isSelected) tools.listFiles(p.id).value.orEmpty() else emptyList()
+                val files = if (isSelected) projectFiles else emptyList()
                 Surface(
                     color = if (isSelected) Color(0xFF3A3A3A) else Color(0xFF2F2F2F),
                     shape = RoundedCornerShape(16.dp),
@@ -627,10 +637,12 @@ private fun ProjectsScreen(projects: List<ProjectEntity>, selectedProjectId: Lon
                                             color = Color(0xFFB8D8FF)
                                         )
                                         TextButton(onClick = {
-                                            val result = tools.readFile(p.id, file.path)
-                                            selectedFile = file.path
-                                            editorContent = result.value.orEmpty()
-                                            editorStatus = result.error.orEmpty()
+                                            scope.launch {
+                                                val result = withContext(Dispatchers.IO) { tools.readFile(p.id, file.path) }
+                                                selectedFile = file.path
+                                                editorContent = result.value.orEmpty()
+                                                editorStatus = result.error.orEmpty()
+                                            }
                                         }) { Text("Edit") }
                                         TextButton(onClick = { renameSourcePath = file.path; renameDestinationPath = file.path; showRenameFile = true }) { Text("Move") }
                                         TextButton(onClick = { pendingDeletePath = file.path }) { Text("Delete") }
@@ -648,9 +660,16 @@ private fun ProjectsScreen(projects: List<ProjectEntity>, selectedProjectId: Lon
                                 )
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Button(onClick = {
-                                        val result = tools.writeFile(p.id, selectedFile!!, editorContent)
-                                        editorStatus = if (result.ok) "Saved" else result.error.orEmpty()
-                                        if (result.ok) recentActivity = ProjectActivityStore(context, p.id).recent(12)
+                                        scope.launch {
+                                            val result = withContext(Dispatchers.IO) {
+                                                tools.writeFile(p.id, selectedFile!!, editorContent)
+                                            }
+                                            editorStatus = if (result.ok) "Saved" else result.error.orEmpty()
+                                            if (result.ok) {
+                                                recentActivity = withContext(Dispatchers.IO) { ProjectActivityStore(context, p.id).recent(12) }
+                                                filesRefreshKey++
+                                            }
+                                        }
                                     }) { Text("Save") }
                                     Spacer(Modifier.width(8.dp))
                                     Text(editorStatus, color = Color(0xFF9B9B9B))
@@ -739,8 +758,9 @@ private fun ProjectsScreen(projects: List<ProjectEntity>, selectedProjectId: Lon
                             }
                             editorStatus = if (result.ok) "Moved to $destination" else result.error.orEmpty()
                             if (result.ok && selectedFile == renameSourcePath) selectedFile = destination
-                            if (result.ok) recentActivity = withContext(Dispatchers.IO) {
-                                ProjectActivityStore(context, id).recent(12)
+                            if (result.ok) {
+                                recentActivity = withContext(Dispatchers.IO) { ProjectActivityStore(context, id).recent(12) }
+                                filesRefreshKey++
                             }
                             showRenameFile = false
                             refresh()
@@ -763,11 +783,16 @@ private fun ProjectsScreen(projects: List<ProjectEntity>, selectedProjectId: Lon
                 TextButton(onClick = {
                     val id = selectedProjectId
                     if (id != null) {
-                        val result = tools.deleteFile(id, pathToDelete)
-                        editorStatus = if (result.ok) "Deleted $pathToDelete" else result.error.orEmpty()
-                        if (result.ok && id != null) recentActivity = ProjectActivityStore(context, id).recent(12)
-                        if (selectedFile == pathToDelete) selectedFile = null
-                        pendingDeletePath = null
+                        scope.launch {
+                            val result = withContext(Dispatchers.IO) { tools.deleteFile(id, pathToDelete) }
+                            editorStatus = if (result.ok) "Deleted $pathToDelete" else result.error.orEmpty()
+                            if (result.ok) {
+                                recentActivity = withContext(Dispatchers.IO) { ProjectActivityStore(context, id).recent(12) }
+                                filesRefreshKey++
+                            }
+                            if (selectedFile == pathToDelete) selectedFile = null
+                            pendingDeletePath = null
+                        }
                     }
                 }) { Text("Delete") }
             },
@@ -827,9 +852,11 @@ private fun ProjectsScreen(projects: List<ProjectEntity>, selectedProjectId: Lon
                         val id = selectedProjectId
                         if (id != null) {
                             val plan = ProjectBuildPlan(buildSummary, buildChanges.ifEmpty { listOf(ProjectFileChange(buildPath, buildContent)) })
-                            val result = buildService.preview(id, plan)
-                            buildPreview = if (result.ok) result.value else null
-                            buildStatus = if (result.ok) "Preview ready. Apply only when the paths and contents are correct." else result.error.orEmpty()
+                            scope.launch {
+                                val result = withContext(Dispatchers.IO) { buildService.preview(id, plan) }
+                                buildPreview = if (result.ok) result.value else null
+                                buildStatus = if (result.ok) "Preview ready. Apply only when the paths and contents are correct." else result.error.orEmpty()
+                            }
                         } else {
                             buildStatus = "Select a project first."
                         }
@@ -840,14 +867,17 @@ private fun ProjectsScreen(projects: List<ProjectEntity>, selectedProjectId: Lon
                             val id = selectedProjectId
                             if (id != null) {
                                 val plan = ProjectBuildPlan(buildSummary, buildChanges.ifEmpty { listOf(ProjectFileChange(buildPath, buildContent)) })
-                                val result = buildService.apply(id, plan)
-                                buildStatus = if (result.ok) "Applied: " + result.value.orEmpty().joinToString() else result.error.orEmpty()
-                                if (result.ok) {
-                                    showBuildPlan = false
-                                    buildPreview = null
-                                    buildChanges = emptyList()
-                                    onPlanConsumed()
-                                    refresh()
+                                scope.launch {
+                                    val result = withContext(Dispatchers.IO) { buildService.apply(id, plan) }
+                                    buildStatus = if (result.ok) "Applied: " + result.value.orEmpty().joinToString() else result.error.orEmpty()
+                                    if (result.ok) {
+                                        showBuildPlan = false
+                                        buildPreview = null
+                                        buildChanges = emptyList()
+                                        onPlanConsumed()
+                                        filesRefreshKey++
+                                        refresh()
+                                    }
                                 }
                             }
                         }
@@ -887,12 +917,17 @@ private fun ProjectsScreen(projects: List<ProjectEntity>, selectedProjectId: Lon
                 TextButton(onClick = {
                     val id = selectedProjectId
                     if (id != null && newFilePath.isNotBlank()) {
-                        val result = tools.writeFile(id, newFilePath.trim(), newFileContent)
-                        editorStatus = if (result.ok) "Created " + newFilePath.trim() else result.error.orEmpty()
-                        if (result.ok) {
-                            newFilePath = ""
-                            newFileContent = ""
-                            showNewFile = false
+                        scope.launch {
+                            val result = withContext(Dispatchers.IO) {
+                                tools.writeFile(id, newFilePath.trim(), newFileContent)
+                            }
+                            editorStatus = if (result.ok) "Created " + newFilePath.trim() else result.error.orEmpty()
+                            if (result.ok) {
+                                newFilePath = ""
+                                newFileContent = ""
+                                showNewFile = false
+                                filesRefreshKey++
+                            }
                         }
                     }
                 }) { Text("Create") }
