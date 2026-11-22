@@ -96,9 +96,16 @@ class ProjectWorkspace private constructor(
     private fun resolve(relativePath: String): File {
         require(relativePath.isNotBlank()) { "Path is required" }
         require(!relativePath.contains('\u0000')) { "Invalid path" }
+        val normalized = relativePath.replace('\\', '/')
+        require(!normalized.startsWith("/") && !Regex("^[A-Za-z]:").containsMatchIn(normalized)) {
+            "Absolute paths are not allowed"
+        }
+        require(normalized.split('/').none { it.isBlank() || it == "." || it == ".." }) {
+            "Invalid or escaping project path"
+        }
 
         val rootCanonical = root.canonicalFile
-        val candidate = File(rootCanonical, relativePath).canonicalFile
+        val candidate = File(rootCanonical, normalized).canonicalFile
         require(
             candidate != rootCanonical &&
                 candidate.path.startsWith(rootCanonical.path + File.separator)

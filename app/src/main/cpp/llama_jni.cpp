@@ -51,6 +51,9 @@ Java_com_natasha_local_llm_LlamaBridge_generate(
     std::lock_guard<std::mutex> lock(g_mutex);
     if (!g_model || !g_ctx || !callback) return JNI_FALSE;
 
+    // Every prompt starts a fresh sequence. Reusing the KV cache here leaks
+    // tokens from the previous chat into the next request.
+    llama_memory_clear(llama_get_memory(g_ctx), true);
     g_cancel.store(false);
     jclass cb_class = env->GetObjectClass(callback);
     jmethodID on_token = env->GetMethodID(cb_class, "onToken", "(Ljava/lang/String;)V");
@@ -68,6 +71,17 @@ Java_com_natasha_local_llm_LlamaBridge_generate(
         env->ReleaseStringUTFChars(jprompt, prompt);
         return JNI_TRUE;
     }
+
+    const int32_t context_limit = static_cast<int32_t>(llama_n_ctx(g_ctx));
+    if (n_prompt >= context_limit) {
+        jstring message = env->NewStringUTF("Prompt exceeds the loaded model context window");
+        env->CallVoidMethod(callback, on_error, message);
+        env->DeleteLocalRef(message);
+        env->ReleaseStringUTFChars(jprompt, prompt);
+        return JNI_TRUE;
+    }
+    const int32_t generation_limit = std::max<int32_t>(
+        0, std::min<int32_t>(max_tokens, context_limit - n_prompt));
 
     std::vector<llama_token> prompt_tokens(n_prompt);
     if (llama_tokenize(vocab, prompt, (int32_t)strlen(prompt), prompt_tokens.data(), n_prompt, true, true) < 0) {
@@ -121,7 +135,7 @@ Java_com_natasha_local_llm_LlamaBridge_generate(
     }
 
     llama_pos pos = n_prompt;
-    for (int i = 0; i < max_tokens && !g_cancel.load(); ++i) {
+    for (int i = 0; i < generation_limit && !g_cancel.load(); ++i) {
         llama_token next = llama_sampler_sample(sampler, g_ctx, -1);
         if (llama_vocab_is_eog(vocab, next)) break;
 
@@ -129,7 +143,11 @@ Java_com_natasha_local_llm_LlamaBridge_generate(
         int32_t len = llama_token_to_piece(vocab, next, piece, sizeof(piece), 0, true);
         if (len > 0) {
             std::string out(piece, len);
-            env->CallVoidMethod(callback, on_token, env->NewStringUTF(out.c_str()));
+            jstring token_text = env->NewStringUTF(out.c_str());
+            if (token_text) {
+                env->CallVoidMethod(callback, on_token, token_text);
+                env->DeleteLocalRef(token_text);
+            }
         }
 
         if (!set_batch(&next, 1, pos++) ||

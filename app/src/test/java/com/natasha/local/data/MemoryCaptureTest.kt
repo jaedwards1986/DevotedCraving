@@ -19,7 +19,7 @@ class MemoryCaptureTest {
 
     @Test fun capturesTheSentenceContainingThePreference() {
         assertEquals(
-            listOf("The weather is nice", "I prefer short answers"),
+            listOf("I prefer short answers"),
             MemoryCapture.extract("The weather is nice. I prefer short answers.")
         )
     }
