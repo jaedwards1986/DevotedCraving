@@ -110,13 +110,16 @@ fun NatashaApp() {
         if (latestConversation != null) conversationId = latestConversation
         refresh()
         val selectedBeforeInstall = db.models().selected()
-        val selected = if (selectedBeforeInstall == null) {
-            status = "Installing built-in Natasha model…"
+        val needsPreferredModel = selectedBeforeInstall == null ||
+            selectedBeforeInstall.name.contains("Llama 3.2 1B", ignoreCase = true) ||
+            selectedBeforeInstall.path.contains("llama-3.2-1b", ignoreCase = true)
+        val selected = if (needsPreferredModel) {
+            status = if (selectedBeforeInstall == null) "Installing ForgeAI's recommended model…" else "Replacing the old undersized model…"
             runCatching {
                 withContext(Dispatchers.IO) { ensurePreferredModel(context, db) }
             }.getOrElse {
-                status = "Built-in model install failed: " + (it.message ?: "unknown error")
-                null
+                status = "Model setup failed: " + (it.message ?: "unknown error")
+                selectedBeforeInstall
             }
         } else selectedBeforeInstall
         if (selected != null) {
