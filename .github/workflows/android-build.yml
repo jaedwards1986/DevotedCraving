@@ -51,15 +51,6 @@ jobs:
           gradle --version
           sdkmanager --list_installed
 
-      - name: Download built-in Natasha model
-        run: |
-          mkdir -p app/src/main/assets
-          curl -L --fail --retry 3 --retry-delay 2 \
-            -o app/src/main/assets/Llama-3.2-1B-Instruct-Q4_K_S.gguf \
-            https://huggingface.co/bartowski/Llama-3.2-1B-Instruct-GGUF/resolve/main/Llama-3.2-1B-Instruct-Q4_K_S.gguf
-          test -s app/src/main/assets/Llama-3.2-1B-Instruct-Q4_K_S.gguf
-          sha256sum app/src/main/assets/Llama-3.2-1B-Instruct-Q4_K_S.gguf
-
       - name: Run unit tests and assemble APKs
         run: gradle testDebugUnitTest lintDebug assembleDebug assembleRelease --no-daemon --stacktrace
 
