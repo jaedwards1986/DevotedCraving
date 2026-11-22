@@ -1080,6 +1080,7 @@ private fun ModelsScreen(
 
 @Composable
 private fun MemoryScreen(memories: List<MemoryEntity>, db: AppDatabase, scope: CoroutineScope, refresh: () -> Unit) {
+    val context = LocalContext.current
     var query by rememberSaveable { mutableStateOf("") }
     var editingId by rememberSaveable { mutableStateOf<Long?>(null) }
     var draft by rememberSaveable { mutableStateOf("") }
