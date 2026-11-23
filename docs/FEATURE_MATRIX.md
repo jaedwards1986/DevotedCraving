@@ -23,8 +23,8 @@ Status meanings:
 | Capability | Status | Evidence / remaining work |
 |---|---|---|
 | 100% free, on-device inference | Not implemented | Current chat client uses an OpenAI-compatible HTTP endpoint. |
-| Embedded llama.cpp Android/JNI runtime | Not implemented | No embedded local inference runtime was present in the audited source tree. |
-| Selected Llama 3 8B Instruct GGUF Q5_K_M model | Planned | Model selected; exact downloadable artifact and checksum still need pinning. |
+| Minimal Android JNI bridge health check and UTF-8 round-trip | Implemented (code); device verification pending | CMake builds an arm64-v8a shared library and Settings exposes a manual health-check button. This is a bridge diagnostic only, not llama.cpp. |\n| Embedded llama.cpp inference runtime | Not implemented | No llama.cpp library, model context, GGUF loader, or token-generation path is present. |
+| Selected Llama 3 8B Instruct GGUF Q5_K_M model | Planned | Model selected; exact downloadable artifact and checksum still need pinning. |\n| CI smoke-test GGUF artifact | Bundled by CI; runtime use not implemented | Workflow currently downloads Qwen3 4B Instruct Q4_K_M and packages it into the APK; app-side loading is not implemented. It is not the selected Llama 3 production target. |
 | Temperature 0.95 | Partial | Temperature is configurable and persisted, but the default remains 0.7. |
 | Top-P 0.95 | Not implemented | Not present in the current request DTO or native sampler integration. |
 | Frequency penalty 0.5 | Not implemented | Not present in the current request DTO or native sampler integration. |
