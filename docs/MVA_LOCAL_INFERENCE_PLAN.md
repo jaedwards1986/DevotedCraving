@@ -44,7 +44,7 @@ The repository should depend on an inference abstraction, not directly on JNI or
 
 - [x] Added an Android NDK/CMake target restricted to `arm64-v8a`.
 - [x] Added a minimal Kotlin JNI wrapper with native runtime/ABI identification.
-- [x] Added a native UTF-16 -> standard UTF-8 -> UTF-16 round-trip probe, including accented text, Japanese characters, and a supplementary-plane emoji.
+- [x] Added a native UTF-16 -> standard UTF-8 -> UTF-16 round-trip probe, including accented text, Japanese characters, and a supplementary-plane emoji.\n- [x] Added a JNI integer-array copy round-trip using JNI array-region APIs (no pinned array pointer), exercising representative token-ID values.
 - [x] Added a manual **Run JNI Health Check** control in Settings, isolated from the chat flow.
 - [ ] Verify the GitHub Actions native build succeeds.
 - [ ] Run the health check on a physical Android device and confirm the ABI report and exact UTF-8 round-trip.
