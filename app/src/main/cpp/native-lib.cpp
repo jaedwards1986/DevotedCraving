@@ -124,3 +124,27 @@ Java_com_forgeai_chat_nativebridge_NativeBridge_nativeUtf8RoundTrip(
     const std::string utf8 = utf16ToUtf8(env, input);
     return toJavaString(env, utf8ToUtf16(utf8));
 }
+
+extern "C" JNIEXPORT jintArray JNICALL
+Java_com_forgeai_chat_nativebridge_NativeBridge_nativeTokenArrayRoundTrip(
+    JNIEnv* env,
+    jobject,
+    jintArray input
+) {
+    if (input == nullptr) return nullptr;
+
+    const jsize length = env->GetArrayLength(input);
+    std::vector<jint> values(static_cast<size_t>(length));
+    if (length > 0) {
+        env->GetIntArrayRegion(input, 0, length, values.data());
+        if (env->ExceptionCheck()) return nullptr;
+    }
+
+    jintArray output = env->NewIntArray(length);
+    if (output == nullptr) return nullptr;
+    if (length > 0) {
+        env->SetIntArrayRegion(output, 0, length, values.data());
+        if (env->ExceptionCheck()) return nullptr;
+    }
+    return output;
+}
