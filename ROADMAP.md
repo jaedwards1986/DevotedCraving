@@ -20,11 +20,13 @@ This roadmap tracks the eight major delivery milestones. A milestone is only mar
 - [x] Neutral dark ForgeAI presentation; Natasha's personality remains in the chat.
 - [ ] Complete interaction, accessibility, and long-conversation testing.
 
-### 4. Local model management — in progress
-- [x] Import GGUF models into app-private storage.
-- [x] Record SHA-256 metadata and support model selection.
-- [x] Keep model switching separate from Natasha's identity and project data.
-- [ ] Validate model compatibility, memory use, and inference stability on the target phone.
+### 4. Local model management — not yet implemented in current source
+- [x] Select **Meta Llama 3 8B Instruct, GGUF Q5_K_M** as the primary model integration target (approximately 5.73 GB; exact file/checksum still to be pinned).
+- [ ] Add an embedded Android llama.cpp/JNI runtime; the current source tree contains no local inference engine.
+- [ ] Add GGUF import/download, integrity verification, app-private storage, model selection, load/unload and cancellation.
+- [ ] Implement the Llama 3 Instruct chat template and preserve Natasha's system prompt.
+- [ ] Verify generation offline on a Pixel 9 Pro XL; benchmark load time, first-token latency, tokens/second, RAM and thermals.
+- [ ] Investigate Tensor G4 acceleration separately. CPU/GPU llama.cpp success does not prove NPU execution.
 
 ### 5. Project workspace — in progress
 - [x] Store project descriptions and private project files.
@@ -58,6 +60,10 @@ This roadmap tracks the eight major delivery milestones. A milestone is only mar
 - [ ] Install and exercise the app on a Google Pixel 9 Pro XL.
 - [ ] Measure model loading, memory pressure, thermal behavior, and sustained inference.
 - [ ] Produce a signed release build and document installation/update steps.
+
+## Model selection and current source audit
+
+The primary dialogue model target is **Meta Llama 3 8B Instruct, GGUF Q5_K_M**. This is a selection decision, not an integration milestone. The current checked-in `main` source still uses an OpenAI-compatible HTTP streaming client and defaults to `gpt-4o-mini`; it does not contain an embedded llama.cpp/JNI runtime or GGUF model manager. Do not mark local inference or offline operation complete until those components are implemented and verified on-device.
 
 ## Current verification note
 
