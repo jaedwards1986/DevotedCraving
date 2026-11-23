@@ -76,6 +76,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
+import com.forgeai.chat.nativebridge.NativeBridge
 import com.forgeai.chat.data.preferences.AppSettings
 import com.forgeai.chat.data.preferences.ThemeMode
 import com.forgeai.chat.data.remote.EndpointValidator
@@ -107,6 +108,7 @@ fun SettingsScreen(
     var showApiKey by rememberSaveable { mutableStateOf(false) }
     var showModelPicker by remember { mutableStateOf(false) }
     var showClearDialog by remember { mutableStateOf(false) }
+    var nativeHealthStatus by remember { mutableStateOf("Not tested") }
 
     val urlError = remember(baseUrl) { EndpointValidator.validateEndpointUrl(baseUrl) }
     val modelError = remember(modelName) { EndpointValidator.validateModelName(modelName) }
@@ -442,6 +444,45 @@ fun SettingsScreen(
                     Spacer(Modifier.width(8.dp))
                     Text("Save Configuration")
                 }
+            }
+
+            // JNI bridge diagnostic: verifies native library loading and UTF-8 marshalling.
+            SettingsSectionCard(title = "Native Engine Diagnostics") {
+                Text(
+                    text = "JNI bridge smoke test only. This does not load llama.cpp or a GGUF model.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                OutlinedButton(
+                    onClick = {
+                        nativeHealthStatus = runCatching { NativeBridge.runHealthCheck() }
+                            .fold(
+                                onSuccess = { result ->
+                                    if (result.utf8RoundTripPassed) {
+                                        "${result.runtimeInfo}\nUTF-8 round-trip: PASS"
+                                    } else {
+                                        "${result.runtimeInfo}\nUTF-8 round-trip: FAIL"
+                                    }
+                                },
+                                onFailure = { error ->
+                                    "JNI bridge: FAIL — ${error.javaClass.simpleName}: ${error.message ?: "unknown error"}"
+                                }
+                            )
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(14.dp)
+                ) {
+                    Text("Run JNI Health Check")
+                }
+                Text(
+                    text = nativeHealthStatus,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = if (nativeHealthStatus.contains("PASS")) {
+                        SuccessGreenDark
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    }
+                )
             }
 
             // Appearance Card (Material 3 Dynamic Color & Theme)
