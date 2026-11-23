@@ -40,6 +40,18 @@ GGUF model in app-private files
 
 The repository should depend on an inference abstraction, not directly on JNI or llama.cpp types. The initial implementation can expose a suspendable streaming generation API and a cancellation handle. Native calls must not block the Android main thread. Ensure native context/model lifetime is explicit and serialized where required; do not share one mutable context across concurrent generations.
 
+## Current implementation status (2026-11-23)
+
+- [x] Added an Android NDK/CMake target restricted to `arm64-v8a`.
+- [x] Added a minimal Kotlin JNI wrapper with native runtime/ABI identification.
+- [x] Added a native UTF-16 -> standard UTF-8 -> UTF-16 round-trip probe, including accented text, Japanese characters, and a supplementary-plane emoji.
+- [x] Added a manual **Run JNI Health Check** control in Settings, isolated from the chat flow.
+- [ ] Verify the GitHub Actions native build succeeds.
+- [ ] Run the health check on a physical Android device and confirm the ABI report and exact UTF-8 round-trip.
+- [ ] Add the llama.cpp library and actual model initialization. The current native library is only a bridge stub.
+
+The CI workflow currently downloads and bundles a Qwen3 4B Instruct Q4_K_M GGUF file. This is a candidate smoke-test fixture only; the app does not yet load it, and it does not replace the selected Llama 3 8B Instruct Q5_K_M production target.
+
 ## Priority 1 — Core engine integration
 
 ### Implementation sequence
