@@ -22,7 +22,8 @@ This roadmap tracks the eight major delivery milestones. A milestone is only mar
 
 ### 4. Local model management — not yet implemented in current source
 - [x] Select **Meta Llama 3 8B Instruct, GGUF Q5_K_M** as the primary model integration target (approximately 5.73 GB; exact file/checksum still to be pinned).
-- [ ] Add an embedded Android llama.cpp/JNI runtime; the current source tree contains no local inference engine.
+- [x] Add the minimal Android arm64-v8a CMake/JNI bridge health-check stub and UTF-8 round-trip probe. This proves bridge plumbing only; it is not llama.cpp.
+- [ ] Integrate the pinned llama.cpp runtime, model load/unload, token generation, and cancellation.
 - [ ] Add GGUF import/download, integrity verification, app-private storage, model selection, load/unload and cancellation.
 - [ ] Implement the Llama 3 Instruct chat template and preserve Natasha's system prompt.
 - [ ] Verify generation offline on a Pixel 9 Pro XL; benchmark load time, first-token latency, tokens/second, RAM and thermals.
@@ -63,7 +64,7 @@ This roadmap tracks the eight major delivery milestones. A milestone is only mar
 
 ## Model selection and current source audit
 
-The primary dialogue model target is **Meta Llama 3 8B Instruct, GGUF Q5_K_M**. This is a selection decision, not an integration milestone. The current checked-in `main` source still uses an OpenAI-compatible HTTP streaming client and defaults to `gpt-4o-mini`; it does not contain an embedded llama.cpp/JNI runtime or GGUF model manager. Do not mark local inference or offline operation complete until those components are implemented and verified on-device.
+The primary dialogue model target is **Meta Llama 3 8B Instruct, GGUF Q5_K_M**. This is a selection decision, not an integration milestone. The current checked-in `main` source still uses an OpenAI-compatible HTTP streaming client and defaults to `gpt-4o-mini`. A minimal JNI health/UTF-8 bridge now exists, but it does not contain llama.cpp, model loading, or inference. The CI workflow currently downloads and bundles a Qwen3 4B Q4_K_M GGUF fixture; that artifact is not loaded by the app and is not the selected production model. Do not mark local inference or offline operation complete until llama.cpp and its model lifecycle are implemented and verified on-device.
 
 ## Current verification note
 
