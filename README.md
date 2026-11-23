@@ -1,47 +1,68 @@
 # ForgeAI
 
-ForgeAI is a public-source, local-first Android AI workspace targeting the Google Pixel 9 Pro XL.
+ForgeAI is a public-source, edge-AI Android workspace targeting the Google Pixel 9 Pro XL. Its target architecture performs all AI inference and generation on the phone, without external inference servers or paid cloud AI services.
 
-## Updated architecture baseline
+## Core strategy: Edge AI & model optimization
 
-ForgeAI is designed to be self-contained and usable offline after its required model files have been downloaded. LLM inference and application data remain on the device; no external inference server or paid inference API is part of the target architecture.
+**Non-negotiable product requirement:** after model/runtime assets have been downloaded, all LLM inference and diffusion image generation must execute on the device's dedicated AI acceleration hardware (Tensor/TPU-class accelerator or an equivalent supported mobile accelerator). Cloud inference is not part of the product architecture.
 
-### Target hardware
+The target device is the **Google Pixel 9 Pro XL with Google Tensor G4** (not Tensor G3). The accelerator requirement is a target and acceptance criterion, not a claim that the current llama.cpp build already uses the Tensor NPU. A model/runtime combination is not considered accelerator-enabled until device telemetry or a supported runtime's diagnostics demonstrate that execution is actually placed on the accelerator. If a model cannot be accelerated on the target hardware, select or convert a compatible model/runtime rather than silently treating CPU execution as completion of this requirement.
 
-- Primary device: Google Pixel 9 Pro XL.
-- System-on-chip: Google Tensor G4.
-- Native ABI: ARM64 (arm64-v8a).
+### 1. Model selection
 
-The Tensor G4 includes an on-device AI accelerator, but the presence of that accelerator does not automatically make an arbitrary GGUF model or llama.cpp build run on the NPU. NPU acceleration is a separate optimization project requiring a compatible runtime, model conversion/support, and device verification.
+#### Dialogue and narrative LLM
 
-### Current dialogue engine
+Prioritize compact, quantized models in the **3B–7B parameter range**, with mobile-friendly INT4/INT8 or equivalent quantization and an accelerator-supported execution path. Candidate model families include compact Llama variants and Phi-3-class models; TinyLlama is a smaller fallback candidate, not the preferred quality target. Evaluate model licensing, tokenizer/chat-template compatibility, memory footprint, latency, output quality and actual accelerator support before selecting a default.
 
-- Runtime: native llama.cpp.
-- Model format: GGUF.
-- Android integration: Kotlin with JNI.
-- Inference: on-device; no remote model-serving endpoint.
-- Existing ARM64 native build and GGUF model-management path are retained as the baseline.
+The dialogue model should be evaluated for Natasha's adult fictional roleplay and general conversational/task performance. Fine-tuning or adapters may be considered where lawful and technically supported; do not assume that a model advertised as fine-tuned for a particular style will preserve the app's character behavior without prompt and regression testing.
 
-The existing llama.cpp path must be proven with a real model load and generated response on the target device before changing runtimes or optimizing sampling. CPU/GPU execution details and performance must be measured on-device; successful native compilation alone does not prove runtime inference or NPU use.
+#### Diffusion image generator
 
-### Future acceleration path
+Do not target full SDXL as the default real-time mobile generator. Prioritize mobile-sized diffusion architectures and optimized variants such as MobileDiffusion, Stable Diffusion Turbo-class models, or other lightweight distilled/pruned models with a verified mobile accelerator backend. Favor generation speed, memory efficiency and stable thermal behavior over maximum photorealism. The diffusion model is a separate model/runtime from the dialogue LLM.
 
-LiteRT (including its language-model tooling where appropriate) and Google's Tensor acceleration tooling are candidates for later investigation. They are not currently claimed as integrated or active. Any alternate backend must be optional, benchmarked against the working llama.cpp baseline, and must not change Natasha's identity, stored conversations, memories, or user interface.
+### 2. Runtime and implementation framework
 
-### Planned on-device pipeline
+- **Primary mobile acceleration direction:** LiteRT (the current evolution of TensorFlow Lite) and compatible accelerator delegates/backends where supported by the Pixel device.
+- **Hardware acceleration:** investigate Google's supported Tensor/TPU acceleration interfaces and the exact runtime/model combinations they support. Do not infer NPU use merely because the phone contains a Tensor accelerator.
+- **Current repository baseline:** native llama.cpp with GGUF models through Kotlin/JNI is already present and is retained for the existing implementation and comparison tests. It is not, by itself, proof of Tensor NPU execution. It must be replaced, adapted, or paired with a verified accelerator path to satisfy the final all-AI-compute-on-accelerator requirement.
+- PyTorch Mobile is not the preferred new implementation path; favor currently supported mobile runtimes and documented accelerator integrations.
+- The native Kotlin/Android application orchestrates input, model execution, image generation and presentation. Keep model execution local and modular so backends can be tested independently.
 
-1. Dialogue: GGUF model through llama.cpp/JNI.
-2. Performance: measure load time, memory use, tokens per second, stability and thermal behavior; then optimize.
-3. Character quality: evaluate prompt consistency and response quality without rewriting Natasha's locked character foundation.
-4. Voice input: add Android SpeechRecognizer with an explicitly on-device recognition path where supported. Do not assume speech recognition is offline on every device/configuration; verify offline availability and provide a clear text-input fallback.
-5. Image generation: add a separate, optimized on-device diffusion subsystem only after dialogue is stable. It will require its own model, runtime, storage and memory/performance testing.
+### 3. On-device workflow
 
-The priority order is deliberate: **LLM stability → memory/speed → dialogue quality → speech → image generation.**
+1. **Voice input — Android SpeechRecognizer:** capture speech and convert it to text. Request/check an on-device recognition path where the OS and installed language assets support it. Verify offline operation on the target device; retain text entry as a fallback if offline speech recognition is unavailable.
+2. **LLM director — compact quantized model:** send the recognized or typed text to the local dialogue model using the selected accelerator-supported runtime. The model produces Natasha's narrative response and, when an image is requested, a structured descriptive prompt for the image subsystem. All model inference must remain on-device and use the supported AI accelerator.
+3. **Diffusion artist — optimized lite model:** pass the structured image prompt to a separate, optimized diffusion model. Execute diffusion on the device's supported GPU/NPU/AI accelerator path; measure generation latency, memory and thermals. No remote image-generation service.
+4. **Output — native ForgeAI UI:** display the narrative response and generated image in the app. Preserve conversation history and existing app data locally.
+
+### 4. Extreme mobile setup
+
+| Layer | Component | Optimization / acceptance target | Location |
+|---|---|---|---|
+| Input | Android SpeechRecognizer | On-device speech recognition; offline verified where supported | Pixel OS |
+| Logic | Quantized 3B–7B LLM | INT4/INT8; LiteRT or another verified accelerator runtime | On-device AI accelerator |
+| Generator | MobileDiffusion / Turbo / Lite diffusion | Distilled, pruned or quantized; accelerator-backed | On-device AI accelerator |
+| Orchestration | Kotlin Android app | Manages pipeline, model lifecycle and state | App |
+| Output | Native Compose UI | Displays text and generated images | App |
+
+The Pixel 9 Pro XL's Tensor G4 is the target hardware. The exact accelerator APIs, supported operators, model formats and runtime delegates must be verified against current Google documentation and on-device tests. A CPU/GPU fallback may be useful for development diagnostics, but it does **not** satisfy the final dedicated-AI-accelerator acceptance requirement for LLM or diffusion compute.
+
+### 5. Implementation order
+
+1. Verify the existing local GGUF load and llama.cpp/JNI generation path as a functional baseline.
+2. Inventory Pixel Tensor accelerator support and benchmark compatible LiteRT/Tensor runtime options.
+3. Select a compact 3B–7B dialogue model with a verified accelerator path; compare quality, latency, memory and thermals.
+4. Integrate and verify accelerator execution for dialogue. Keep Natasha's existing character foundation unchanged.
+5. Add offline-capable speech input and verify behavior with airplane mode enabled.
+6. Integrate a separate lightweight diffusion model and verify that image generation executes on the supported device accelerator.
+7. Run full end-to-end offline tests: speech/text → LLM → optional diffusion → native UI.
+
+The priority is **accelerator feasibility → dialogue stability → memory/speed → character quality → speech → image generation**. Do not start diffusion integration until the dialogue accelerator path is stable.
 
 ## Current implementation
 
 - Kotlin, Jetpack Compose, Material 3 and Room persistence.
-- Native llama.cpp JNI inference for local GGUF models (ARM64).
+- Native llama.cpp JNI inference for local GGUF models (ARM64); accelerator/NPU execution is not yet verified.
 - GGUF import into app-private storage, SHA-256 recording and model switching.
 - Token streaming and cancellation; native model load, inference and unload are serialized.
 - Chat history with multiple conversations and bounded text/source-code attachments.
@@ -64,30 +85,34 @@ The priority order is deliberate: **LLM stability → memory/speed → dialogue 
 - Classy neutral dark ForgeAI interface; Natasha's adult personality stays in the chat rather than the visual branding.
 - Android CI workflow configured for unit tests, debug/release APK assembly, and debug APK artifact upload.
 
-## Model setup
+## Model setup and migration
 
-On first launch, ForgeAI automatically downloads, verifies and selects **L3.1-RP-Hero Dirty Harry 8B Q5_K_M** from the public Hugging Face repository `DavidAU/L3.1-RP-Hero-Dirty_Harry-8B-GGUF` (file `L3.1-RP-Hero-Dirty_Harry-8B-D_AU-q5_k_m.gguf`). Its author describes it as an uncensored NSFW roleplay model; the published Q5_K_M file is approximately 5.73 GB. It uses the standard Llama 3 chat template, which ForgeAI selects automatically. The model is not bundled in the APK; first launch requires an internet connection and sufficient free storage. The user does not have to search for, choose, or manually import the initial model. The Models tab remains available later to import, download, and switch models.
+The currently configured first-launch model is **L3.1-RP-Hero Dirty Harry 8B Q5_K_M** from the public Hugging Face repository `DavidAU/L3.1-RP-Hero-Dirty_Harry-8B-GGUF` (file `L3.1-RP-Hero-Dirty_Harry-8B-D_AU-q5_k_m.gguf`), approximately 5.73 GB. This is the existing functional baseline, **not the final optimized model target**: it is larger than the new preferred 3B–7B range, and its current llama.cpp path is not evidence of Tensor accelerator use.
 
-**Offline requirement:** after the GGUF and any required runtime assets are fully downloaded and verified, ordinary chat inference and access to locally stored conversations, memories and projects must work without a network connection. Hugging Face catalog discovery and downloading additional models require internet access. Model switching does not replace Natasha's app-level identity, personality pack, memories, conversations or project data.
+Model migration must be evidence-led. Evaluate candidate 3B–7B models for quality, quantization, context requirements, chat-template support, storage/RAM needs, license and compatibility with an accelerator-supported runtime. Do not silently replace the current model until the replacement is validated and a safe model-switch/rollback path is confirmed. The user should retain the ability to download models while all subsequent inference remains offline.
 
-The current 8B model remains the baseline until actual device benchmarks establish whether a smaller 3B–7B model would provide a better speed, memory and quality trade-off. Do not change the default model solely on theoretical NPU performance claims.
+**Offline requirement:** once models, tokenizers and required runtime assets have been downloaded and verified, dialogue, image generation, and access to locally stored conversations, memories and projects must operate without a network connection. Model catalog discovery and additional downloads may require internet access. No remote inference or image-generation endpoint is permitted.
 
 ## Privacy and connectivity
 
-The app uses HTTPS network access for public Hugging Face model discovery and downloads; inference and stored chat data remain local. The intended post-download operating mode is offline. Android cloud backup is disabled and cleartext traffic is rejected. Public gated repositories that require authentication are not downloadable through the current anonymous catalog flow. Automatic app binary updates are not implemented. Conversation and memory archives can be exported/imported manually; archives are currently unencrypted and should be stored securely. Automatic cloud sync and full-device restore are not implemented.
+Network access is limited to optional public model discovery and model/runtime downloads. Inference and generated images must remain local. Android cloud backup is disabled and cleartext traffic is rejected. Public gated repositories that require authentication are not downloadable through the current anonymous catalog flow. Automatic app binary updates are not implemented. Conversation and memory archives can be exported/imported manually; archives are currently unencrypted and should be stored securely. Automatic cloud sync and full-device restore are not implemented.
 
-## Verification status and implementation gates
+## Verification gates
 
-A successful CI build verifies compilation, native linking and APK packaging for the configured build targets. It does **not** by itself verify installation, GGUF loading, JNI inference, offline behavior, NPU acceleration, speech recognition or image generation on a physical device.
+A successful CI build verifies compilation, native linking and APK packaging for configured targets. It does **not** prove model loading, inference, offline behavior, accelerator use, speech recognition or image generation on a physical device.
 
-The next required device milestone is to:
-1. Install the current APK on a Pixel 9 Pro XL and confirm launch.
-2. Load the configured GGUF and record the exact model name, quantization, file size and load result.
-3. Send a test prompt and verify that a response is generated through the local llama.cpp/JNI path.
-4. Repeat a short inference test with network access disabled to confirm post-download offline operation.
-5. Record load time, memory use, generation speed and thermal behavior before tuning or replacing the backend.
+Track these gates independently:
 
-Do not mark a gate complete without direct device evidence. Preserve Natasha's character foundation and the existing interface during infrastructure verification.
+1. Install the APK on a Pixel 9 Pro XL and confirm launch.
+2. Load the current GGUF and record exact model name, quantization, file size and load result.
+3. Generate a response through the local llama.cpp/JNI baseline.
+4. Benchmark candidate compact LLMs and verify actual Tensor accelerator execution using supported runtime diagnostics/device telemetry.
+5. Confirm dialogue inference remains operational with network access disabled.
+6. Verify on-device SpeechRecognizer behavior offline.
+7. Generate an image with the selected lite diffusion model and verify accelerator execution and offline operation.
+8. Measure latency, peak memory, battery impact and thermal behavior for both LLM and diffusion workloads.
+
+Do not mark accelerator, offline, speech or image-generation gates complete without direct device evidence. Preserve Natasha's character foundation and the existing interface during engine work.
 
 ## Build and verification
 
@@ -95,4 +120,4 @@ Open the repository in Android Studio with a compatible Android SDK and NDK. The
 
 ## Important current limits
 
-Project build plans write reviewed files inside the app-private project workspace; they do not yet execute Gradle or produce an APK on the phone. Model-generated plans depend on the selected local model following the structured proposal format, and every proposal still requires manual review and approval. Chat attachments currently accept bounded text/source files. Image generation, full voice interaction, authenticated gated-model downloads and a complete signed app updater are not implemented yet.
+Project build plans write reviewed files inside the app-private project workspace; they do not yet execute Gradle or produce an APK on the phone. Model-generated plans depend on the selected local model following the structured proposal format, and every proposal still requires manual review and approval. Chat attachments currently accept bounded text/source files. Image generation, full voice interaction, verified Tensor NPU inference, and a complete signed app updater are not implemented yet.
