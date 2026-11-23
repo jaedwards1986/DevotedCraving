@@ -458,11 +458,9 @@ fun SettingsScreen(
                         nativeHealthStatus = runCatching { NativeBridge.runHealthCheck() }
                             .fold(
                                 onSuccess = { result ->
-                                    if (result.utf8RoundTripPassed) {
-                                        "${result.runtimeInfo}\nUTF-8 round-trip: PASS"
-                                    } else {
-                                        "${result.runtimeInfo}\nUTF-8 round-trip: FAIL"
-                                    }
+                                    val utf8 = if (result.utf8RoundTripPassed) "PASS" else "FAIL"
+                                    val tokens = if (result.tokenArrayRoundTripPassed) "PASS" else "FAIL"
+                                    "${result.runtimeInfo}\nUTF-8 string round-trip: $utf8\nToken ID array round-trip: $tokens"
                                 },
                                 onFailure = { error ->
                                     "JNI bridge: FAIL — ${error.javaClass.simpleName}: ${error.message ?: "unknown error"}"
