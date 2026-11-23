@@ -24,7 +24,7 @@ Do not target full SDXL as the default real-time mobile generator. Prioritize mo
 
 - **Primary mobile acceleration direction:** LiteRT (the current evolution of TensorFlow Lite) and compatible accelerator delegates/backends where supported by the Pixel device.
 - **Hardware acceleration:** investigate Google's supported Tensor/TPU acceleration interfaces and the exact runtime/model combinations they support. Do not infer NPU use merely because the phone contains a Tensor accelerator.
-- **Current repository baseline:** native llama.cpp with GGUF models through Kotlin/JNI is already present and is retained for the existing implementation and comparison tests. It is not, by itself, proof of Tensor NPU execution. It must be replaced, adapted, or paired with a verified accelerator path to satisfy the final all-AI-compute-on-accelerator requirement.
+- **Current checked-in source status:** the current `main` source tree does not contain a llama.cpp/JNI runtime, GGUF importer, or local model manager. The chat path currently uses an OpenAI-compatible HTTP streaming client. Earlier statements in this README describing an existing native runtime and GGUF model manager were inaccurate for the checked-in source and are superseded by this status. The first implementation task is to add and verify the embedded local runtime; do not point the current HTTP client at a made-up local endpoint.
 - PyTorch Mobile is not the preferred new implementation path; favor currently supported mobile runtimes and documented accelerator integrations.
 - The native Kotlin/Android application orchestrates input, model execution, image generation and presentation. Keep model execution local and modular so backends can be tested independently.
 
@@ -49,47 +49,36 @@ The Pixel 9 Pro XL's Tensor G4 is the target hardware. The exact accelerator API
 
 ### 5. Implementation order
 
-1. Verify the existing local GGUF load and llama.cpp/JNI generation path as a functional baseline.
-2. Inventory Pixel Tensor accelerator support and benchmark compatible LiteRT/Tensor runtime options.
-3. Select a compact 3B–7B dialogue model with a verified accelerator path; compare quality, latency, memory and thermals.
-4. Integrate and verify accelerator execution for dialogue. Keep Natasha's existing character foundation unchanged.
-5. Add offline-capable speech input and verify behavior with airplane mode enabled.
-6. Integrate a separate lightweight diffusion model and verify that image generation executes on the supported device accelerator.
-7. Run full end-to-end offline tests: speech/text → LLM → optional diffusion → native UI.
+1. Add an embedded Android local-inference runtime and a real GGUF model lifecycle (download/import, validation, load, unload, cancellation and error handling).
+2. Integrate the selected **Meta Llama 3 8B Instruct, GGUF Q5_K_M** model as the primary compatibility target; keep the multi-gigabyte model file separate from the APK.
+3. Verify CPU/GPU llama.cpp inference as a functional baseline, then inventory Pixel Tensor G4 accelerator support and benchmark compatible LiteRT/Tensor runtime options. GGUF through llama.cpp does not automatically use the Tensor NPU.
+4. Compare model load time, first-token latency, tokens/second, peak memory, thermal behavior and conversation quality. Keep Natasha's existing character foundation unchanged.
+5. Only claim dedicated accelerator execution after device-side diagnostics prove it; if the selected GGUF/runtime cannot use the NPU, treat that as an unresolved acceptance gap.
+6. Add offline-capable speech input and verify behavior with airplane mode enabled.
+7. Integrate a separate lightweight diffusion model and verify image generation on the supported device accelerator.
+8. Run full end-to-end offline tests: speech/text → LLM → optional diffusion → native UI.
 
 The priority is **accelerator feasibility → dialogue stability → memory/speed → character quality → speech → image generation**. Do not start diffusion integration until the dialogue accelerator path is stable.
 
-## Current implementation
+## Current implementation (verified source-tree status)
 
 - Kotlin, Jetpack Compose, Material 3 and Room persistence.
-- Native llama.cpp JNI inference for local GGUF models (ARM64); accelerator/NPU execution is not yet verified.
-- GGUF import into app-private storage, SHA-256 recording and model switching.
-- Token streaming and cancellation; native model load, inference and unload are serialized.
-- Chat history with multiple conversations and bounded text/source-code attachments.
-- Prompt-free natural conversation: Natasha's versioned personality is injected automatically, so users can speak normally without slash commands, magic phrases or repeated setup prompts.
-- Natasha personality pack Version 71 preserves her permanently bold, sexually forward adult character and adapts automatically to each selected model's actual capabilities and rules.
-- Natasha's adult fictional sex-worker character profile is stored separately from the selected LLM.
-- An immutable character foundation is injected into every prompt, independent of conversation history and selected model; profile customizations cannot replace her established identity.
-- The locked character voice is explicitly hypersexual, persistently horny, sexually forward, brazen, filthy-mouthed, dirty-minded, and identifies her as a stripper, prostitute, and sex-line operator, while preserving useful task-focused answers.
-- JVM prompt tests cover Dirty Harry RP, Aion RP, Qwen3, Llama 3, generic templates, and attempts to override the core identity.
-- Persistent memory list with search, editing, deletion, pinning, conservative automatic capture, and relevance-ranked recall.
-- Full conversation and memory JSON archive export/import; imported conversation IDs are remapped to avoid merging with existing chats.
-- Project workspace with project descriptions, file creation, editing, safe file moves/renames, and confirmed deletion.
-- Project-aware prompts that include a bounded snapshot of selected source files while excluding hidden/generated folders and redacting common credentials and tokens.
-- Natasha can propose multi-file project changes in a structured plan; ForgeAI parses the proposal, validates relative paths and size limits, and requires a human preview and explicit approval before writing.
-- Reviewed project build plans with path validation, file-size limits and rollback on failed application.
-- Project ZIP export/import with traversal checks, bounded archive sizes, staged restore, rollback on failure, and binary-safe file copying.
-- Persistent project activity journal for file edits, build plans, archive imports/exports, with bounded journal growth.
-- Model manager with GGUF import, public Hugging Face catalog search, in-app GGUF downloads, free-space reserve, size checks, SHA-256 verification when the hub supplies an LFS digest, safe removal and recoverable model switching.
-- Daily WorkManager maintenance scheduling, database integrity checks, low-storage reporting, safe cleanup of abandoned temporary imports, and a manual maintenance trigger.
-- Classy neutral dark ForgeAI interface; Natasha's adult personality stays in the chat rather than the visual branding.
-- Android CI workflow configured for unit tests, debug/release APK assembly, and debug APK artifact upload.
+- DataStore-backed settings, including Natasha's default system prompt.
+- OpenAI-compatible HTTP/SSE chat client, endpoint/model settings, model-list discovery and connection testing.
+- Conversation history, streaming/cancellation UI, and prompt injection through the chat repository.
+- The current default endpoint/model remain `https://api.openai.com/v1` and `gpt-4o-mini`; this is a remote API configuration, not a local Llama configuration.
+- The checked-in source tree currently has no embedded llama.cpp/JNI runtime, GGUF model importer/downloader, local model manager, Tensor NPU backend, or diffusion subsystem.
+- A successful build of this source would therefore not establish local LLM inference or offline operation.
+
+This section intentionally reports only components visible in the current `main` source tree. Earlier descriptions of native llama.cpp inference, GGUF import/model switching, and diffusion are not supported by the currently inspected source tree and must not be treated as implemented.
 
 ## Model setup and migration
 
-The currently configured first-launch model is **L3.1-RP-Hero Dirty Harry 8B Q5_K_M** from the public Hugging Face repository `DavidAU/L3.1-RP-Hero-Dirty_Harry-8B-GGUF` (file `L3.1-RP-Hero-Dirty_Harry-8B-D_AU-q5_k_m.gguf`), approximately 5.73 GB. This is the existing functional baseline, **not the final optimized model target**: it is larger than the new preferred 3B–7B range, and its current llama.cpp path is not evidence of Tensor accelerator use.
+The selected primary model target is **Meta Llama 3 8B Instruct, GGUF Q5_K_M**. A published GGUF listing reports approximately **5.73 GB** for this quantization; the exact repository/file and checksum must be pinned before implementing downloads. Meta's official model card describes the instruction-tuned model as intended for dialogue and lists an 8K context window. Model access is governed by Meta's Llama 3 Community License and applicable usage policy; free access does not mean public-domain or license-free.
 
-Model migration must be evidence-led. Evaluate candidate 3B–7B models for quality, quantization, context requirements, chat-template support, storage/RAM needs, license and compatibility with an accelerator-supported runtime. Do not silently replace the current model until the replacement is validated and a safe model-switch/rollback path is confirmed. The user should retain the ability to download models while all subsequent inference remains offline.
+This is a **selected integration target, not an implemented model**. The current source still defaults to the remote OpenAI-compatible endpoint and has no embedded GGUF runtime. Do not change the default endpoint to localhost until an embedded runtime exists; changing only the model ID would not make Llama run locally. The implementation must add an on-device runtime, a real model lifecycle and the correct Llama 3 chat template, then test on the Pixel 9 Pro XL.
+
+The user's chosen Q5_K_M target is retained even though it is outside the earlier 3B–7B mobile-optimization preference. Benchmark memory use, context/KV-cache size, thermal behavior and sustained token speed on the target device before treating it as a viable default. Keep the model downloadable separately from the APK.
 
 **Offline requirement:** once models, tokenizers and required runtime assets have been downloaded and verified, dialogue, image generation, and access to locally stored conversations, memories and projects must operate without a network connection. Model catalog discovery and additional downloads may require internet access. No remote inference or image-generation endpoint is permitted.
 
