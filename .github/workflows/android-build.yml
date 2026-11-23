@@ -77,18 +77,22 @@ jobs:
           echo "Installable APK size: $APK_SIZE bytes"
           test "$APK_SIZE" -gt 1800000000
 
-      - name: Upload debug APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: forgeai-debug-apk
-          path: app/build/outputs/apk/debug/*.apk
-          if-no-files-found: error
-          retention-days: 14
+      - name: Stage APKs and write archive outside checkout
+        run: |
+          set -euo pipefail
+          STAGE_DIR="$RUNNER_TEMP/forgeai-apk-stage"
+          ARCHIVE="$RUNNER_TEMP/forgeai-apks.zip"
+          mkdir -p "$STAGE_DIR"
+          cp app/build/outputs/apk/debug/*.apk "$STAGE_DIR/"
+          cp app/build/outputs/apk/release/*.apk "$STAGE_DIR/"
+          (cd "$STAGE_DIR" && zip -q "$ARCHIVE" ./*.apk)
+          test -s "$ARCHIVE"
+          unzip -l "$ARCHIVE"
 
-      - name: Upload release APK
+      - name: Publish APK archive
         uses: actions/upload-artifact@v4
         with:
-          name: forgeai-release-apk
-          path: app/build/outputs/apk/release/*.apk
+          name: forgeai-apks
+          path: ${{ runner.temp }}/forgeai-apks.zip
           if-no-files-found: error
           retention-days: 14
