@@ -276,25 +276,29 @@ Java_com_forgeai_chat_nativebridge_NativeBridge_nativeGenerate(
     if (static_cast<uint32_t>(prompt_count + max_tokens) > llama_n_ctx(g_context))
         return errorJson("Prompt plus output exceeds context window");
 
-    llama_batch_ext* batch = llama_batch_ext_init(g_context);
-    if (batch == nullptr) return errorJson("Could not allocate prompt batch");
-    bool batch_ok = true;
-    for (int32_t i = 0; i < prompt_count; ++i) {
-        const int32_t idx = llama_batch_ext_add_token(batch, 0, prompt_tokens[static_cast<size_t>(i)]);
-        const llama_pos pos = i;
-        if (idx < 0 || !llama_batch_ext_set_pos(batch, idx, &pos) ||
-            !llama_batch_ext_set_output_logits(batch, idx, i == prompt_count - 1)) {
-            batch_ok = false;
-            break;
+    bool prompt_ok = true;
+    for (int32_t offset = 0; offset < prompt_count && prompt_ok; offset += 512) {
+        llama_batch_ext* batch = llama_batch_ext_init(g_context);
+        if (batch == nullptr) { prompt_ok = false; break; }
+        const int32_t chunk_end = std::min(prompt_count, offset + 512);
+        for (int32_t i = offset; i < chunk_end; ++i) {
+            const int32_t idx = llama_batch_ext_add_token(batch, 0, prompt_tokens[static_cast<size_t>(i)]);
+            const llama_pos pos = i;
+            if (idx < 0 || !llama_batch_ext_set_pos(batch, idx, &pos) ||
+                !llama_batch_ext_set_output_logits(batch, idx, i == prompt_count - 1)) {
+                prompt_ok = false;
+                break;
+            }
+        }
+        const int32_t result = prompt_ok ? llama_process(g_context, LLAMA_PROCESS_TYPE_DECODE, batch) : -1;
+        llama_batch_ext_free(batch);
+        if (result != 0) {
+            const bool timeout = monotonicNanos() >= deadline;
+            return errorJson(timeout ? "Timed out during prompt evaluation" : "Prompt evaluation failed",
+                             timeout ? "TIMEOUT" : "ERROR");
         }
     }
-    const int32_t prompt_result = batch_ok ? llama_process(g_context, LLAMA_PROCESS_TYPE_DECODE, batch) : -1;
-    llama_batch_ext_free(batch);
-    if (!batch_ok || prompt_result != 0) {
-        const bool timeout = monotonicNanos() >= deadline;
-        return errorJson(timeout ? "Timed out during prompt evaluation" : "Prompt evaluation failed",
-                         timeout ? "TIMEOUT" : "ERROR");
-    }
+    if (!prompt_ok) return errorJson("Prompt batch construction failed");
 
     llama_sampler_chain_params params = llama_sampler_chain_default_params();
     llama_sampler* sampler = llama_sampler_chain_init(params);
