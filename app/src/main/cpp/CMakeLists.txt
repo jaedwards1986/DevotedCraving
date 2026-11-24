@@ -5,6 +5,7 @@ include(FetchContent)
 
 # Reproducible upstream source pin. Do not replace with a moving branch/tag.
 set(FORGEAI_LLAMA_CPP_COMMIT "c74c71a6f7a0b06df30f979520e5d9a86a4d60ad" CACHE STRING "Pinned llama.cpp commit")
+option(FORGEAI_ENABLE_KLEIDIAI "Enable Arm KleidiAI optimized CPU kernels for arm64-v8a" OFF)
 
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
 set(LLAMA_BUILD_TESTS OFF CACHE BOOL "" FORCE)
@@ -20,7 +21,7 @@ set(GGML_OPENMP OFF CACHE BOOL "" FORCE)
 set(GGML_LLAMAFILE OFF CACHE BOOL "" FORCE)
 set(GGML_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GGML_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
-if(ANDROID_ABI STREQUAL "arm64-v8a")
+if(ANDROID_ABI STREQUAL "arm64-v8a" AND FORGEAI_ENABLE_KLEIDIAI)
     set(GGML_CPU_KLEIDIAI ON CACHE BOOL "" FORCE)
 endif()
 
