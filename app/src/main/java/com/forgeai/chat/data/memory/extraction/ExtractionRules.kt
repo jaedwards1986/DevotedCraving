@@ -15,14 +15,6 @@ internal object ExtractionRules {
         """(?i)^\s*(?:maybe|perhaps|possibly|I might|I may|I'm considering|I am considering)\b(.+?)\s*[.!?]*$"""
     )
 
-    val negativePreference = Regex(
-        """(?i)^\s*I\s+(?:really\s+)?(?:do\s+not|don't|dislike|hate|can't stand)\s+(.+?)\s*[.!?]*$"""
-    )
-
-    val positivePreference = Regex(
-        """(?i)^\s*I\s+(?:really\s+)?(?:like|love|prefer|enjoy)\s+(.+?)\s*[.!?]*$"""
-    )
-
     val decisionEvent = Regex(
         """(?i)^\s*(?:we|I)\s+(?:have\s+)?(?:decided|chose|selected)\s+(.+?)\s*[.!?]*$"""
     )
