@@ -9,6 +9,7 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.forgeai.chat.data.local.entity.CorrectionRecordEntity
 import com.forgeai.chat.data.local.entity.MemoryEventEntity
+import com.forgeai.chat.data.local.entity.MemoryEntity
 import com.forgeai.chat.data.local.entity.UserPreferenceEntity
 import kotlinx.coroutines.runBlocking
 import org.junit.After
@@ -99,9 +100,38 @@ class LongTermMemoryMigrationTest {
         db.longTermMemoryDao().upsertPreference(preference)
         assertEquals(preference, db.longTermMemoryDao().getPreference("format"))
 
-        // The legacy archive remains readable after writing to the new LTM tables.
-        assertEquals(120, db.chatDao().getMessagesOnce(1L).size)
+        // Exercise the pre-existing canonical memories table as well.
+        val pineTreeMemory = MemoryEntity(
+            memoryId = "pine-tree-preference",
+            category = "PREFERENCE",
+            subject = "Pine trees",
+            content = "The user likes pine trees",
+            normalizedKey = "preference:likes-pine-trees",
+            status = "ACTIVE"
+        )
+        db.memoryDao().upsert(pineTreeMemory)
+        assertEquals(pineTreeMemory, db.memoryDao().getById("pine-tree-preference"))
+
+        // Deleting one historical message must not cascade into either memory store.
+        val firstMessageId = messages.first().id
+        db.chatDao().deleteMessage(firstMessageId)
+        assertEquals(119, db.chatDao().getMessagesOnce(1L).size)
+        assertEquals(pineTreeMemory, db.memoryDao().getById("pine-tree-preference"))
+        assertEquals(preference, db.longTermMemoryDao().getPreference("format"))
         assertNull(db.chatDao().getConversation(999L))
+
+        // Confirm the expected additive indices exist in the upgraded SQLite schema.
+        val indexedTables = db.openHelper.readableDatabase.query(
+            "SELECT name FROM sqlite_master WHERE type = 'index'"
+        ).use { cursor ->
+            buildSet {
+                val nameColumn = cursor.getColumnIndexOrThrow("name")
+                while (cursor.moveToNext()) add(cursor.getString(nameColumn))
+            }
+        }
+        assert(indexedTables.contains("index_user_preferences_status_updated_at"))
+        assert(indexedTables.contains("index_memory_events_related_entity_id"))
+        assert(indexedTables.contains("index_correction_records_memory_id_corrected_at"))
     }
 
     private class LegacyV1Database(
