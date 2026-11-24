@@ -16,7 +16,7 @@ class GGUFManager {
         data object NotLoaded : State
         data class Validating(val path: String) : State
         data class Loading(val path: String) : State
-        data class Ready(val path: String, val detail: String, val loadDurationMs: Long) : State
+        data class Ready(val path: String, val detail: String, val loadDurationMs: Long, val threads: Int) : State
         data class Unloading(val path: String?) : State
         data class Error(val message: String) : State
     }
@@ -48,7 +48,7 @@ class GGUFManager {
                     mutableState.value = State.Error(result.detail)
                     error(result.detail)
                 }
-                State.Ready(canonical.absolutePath, result.detail, elapsedMs).also { mutableState.value = it }
+                State.Ready(canonical.absolutePath, result.detail, elapsedMs, options.threads).also { mutableState.value = it }
             }
         }
 
