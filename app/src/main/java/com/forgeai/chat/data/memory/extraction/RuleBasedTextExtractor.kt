@@ -91,12 +91,12 @@ class RuleBasedTextExtractor : TextExtractor {
         confidence: Double,
         sourceMessageId: Long?,
         rule: String
-    ) = ExtractionCandidate(
+    ): List<ExtractionCandidate> = listOf(ExtractionCandidate(
         category = category,
         value = value,
         confidence = confidence,
         sensitivity = SensitivityLevel.LOW,
         sourceMessageId = sourceMessageId,
         matchedRule = rule
-    )
+    ))
 }
