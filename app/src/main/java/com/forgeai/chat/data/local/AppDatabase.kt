@@ -6,6 +6,7 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import com.forgeai.chat.data.local.dao.ChatDao
 import com.forgeai.chat.data.local.dao.MemoryDao
+import com.forgeai.chat.data.local.dao.LongTermMemoryDao
 import com.forgeai.chat.data.local.entity.ConversationEntity
 import com.forgeai.chat.data.local.entity.MemoryEntity
 import com.forgeai.chat.data.local.entity.UserPreferenceEntity
@@ -28,6 +29,7 @@ import com.forgeai.chat.data.local.entity.MessageEntity
 abstract class AppDatabase : RoomDatabase() {
     abstract fun chatDao(): ChatDao
     abstract fun memoryDao(): MemoryDao
+    abstract fun longTermMemoryDao(): LongTermMemoryDao
 
     companion object {
         private const val DATABASE_NAME = "forgeai_chat.db"
