@@ -8,12 +8,12 @@ import kotlinx.coroutines.withContext
 data class AcceptanceRun(
     val sequence: String, val configurationId: String, val tokensPerSecond: Double,
     val fidelityScore: Double, val elapsedMs: Long, val outputTokens: Int,
-    val processPssKbAfterRun: Int, val successful: Boolean, val failure: String? = null
+    val processPssKbAfterRun: Long, val successful: Boolean, val failure: String? = null
 )
 
 data class DeviceAcceptanceReport(
     val deviceModel: String, val baseline: List<AcceptanceRun>, val stress: List<AcceptanceRun>,
-    val peakObservedPssKb: Int, val requiredThreadCount: Int, val modelPath: String
+    val peakObservedPssKb: Long, val requiredThreadCount: Int, val modelPath: String
 ) {
     val baselineSuccessful: Int get() = baseline.count { it.successful }
     val stressSuccessful: Int get() = stress.count { it.successful }
