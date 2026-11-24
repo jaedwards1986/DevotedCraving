@@ -68,13 +68,13 @@ interface MemoryDao {
         WHERE memory_id = :memoryId
           AND source_conversation_id = :conversationId
           AND status = 'ACTIVE'
-          AND normalized_key = :expectedNormalizedKey
+          AND content = :expectedPreviousValue
           AND revision = :expectedRevision
     """)
     suspend fun applyCorrectionIfUnchanged(
         memoryId: String,
         conversationId: Long,
-        expectedNormalizedKey: String,
+        expectedPreviousValue: String,
         expectedRevision: Long,
         correctedValue: String,
         now: Long = System.currentTimeMillis()
