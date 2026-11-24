@@ -262,6 +262,22 @@ Java_com_forgeai_chat_nativebridge_NativeBridge_nativeGenerate(
     if (g_model == nullptr || g_context == nullptr) return errorJson("No GGUF model is loaded");
 
     g_cancel_requested.store(false, std::memory_order_relaxed);
+    jclass callback_class = nullptr;
+    jmethodID started_method = nullptr;
+    jmethodID callback_method = nullptr;
+    if (first_token_callback != nullptr) {
+        callback_class = env->GetObjectClass(first_token_callback);
+        if (callback_class != nullptr) {
+            started_method = env->GetMethodID(callback_class, "onGenerationStarted", "()V");
+            if (env->ExceptionCheck()) { env->ExceptionClear(); started_method = nullptr; }
+            callback_method = env->GetMethodID(callback_class, "onFirstToken", "(Ljava/lang/String;)V");
+            if (env->ExceptionCheck()) { env->ExceptionClear(); callback_method = nullptr; }
+            if (started_method != nullptr) {
+                env->CallVoidMethod(first_token_callback, started_method);
+                if (env->ExceptionCheck()) env->ExceptionClear();
+            }
+        }
+    }
     const auto started = std::chrono::steady_clock::now();
     const int64_t deadline = monotonicNanos() + static_cast<int64_t>(timeout_ms) * 1000000LL;
     g_decode_deadline_ns.store(deadline, std::memory_order_relaxed);
@@ -324,15 +340,6 @@ Java_com_forgeai_chat_nativebridge_NativeBridge_nativeGenerate(
     bool cancelled = false;
     bool eog = false;
     bool first_token_sent = false;
-    jclass callback_class = nullptr;
-    jmethodID callback_method = nullptr;
-    if (first_token_callback != nullptr) {
-        callback_class = env->GetObjectClass(first_token_callback);
-        if (callback_class != nullptr) {
-            callback_method = env->GetMethodID(callback_class, "onFirstToken", "(Ljava/lang/String;)V");
-            if (env->ExceptionCheck()) { env->ExceptionClear(); callback_method = nullptr; }
-        }
-    }
     int32_t decode_result = 0;
     for (int32_t i = 0; i < max_tokens; ++i) {
         if (g_cancel_requested.load(std::memory_order_relaxed)) { cancelled = true; break; }
