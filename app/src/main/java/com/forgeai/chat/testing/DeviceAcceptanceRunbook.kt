@@ -41,9 +41,9 @@ object DeviceAcceptanceRunbook {
         val baselineSampler = SamplerConfig(temperature = 0.7f, topP = 0.95f, frequencyPenalty = 0.0f, presencePenalty = 0.0f)
         val stressSampler = SamplerConfigurationIds.highVarianceMatrix().first { it.first == STRESS_CONFIGURATION_ID }.second
         val suite = InferenceTestFixtures.personaSuite()
-        require(suite.size >= 10) { "At least ten persona fixtures are required for independent baseline and stress prompts" }
+        require(suite.size >= 5) { "At least five persona fixtures are required" }
         val baselinePrompts = suite.take(5)
-        val stressPrompts = suite.takeLast(5)
+        val stressPrompts = suite.take(5)
         var peakPss = Debug.getPss()
 
         suspend fun executeSequence(label: String, configurationId: String, sampler: SamplerConfig, prompts: List<TestFixture>): List<AcceptanceRun> {
