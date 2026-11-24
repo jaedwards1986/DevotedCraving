@@ -236,7 +236,7 @@ Java_com_forgeai_chat_nativebridge_NativeBridge_nativeTokenize(JNIEnv* env, jobj
 
 extern "C" JNIEXPORT jstring JNICALL
 Java_com_forgeai_chat_nativebridge_NativeBridge_nativeGenerate(
-    JNIEnv* env, jobject, jstring prompt_text, jfloat temperature, jfloat top_p,
+    JNIEnv* env, jobject, jstring prompt_text, jstring configuration_id_text, jfloat temperature, jfloat top_p,
     jfloat frequency_penalty, jfloat presence_penalty, jint max_tokens,
     jint timeout_ms, jint seed) {
     const auto errorJson = [&](const char* message, const char* status = "ERROR") {
@@ -244,6 +244,9 @@ Java_com_forgeai_chat_nativebridge_NativeBridge_nativeGenerate(
             "\",\"message\":\"" + jsonEscape(message) + "\"}");
     };
     if (prompt_text == nullptr) return errorJson("Prompt is null");
+    if (configuration_id_text == nullptr) return errorJson("Configuration ID is null");
+    const std::string configuration_id = utf16ToUtf8(env, configuration_id_text);
+    if (configuration_id.empty()) return errorJson("Configuration ID is blank");
     if (!std::isfinite(temperature) || temperature < 0.0f || temperature > 2.0f ||
         !std::isfinite(top_p) || top_p <= 0.0f || top_p > 1.0f ||
         !std::isfinite(frequency_penalty) || frequency_penalty < -2.0f || frequency_penalty > 2.0f ||
@@ -342,6 +345,7 @@ Java_com_forgeai_chat_nativebridge_NativeBridge_nativeGenerate(
 
     std::ostringstream json;
     json << "{\"status\":\"" << (timeout ? "TIMEOUT" : (decode_result != 0 ? "ERROR" : "OK"))
+         << "\",\"configuration_id\":\"" << jsonEscape(configuration_id)
          << "\",\"message\":\"" << (timeout ? "Generation deadline exceeded" :
              (decode_result != 0 ? "Token decode failed" : ""))
          << "\",\"text\":\"" << jsonEscape(output) << "\",\"prompt_tokens\":" << prompt_count
