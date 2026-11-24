@@ -387,7 +387,7 @@ Java_com_forgeai_chat_nativebridge_NativeBridge_nativeGenerate(
     json << "{\"status\":\"" << (cancelled ? "CANCELLED" : (timeout ? "TIMEOUT" : (decode_result != 0 ? "ERROR" : "OK")))
          << "\",\"configuration_id\":\"" << jsonEscape(configuration_id)
          << "\",\"message\":\"" << (cancelled ? "Generation cancelled" : (timeout ? "Generation deadline exceeded" :
-             (decode_result != 0 ? "Token decode failed" : ""))
+             (decode_result != 0 ? "Token decode failed" : "")))
          << "\",\"text\":\"" << jsonEscape(output) << "\",\"prompt_tokens\":" << prompt_count
          << ",\"output_tokens\":" << output_ids.size() << ",\"elapsed_ms\":" << elapsed
          << ",\"tokens_per_sec\":" << std::fixed << std::setprecision(3) << rate
