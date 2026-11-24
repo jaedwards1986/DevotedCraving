@@ -4,7 +4,7 @@
 
 This plan supersedes any interpretation that a JNI connectivity probe or a bundled CI model fixture means local inference is operational.
 
-Deployment memory, threading, asynchronous lifecycle, retry, rollback, and sampler-boundary tests are specified in [Deployment Readiness Triage](DEPLOYMENT_READINESS_TRIAGE.md). Those tests are part of the Phase 1/2 model-hardening gate; RAG remains blocked until the physical-device model gate passes.
+Deployment memory, threading, asynchronous lifecycle, retry, rollback, and sampler-boundary tests are specified in [Deployment Readiness Triage](DEPLOYMENT_READINESS_TRIAGE.md). Pixel-specific backend selection is gated by [Pixel 9 Pro XL Accelerator Feasibility](PIXEL_ACCELERATOR_FEASIBILITY.md): CPU first, Vulkan as an optional measured experiment, and no NNAPI/NPU claim without a maintained backend and device proof. Those tests are part of the Phase 1/2 model-hardening gate; RAG remains blocked until the physical-device model gate passes.
 
 ## Baseline audit
 
