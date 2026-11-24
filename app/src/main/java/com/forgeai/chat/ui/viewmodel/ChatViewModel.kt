@@ -8,6 +8,7 @@ import com.forgeai.chat.data.preferences.AppSettings
 import com.forgeai.chat.data.preferences.ThemeMode
 import com.forgeai.chat.data.remote.EndpointValidator
 import com.forgeai.chat.data.repository.ChatRepository
+import com.forgeai.chat.domain.settings.NatashaSettingsCommandParser
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
@@ -203,6 +204,14 @@ class ChatViewModel(
         if (prompt.isEmpty() || _isStreaming.value) return
 
         val settings = latestSettings
+        val settingsCommand = NatashaSettingsCommandParser.apply(prompt, settings.systemPrompt)
+        if (settingsCommand != null) {
+            viewModelScope.launch {
+                repository.updateSystemPrompt(settingsCommand.updatedSystemPrompt)
+                showSnackbar(settingsCommand.confirmation)
+            }
+            return
+        }
         val urlError = EndpointValidator.validateEndpointUrl(settings.baseUrl)
         if (urlError != null) {
             showSnackbar(urlError)
