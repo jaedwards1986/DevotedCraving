@@ -1,5 +1,7 @@
 package com.forgeai.chat.nativebridge
 
+import org.json.JSONObject
+
 /**
  * JNI boundary for the embedded llama.cpp CPU runtime.
  * Tokenization uses the vocabulary of the currently loaded GGUF model.
@@ -14,6 +16,10 @@ object NativeBridge {
     private external fun nativeTokenize(text: String, addBos: Boolean): IntArray?
     private external fun nativeUnloadModel(): Boolean
     private external fun nativeIsModelLoaded(): Boolean
+    private external fun nativeGenerate(
+        prompt: String, temperature: Float, topP: Float, frequencyPenalty: Float,
+        presencePenalty: Float, maxTokens: Int, timeoutMs: Int, seed: Int
+    ): String
 
     data class HealthResult(
         val runtimeInfo: String,
@@ -22,6 +28,21 @@ object NativeBridge {
     )
 
     data class ModelLoadResult(val success: Boolean, val detail: String)
+
+    data class GenerationResult(
+        val status: String,
+        val message: String,
+        val text: String,
+        val promptTokens: Int,
+        val outputTokens: Int,
+        val elapsedMs: Long,
+        val tokensPerSecond: Double,
+        val reachedEndOfGeneration: Boolean,
+        val tokenIds: List<Int>
+    ) {
+        val success: Boolean get() = status == "OK"
+        val timedOut: Boolean get() = status == "TIMEOUT"
+    }
 
     fun runHealthCheck(): HealthResult {
         val probe = "ForgeAI JNI ✓ — café — 日本語 — 😀"
@@ -39,6 +60,39 @@ object NativeBridge {
 
     /** Requires a successfully loaded model; null indicates no model or tokenizer failure. */
     fun tokenize(text: String, addBos: Boolean = true): IntArray? = nativeTokenize(text, addBos)
+
+    /**
+     * Synchronous JNI call: invoke from Dispatchers.IO or another worker thread.
+     * Native code enforces a hard 128-token ceiling and cooperative decode deadline.
+     */
+    fun generate(
+        prompt: String,
+        temperature: Float = 0.7f,
+        topP: Float = 0.95f,
+        frequencyPenalty: Float = 0f,
+        presencePenalty: Float = 0f,
+        maxTokens: Int = 128,
+        timeoutMs: Int = 120_000,
+        seed: Int = -1
+    ): GenerationResult {
+        val raw = nativeGenerate(
+            prompt, temperature, topP, frequencyPenalty, presencePenalty,
+            maxTokens.coerceAtMost(128), timeoutMs, seed
+        )
+        val json = JSONObject(raw)
+        val ids = json.optJSONArray("token_ids")
+        return GenerationResult(
+            status = json.optString("status", "ERROR"),
+            message = json.optString("message"),
+            text = json.optString("text"),
+            promptTokens = json.optInt("prompt_tokens"),
+            outputTokens = json.optInt("output_tokens"),
+            elapsedMs = json.optLong("elapsed_ms"),
+            tokensPerSecond = json.optDouble("tokens_per_sec"),
+            reachedEndOfGeneration = json.optBoolean("eog"),
+            tokenIds = if (ids == null) emptyList() else List(ids.length()) { ids.getInt(it) }
+        )
+    }
 
     fun unloadModel(): Boolean = nativeUnloadModel()
     fun isModelLoaded(): Boolean = nativeIsModelLoaded()
