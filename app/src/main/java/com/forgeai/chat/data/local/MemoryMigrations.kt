@@ -27,7 +27,6 @@ val MIGRATION_1_2 = object : Migration(1, 2) {
                 updated_at INTEGER NOT NULL,
                 last_accessed_at INTEGER,
                 is_pinned INTEGER NOT NULL,
-                revision INTEGER NOT NULL DEFAULT 0,
                 PRIMARY KEY(memory_id)
             )
             """.trimIndent()
