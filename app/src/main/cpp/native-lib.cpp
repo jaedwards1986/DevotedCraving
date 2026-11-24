@@ -173,7 +173,7 @@ Java_com_forgeai_chat_nativebridge_NativeBridge_nativeTokenize(JNIEnv* env, jobj
         capacity = -count;
         tokens.resize(static_cast<size_t>(capacity));
         count = llama_tokenize(vocab, input.data(), static_cast<int32_t>(input.size()),
-            tokens.data(), capacity, add_bos == JNI_TRUE, false);
+            tokens.data(), capacity, add_bos == JNI_TRUE, true);
     }
     if (count < 0) return nullptr;
     jintArray result = env->NewIntArray(count);
