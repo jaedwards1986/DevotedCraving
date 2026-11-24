@@ -30,7 +30,7 @@ data class MemoryEntity(
     @ColumnInfo(name = "normalized_key")
     val normalizedKey: String,
     val sensitivity: String = "LOW",
-    val status: String = "ACTIVE",
+    val status: String = "PENDING_CONSENT",
     val confidence: Double = 1.0,
     @ColumnInfo(name = "source_conversation_id")
     val sourceConversationId: Long? = null,
