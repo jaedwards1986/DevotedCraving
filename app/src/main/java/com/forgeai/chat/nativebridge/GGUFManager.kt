@@ -52,6 +52,31 @@ class GGUFManager {
             }
         }
 
+    suspend fun generate(
+        prompt: String,
+        temperature: Float = 0.7f,
+        topP: Float = 0.95f,
+        frequencyPenalty: Float = 0f,
+        presencePenalty: Float = 0f,
+        maxTokens: Int = 128,
+        timeoutMs: Int = 120_000,
+        seed: Int = -1
+    ): NativeBridge.GenerationResult = withContext(Dispatchers.IO) {
+        mutex.withLock {
+            check(mutableState.value is State.Ready) { "Load a GGUF model before generation" }
+            NativeBridge.generate(
+                prompt = prompt,
+                temperature = temperature,
+                topP = topP,
+                frequencyPenalty = frequencyPenalty,
+                presencePenalty = presencePenalty,
+                maxTokens = maxTokens,
+                timeoutMs = timeoutMs,
+                seed = seed
+            )
+        }
+    }
+
     suspend fun unload(): Boolean = withContext(Dispatchers.IO) {
         mutex.withLock {
             val previousPath = (mutableState.value as? State.Ready)?.path
