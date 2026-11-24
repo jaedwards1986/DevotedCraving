@@ -42,3 +42,84 @@ val MIGRATION_1_2 = object : Migration(1, 2) {
         )
     }
 }
+
+
+/**
+ * Additive LTM expansion. Existing conversations, messages, and memories are
+ * not rebuilt or rewritten. No foreign keys are added to legacy tables.
+ */
+val MIGRATION_2_3 = object : Migration(2, 3) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS user_preferences (
+                setting_name TEXT NOT NULL,
+                setting_value TEXT NOT NULL,
+                metadata TEXT,
+                sensitivity TEXT NOT NULL,
+                status TEXT NOT NULL,
+                confidence REAL NOT NULL,
+                source_conversation_id INTEGER,
+                source_message_id INTEGER,
+                updated_at INTEGER NOT NULL,
+                PRIMARY KEY(setting_name)
+            )
+            """.trimIndent()
+        )
+        db.execSQL(
+            "CREATE INDEX IF NOT EXISTS index_user_preferences_status_updated_at ON user_preferences(status, updated_at)"
+        )
+        db.execSQL(
+            "CREATE INDEX IF NOT EXISTS index_user_preferences_sensitivity_status ON user_preferences(sensitivity, status)"
+        )
+
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS memory_events (
+                event_id TEXT NOT NULL,
+                narrative_snippet TEXT NOT NULL,
+                related_entity_id TEXT,
+                confidence_score REAL NOT NULL,
+                sensitivity TEXT NOT NULL,
+                status TEXT NOT NULL,
+                source_conversation_id INTEGER,
+                source_message_id INTEGER,
+                created_at INTEGER NOT NULL,
+                updated_at INTEGER NOT NULL,
+                PRIMARY KEY(event_id)
+            )
+            """.trimIndent()
+        )
+        db.execSQL(
+            "CREATE INDEX IF NOT EXISTS index_memory_events_related_entity_id ON memory_events(related_entity_id)"
+        )
+        db.execSQL(
+            "CREATE INDEX IF NOT EXISTS index_memory_events_status_created_at ON memory_events(status, created_at)"
+        )
+        db.execSQL(
+            "CREATE INDEX IF NOT EXISTS index_memory_events_source_conversation_id ON memory_events(source_conversation_id)"
+        )
+
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS correction_records (
+                correction_id TEXT NOT NULL,
+                memory_id TEXT NOT NULL,
+                previous_value TEXT NOT NULL,
+                corrected_value TEXT NOT NULL,
+                reason TEXT,
+                source_conversation_id INTEGER,
+                source_message_id INTEGER,
+                corrected_at INTEGER NOT NULL,
+                PRIMARY KEY(correction_id)
+            )
+            """.trimIndent()
+        )
+        db.execSQL(
+            "CREATE INDEX IF NOT EXISTS index_correction_records_memory_id_corrected_at ON correction_records(memory_id, corrected_at)"
+        )
+        db.execSQL(
+            "CREATE INDEX IF NOT EXISTS index_correction_records_source_conversation_id ON correction_records(source_conversation_id)"
+        )
+    }
+}
