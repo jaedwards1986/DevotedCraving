@@ -31,7 +31,9 @@ This roadmap tracks the eight major delivery milestones. A milestone is only mar
 - [ ] Add GGUF import/download, integrity verification, app-private storage, model selection, load/unload and cancellation.
 - [ ] Implement the Llama 3 Instruct chat template and preserve Natasha's system prompt.
 - [ ] Verify generation offline on a Pixel 9 Pro XL; benchmark load time, first-token latency, tokens/second, RAM and thermals.
-- [ ] Investigate Tensor G4 acceleration separately. CPU/GPU llama.cpp success does not prove NPU execution.
+- [ ] Establish the CPU reference with the pinned llama.cpp runtime and measure it on the Pixel 9 Pro XL.
+- [ ] Evaluate Vulkan as an optional Mali-G715 experiment only after CPU inference is correct; do not target Adreno-focused OpenCL initially.
+- [ ] Reconsider NNAPI/Tensor G4 NPU only if a maintained llama.cpp-compatible backend and physical-device execution evidence exist. See [Pixel Accelerator Feasibility](docs/PIXEL_ACCELERATOR_FEASIBILITY.md).
 
 ### 5. Project workspace — in progress
 - [x] Store project descriptions and private project files.
