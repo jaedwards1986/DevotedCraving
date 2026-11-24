@@ -4,6 +4,8 @@
 
 This plan supersedes any interpretation that a JNI connectivity probe or a bundled CI model fixture means local inference is operational.
 
+Deployment memory, threading, asynchronous lifecycle, retry, rollback, and sampler-boundary tests are specified in [Deployment Readiness Triage](DEPLOYMENT_READINESS_TRIAGE.md). Those tests are part of the Phase 1/2 model-hardening gate; RAG remains blocked until the physical-device model gate passes.
+
 ## Baseline audit
 
 At the time this plan was written:
