@@ -67,6 +67,7 @@ object CpuMatrixRunner {
         require(repeatsPerConfiguration in 1..10)
         val observations = mutableListOf<RuntimeObservation>()
         val failures = mutableListOf<String>()
+        val ratingsByConfiguration = mutableMapOf<String, MutableList<PersonaRating>>()
         val prompts = InferenceTestFixtures.personaSuite()
         SamplerConfigurationIds.highVarianceMatrix().forEach { (id, sampler) ->
             repeat(repeatsPerConfiguration) { index ->
@@ -83,8 +84,8 @@ object CpuMatrixRunner {
                         observations += RuntimeObservation(RuntimeBackend.CPU, id, result.tokensPerSecond.coerceAtLeast(0.0), 0.0, result.elapsedMs, result.outputTokens, false)
                     } else {
                         val rating = rater.rate(id, fixture.id, result.text)
-                        val fidelity = PersonaFidelityScorer.summarize(listOf(rating)).fidelityScore
-                        observations += RuntimeObservation(RuntimeBackend.CPU, id, result.tokensPerSecond, fidelity, result.elapsedMs, result.outputTokens, true)
+                        ratingsByConfiguration.getOrPut(id) { mutableListOf() }.add(rating)
+                        observations += RuntimeObservation(RuntimeBackend.CPU, id, result.tokensPerSecond, 0.0, result.elapsedMs, result.outputTokens, true)
                     }
                 } catch (error: Exception) {
                     failures += "$id/${fixture.id}/$index: ${error.javaClass.simpleName}: ${error.message}"
@@ -92,6 +93,14 @@ object CpuMatrixRunner {
                 }
             }
         }
-        return CpuMatrixReport(observations, failures)
+        val aggregateByConfiguration = ratingsByConfiguration.mapValues { (_, ratings) ->
+            PersonaFidelityScorer.summarize(ratings).fidelityScore
+        }
+        val scoredObservations = observations.map { observation ->
+            if (observation.successful) observation.copy(
+                fidelityScore = aggregateByConfiguration[observation.configurationId] ?: 0.0
+            ) else observation
+        }
+        return CpuMatrixReport(scoredObservations, failures)
     }
 }
