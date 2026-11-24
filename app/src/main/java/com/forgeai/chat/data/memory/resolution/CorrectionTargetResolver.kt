@@ -91,6 +91,7 @@ class CorrectionTargetResolver(
         return CorrectionResolution.Resolved(
             targetMemoryId = selected.memoryId,
             expectedVersion = selected.version,
+            expectedPreviousValue = anchor.expectedPreviousValue.trim(),
             confidence = anchor.confidence,
             evidence = anchor.evidence.trim()
         )
