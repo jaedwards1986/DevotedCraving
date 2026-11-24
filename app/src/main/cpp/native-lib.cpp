@@ -19,6 +19,7 @@ llama_model* g_model = nullptr;
 llama_context* g_context = nullptr;
 std::once_flag g_backend_once;
 std::atomic<int64_t> g_decode_deadline_ns{0};
+std::atomic<bool> g_cancel_requested{false};
 
 int64_t monotonicNanos() {
     return std::chrono::duration_cast<std::chrono::nanoseconds>(
@@ -26,6 +27,7 @@ int64_t monotonicNanos() {
 }
 
 bool decodeAbortCallback(void*) {
+    if (g_cancel_requested.load(std::memory_order_relaxed)) return true;
     const int64_t deadline = g_decode_deadline_ns.load(std::memory_order_relaxed);
     return deadline > 0 && monotonicNanos() >= deadline;
 }
@@ -238,7 +240,7 @@ extern "C" JNIEXPORT jstring JNICALL
 Java_com_forgeai_chat_nativebridge_NativeBridge_nativeGenerate(
     JNIEnv* env, jobject, jstring prompt_text, jstring configuration_id_text, jfloat temperature, jfloat top_p,
     jfloat frequency_penalty, jfloat presence_penalty, jint max_tokens,
-    jint timeout_ms, jint seed) {
+    jint timeout_ms, jint seed, jobject first_token_callback) {
     const auto errorJson = [&](const char* message, const char* status = "ERROR") {
         return toJavaString(env, std::string("{\"status\":\"") + status +
             "\",\"message\":\"" + jsonEscape(message) + "\"}");
@@ -259,6 +261,7 @@ Java_com_forgeai_chat_nativebridge_NativeBridge_nativeGenerate(
     std::lock_guard<std::mutex> lock(g_model_mutex);
     if (g_model == nullptr || g_context == nullptr) return errorJson("No GGUF model is loaded");
 
+    g_cancel_requested.store(false, std::memory_order_relaxed);
     const auto started = std::chrono::steady_clock::now();
     const int64_t deadline = monotonicNanos() + static_cast<int64_t>(timeout_ms) * 1000000LL;
     g_decode_deadline_ns.store(deadline, std::memory_order_relaxed);
@@ -297,9 +300,11 @@ Java_com_forgeai_chat_nativebridge_NativeBridge_nativeGenerate(
         const int32_t result = prompt_ok ? llama_process(g_context, LLAMA_PROCESS_TYPE_DECODE, batch) : -1;
         llama_batch_ext_free(batch);
         if (result != 0) {
+            const bool cancelled = g_cancel_requested.load(std::memory_order_relaxed);
             const bool timeout = monotonicNanos() >= deadline;
-            return errorJson(timeout ? "Timed out during prompt evaluation" : "Prompt evaluation failed",
-                             timeout ? "TIMEOUT" : "ERROR");
+            return errorJson(cancelled ? "Generation cancelled during prompt evaluation" :
+                (timeout ? "Timed out during prompt evaluation" : "Prompt evaluation failed"),
+                cancelled ? "CANCELLED" : (timeout ? "TIMEOUT" : "ERROR"));
         }
     }
     if (!prompt_ok) return errorJson("Prompt batch construction failed");
@@ -316,14 +321,38 @@ Java_com_forgeai_chat_nativebridge_NativeBridge_nativeGenerate(
     std::string output;
     std::vector<llama_token> output_ids;
     bool timeout = false;
+    bool cancelled = false;
     bool eog = false;
+    bool first_token_sent = false;
+    jclass callback_class = nullptr;
+    jmethodID callback_method = nullptr;
+    if (first_token_callback != nullptr) {
+        callback_class = env->GetObjectClass(first_token_callback);
+        if (callback_class != nullptr) {
+            callback_method = env->GetMethodID(callback_class, "onFirstToken", "(Ljava/lang/String;)V");
+            if (env->ExceptionCheck()) { env->ExceptionClear(); callback_method = nullptr; }
+        }
+    }
     int32_t decode_result = 0;
     for (int32_t i = 0; i < max_tokens; ++i) {
+        if (g_cancel_requested.load(std::memory_order_relaxed)) { cancelled = true; break; }
         if (monotonicNanos() >= deadline) { timeout = true; break; }
         const llama_token token = llama_sampler_sample(sampler, g_context, -1);
         if (llama_vocab_is_eog(vocab, token)) { eog = true; break; }
         output_ids.push_back(token);
-        output += tokenPiece(vocab, token);
+        const std::string piece = tokenPiece(vocab, token);
+        output += piece;
+        if (!first_token_sent && !piece.empty()) {
+            first_token_sent = true;
+            if (callback_method != nullptr) {
+                jstring java_piece = toJavaString(env, piece);
+                if (java_piece != nullptr) {
+                    env->CallVoidMethod(first_token_callback, callback_method, java_piece);
+                    env->DeleteLocalRef(java_piece);
+                    if (env->ExceptionCheck()) env->ExceptionClear();
+                }
+            }
+        }
 
         llama_batch_ext* next = llama_batch_ext_init(g_context);
         if (next == nullptr) { decode_result = -1; break; }
@@ -334,19 +363,23 @@ Java_com_forgeai_chat_nativebridge_NativeBridge_nativeGenerate(
         decode_result = valid ? llama_process(g_context, LLAMA_PROCESS_TYPE_DECODE, next) : -1;
         llama_batch_ext_free(next);
         if (!valid || decode_result != 0) {
-            timeout = monotonicNanos() >= deadline;
+            cancelled = g_cancel_requested.load(std::memory_order_relaxed);
+            timeout = !cancelled && monotonicNanos() >= deadline;
             break;
         }
     }
+    if (callback_class != nullptr) env->DeleteLocalRef(callback_class);
     llama_sampler_free(sampler);
+    cancelled = cancelled || g_cancel_requested.load(std::memory_order_relaxed);
+    timeout = !cancelled && (timeout || monotonicNanos() >= deadline);
     const auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
         std::chrono::steady_clock::now() - started).count();
     const double rate = elapsed > 0 ? output_ids.size() * 1000.0 / elapsed : 0.0;
 
     std::ostringstream json;
-    json << "{\"status\":\"" << (timeout ? "TIMEOUT" : (decode_result != 0 ? "ERROR" : "OK"))
+    json << "{\"status\":\"" << (cancelled ? "CANCELLED" : (timeout ? "TIMEOUT" : (decode_result != 0 ? "ERROR" : "OK")))
          << "\",\"configuration_id\":\"" << jsonEscape(configuration_id)
-         << "\",\"message\":\"" << (timeout ? "Generation deadline exceeded" :
+         << "\",\"message\":\"" << (cancelled ? "Generation cancelled" : (timeout ? "Generation deadline exceeded" :
              (decode_result != 0 ? "Token decode failed" : ""))
          << "\",\"text\":\"" << jsonEscape(output) << "\",\"prompt_tokens\":" << prompt_count
          << ",\"output_tokens\":" << output_ids.size() << ",\"elapsed_ms\":" << elapsed
@@ -355,6 +388,12 @@ Java_com_forgeai_chat_nativebridge_NativeBridge_nativeGenerate(
     for (size_t i = 0; i < output_ids.size(); ++i) { if (i) json << ","; json << output_ids[i]; }
     json << "]}";
     return toJavaString(env, json.str());
+}
+
+extern "C" JNIEXPORT jboolean JNICALL
+Java_com_forgeai_chat_nativebridge_NativeBridge_nativeCancelGeneration(JNIEnv*, jobject) {
+    g_cancel_requested.store(true, std::memory_order_relaxed);
+    return JNI_TRUE;
 }
 
 extern "C" JNIEXPORT jboolean JNICALL
