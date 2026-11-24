@@ -25,7 +25,8 @@ class AppContainer(application: Application) {
         DefaultChatRepository(
             chatDao = database.chatDao(),
             settingsRepository = settingsDataStore,
-            streamClient = streamClient
+            streamClient = streamClient,
+            memoryDao = database.memoryDao()
         )
     }
 }
