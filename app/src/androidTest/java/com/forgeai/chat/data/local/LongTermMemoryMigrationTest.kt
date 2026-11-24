@@ -16,6 +16,7 @@ import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 
@@ -129,9 +130,9 @@ class LongTermMemoryMigrationTest {
                 while (cursor.moveToNext()) add(cursor.getString(nameColumn))
             }
         }
-        assert(indexedTables.contains("index_user_preferences_status_updated_at"))
-        assert(indexedTables.contains("index_memory_events_related_entity_id"))
-        assert(indexedTables.contains("index_correction_records_memory_id_corrected_at"))
+        assertTrue(indexedTables.contains("index_user_preferences_status_updated_at"))
+        assertTrue(indexedTables.contains("index_memory_events_related_entity_id"))
+        assertTrue(indexedTables.contains("index_correction_records_memory_id_corrected_at"))
     }
 
     private class LegacyV1Database(
