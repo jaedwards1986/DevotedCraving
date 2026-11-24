@@ -8,6 +8,7 @@ import com.forgeai.chat.data.local.entity.UserPreferenceEntity
 import com.forgeai.chat.data.memory.extraction.ExtractionCandidate
 import com.forgeai.chat.data.memory.extraction.ExtractionCategory
 import java.security.MessageDigest
+import kotlinx.coroutines.CancellationException
 import java.util.Locale
 
 /**
@@ -56,6 +57,8 @@ class MemoryWriterService(
                     ExtractionCategory.SENSITIVE_DATA -> error("Category was screened before transaction.")
                 }
             }
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (error: Exception) {
             IngestionResult.Failed(error.message ?: error::class.java.simpleName)
         }
