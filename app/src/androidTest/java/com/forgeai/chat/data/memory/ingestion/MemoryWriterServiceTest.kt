@@ -48,7 +48,7 @@ class MemoryWriterServiceTest {
 
         val duplicate = service.ingest(candidate)
         assertTrue(duplicate is IngestionResult.Duplicate)
-        assertEquals(1, database.longTermMemoryDao().getActivePreferences().size)
+        assertEquals(0, database.longTermMemoryDao().getActivePreferences().size)
     }
 
     @Test
@@ -87,6 +87,25 @@ class MemoryWriterServiceTest {
             assertEquals(0, cursor.getInt(0))
         }
         db.query("SELECT COUNT(*) FROM correction_records").use { cursor ->
+            assertTrue(cursor.moveToFirst())
+            assertEquals(0, cursor.getInt(0))
+        }
+    }
+
+
+    @Test
+    fun failedInsertRollsBackAndReturnsFailure() = runBlocking {
+        database.openHelper.writableDatabase.execSQL(
+            "CREATE TRIGGER reject_preference_insert BEFORE INSERT ON user_preferences " +
+                "BEGIN SELECT RAISE(ABORT, 'forced test failure'); END"
+        )
+
+        val result = service.ingest(candidate(ExtractionCategory.PREFERENCE, "I like tea."))
+        assertTrue(result is IngestionResult.Failed)
+
+        database.openHelper.readableDatabase.query(
+            "SELECT COUNT(*) FROM user_preferences"
+        ).use { cursor ->
             assertTrue(cursor.moveToFirst())
             assertEquals(0, cursor.getInt(0))
         }
