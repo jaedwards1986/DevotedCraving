@@ -8,15 +8,21 @@ import com.forgeai.chat.data.local.dao.ChatDao
 import com.forgeai.chat.data.local.dao.MemoryDao
 import com.forgeai.chat.data.local.entity.ConversationEntity
 import com.forgeai.chat.data.local.entity.MemoryEntity
+import com.forgeai.chat.data.local.entity.UserPreferenceEntity
+import com.forgeai.chat.data.local.entity.MemoryEventEntity
+import com.forgeai.chat.data.local.entity.CorrectionRecordEntity
 import com.forgeai.chat.data.local.entity.MessageEntity
 
 @Database(
     entities = [
         ConversationEntity::class,
         MessageEntity::class,
-        MemoryEntity::class
+        MemoryEntity::class,
+        UserPreferenceEntity::class,
+        MemoryEventEntity::class,
+        CorrectionRecordEntity::class
     ],
-    version = 2,
+    version = 3,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -36,7 +42,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     DATABASE_NAME
                 )
-                    .addMigrations(MIGRATION_1_2)
+                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
                     .build()
                     .also { instance = it }
             }
