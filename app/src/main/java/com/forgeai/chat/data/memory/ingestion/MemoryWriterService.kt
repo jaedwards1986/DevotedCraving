@@ -21,8 +21,38 @@ import java.util.Locale
  */
 class MemoryWriterService(
     private val database: AppDatabase,
-    private val memoryDao: LongTermMemoryDao
+    private val memoryDao: LongTermMemoryDao,
+    private val correctionValidator: com.forgeai.chat.data.memory.resolution.AnchorValidator? = null,
+    private val correctionTransactionManager: CorrectionTransactionManager = CorrectionTransactionManager(
+        database = database,
+        memoryDao = database.memoryDao(),
+        longTermMemoryDao = memoryDao
+    )
 ) : IngestionService {
+
+    /**
+     * Correction-specific ingress. Validation is advisory; the transaction manager
+     * re-checks the live target before mutating it.
+     */
+    suspend fun ingestCorrection(
+        input: com.forgeai.chat.data.memory.resolution.AnchoredCorrection,
+        consentGranted: Boolean
+    ): CorrectionWriteResult {
+        val validator = correctionValidator
+            ?: return CorrectionWriteResult.Rejected("Correction validator is not configured.")
+        return when (val resolution = validator.validate(input)) {
+            is com.forgeai.chat.data.memory.resolution.CorrectionResolution.Resolved ->
+                correctionTransactionManager.write(input, resolution, consentGranted)
+            is com.forgeai.chat.data.memory.resolution.CorrectionResolution.Ambiguous ->
+                CorrectionWriteResult.Conflict("Correction target is ambiguous: ${resolution.candidateMemoryIds.joinToString()}")
+            is com.forgeai.chat.data.memory.resolution.CorrectionResolution.Stale ->
+                CorrectionWriteResult.Conflict("Correction target is stale: ${resolution.targetMemoryId}")
+            is com.forgeai.chat.data.memory.resolution.CorrectionResolution.Invalid ->
+                CorrectionWriteResult.Rejected(resolution.reason)
+            is com.forgeai.chat.data.memory.resolution.CorrectionResolution.Unresolved ->
+                CorrectionWriteResult.Conflict(resolution.reason)
+        }
+    }
 
     override suspend fun ingest(candidate: ExtractionCandidate): IngestionResult {
         if (candidate.category == ExtractionCategory.SENSITIVE_DATA) {
