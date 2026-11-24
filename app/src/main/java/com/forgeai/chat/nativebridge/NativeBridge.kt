@@ -17,7 +17,7 @@ object NativeBridge {
     private external fun nativeUnloadModel(): Boolean
     private external fun nativeIsModelLoaded(): Boolean
     private external fun nativeGenerate(
-        prompt: String, temperature: Float, topP: Float, frequencyPenalty: Float,
+        prompt: String, configurationId: String, temperature: Float, topP: Float, frequencyPenalty: Float,
         presencePenalty: Float, maxTokens: Int, timeoutMs: Int, seed: Int
     ): String
 
@@ -31,6 +31,7 @@ object NativeBridge {
 
     data class GenerationResult(
         val status: String,
+        val configurationId: String,
         val message: String,
         val text: String,
         val promptTokens: Int,
@@ -73,16 +74,18 @@ object NativeBridge {
         presencePenalty: Float = 0f,
         maxTokens: Int = 128,
         timeoutMs: Int = 120_000,
-        seed: Int = -1
+        seed: Int = -1,
+        configurationId: String = "baseline"
     ): GenerationResult {
         val raw = nativeGenerate(
-            prompt, temperature, topP, frequencyPenalty, presencePenalty,
+            prompt, configurationId, temperature, topP, frequencyPenalty, presencePenalty,
             maxTokens.coerceAtMost(128), timeoutMs, seed
         )
         val json = JSONObject(raw)
         val ids = json.optJSONArray("token_ids")
         return GenerationResult(
             status = json.optString("status", "ERROR"),
+            configurationId = json.optString("configuration_id", configurationId),
             message = json.optString("message"),
             text = json.optString("text"),
             promptTokens = json.optInt("prompt_tokens"),
