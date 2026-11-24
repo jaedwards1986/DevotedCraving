@@ -45,5 +45,11 @@ data class MemoryEntity(
     @ColumnInfo(name = "last_accessed_at")
     val lastAccessedAt: Long? = null,
     @ColumnInfo(name = "is_pinned")
-    val isPinned: Boolean = false
+    val isPinned: Boolean = false,
+    /**
+     * Monotonic optimistic-concurrency token. It is incremented on every
+     * authoritative memory mutation and is never used as wall-clock time.
+     */
+    @ColumnInfo(name = "revision")
+    val revision: Long = 0L
 )
