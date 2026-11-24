@@ -6,6 +6,7 @@ sealed interface CorrectionResolution {
     data class Resolved(
         val targetMemoryId: String,
         val expectedVersion: Long,
+        val expectedPreviousValue: String,
         val confidence: Double,
         val evidence: String
     ) : CorrectionResolution
