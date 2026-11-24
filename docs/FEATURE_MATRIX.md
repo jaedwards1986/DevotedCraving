@@ -30,7 +30,9 @@ Status meanings:
 | Frequency penalty 0.5 | Not implemented | Not present in the current request DTO or native sampler integration. |
 | Presence penalty 0.3 | Not implemented | Not present in the current request DTO or native sampler integration. |
 | Offline operation after model download | Not implemented | Cannot be claimed until the embedded runtime and model lifecycle are implemented and exercised offline. |
-| Tensor G4 NPU acceleration | Not verified | Requires a supported backend and device-level profiling; CPU/GPU execution is not proof of NPU use. |
+| Tensor G4 NPU acceleration | Not implemented / not verified | Feasibility assessment says no documented first-party llama.cpp NNAPI backend; NNAPI is deprecated in Android 15. Requires a maintained compatible backend and physical-device proof of actual NPU execution. |
+| Pixel Mali-G715 Vulkan acceleration | Not implemented / not verified | Identified as an optional experiment only after CPU inference works. Exact device/driver/model support and sustained speedup have not been demonstrated. |
+| Pixel CPU optimization (Arm/KleidiAI) | Planned | CPU is the required baseline. Evaluate the pinned llama.cpp revision's Android KleidiAI support and benchmark on the physical Pixel; no throughput claim exists yet. |
 
 ## Conversation history and long-term memory
 
