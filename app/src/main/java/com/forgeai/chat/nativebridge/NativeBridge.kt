@@ -3,7 +3,11 @@ package com.forgeai.chat.nativebridge
 import org.json.JSONObject
 
 /** Receives the first non-empty decoded text piece on the native generation thread. */
-fun interface FirstTokenCallback {
+interface FirstTokenCallback {
+    /** Called after native generation owns the model lock and its cancellation flag is armed. */
+    fun onGenerationStarted()
+
+    /** Called once, on the native generation thread, for the first non-empty decoded text piece. */
     fun onFirstToken(tokenPiece: String)
 }
 
