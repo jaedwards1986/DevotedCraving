@@ -77,6 +77,7 @@ data class MemoryEventEntity(
     tableName = "correction_records",
     indices = [
         Index(value = ["memory_id", "corrected_at"]),
+        Index(value = ["status", "corrected_at"]),
         Index(value = ["source_conversation_id"])
     ]
 )
@@ -91,6 +92,8 @@ data class CorrectionRecordEntity(
     @ColumnInfo(name = "corrected_value")
     val correctedValue: String,
     val reason: String? = null,
+    val sensitivity: String = "LOW",
+    val status: String = "PENDING_CONSENT",
     @ColumnInfo(name = "source_conversation_id")
     val sourceConversationId: Long? = null,
     @ColumnInfo(name = "source_message_id")
