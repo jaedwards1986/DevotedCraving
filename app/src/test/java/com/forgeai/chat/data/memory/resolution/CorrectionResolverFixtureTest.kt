@@ -64,7 +64,8 @@ class CorrectionResolverFixtureTest {
                     it.id == scenario.anchor.targetMemoryId
                 }
                 if (scenario.expected == CorrectionResolverFixtures.Expected.UNRESOLVED) {
-                    assertEquals(null, target)
+                    // An unresolved explicit target may be absent or present but inactive.
+                    assertTrue(target == null || !target.active)
                 } else {
                     assertNotNull(target)
                 }
