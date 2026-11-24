@@ -6,6 +6,7 @@ import com.forgeai.chat.data.preferences.SettingsDataStore
 import com.forgeai.chat.data.remote.OpenAiStreamClient
 import com.forgeai.chat.data.repository.ChatRepository
 import com.forgeai.chat.data.repository.DefaultChatRepository
+import com.forgeai.chat.maintenance.MaintenanceScheduler
 
 class AppContainer(application: Application) {
     private val database: AppDatabase by lazy {
@@ -36,5 +37,6 @@ class ForgeAiApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         container = AppContainer(this)
+        MaintenanceScheduler.schedule(this)
     }
 }
