@@ -50,6 +50,6 @@ data class MemoryEntity(
      * Monotonic optimistic-concurrency token. It is incremented on every
      * authoritative memory mutation and is never used as wall-clock time.
      */
-    @ColumnInfo(name = "revision")
+    @ColumnInfo(name = "revision", defaultValue = "0")
     val revision: Long = 0L
 )
