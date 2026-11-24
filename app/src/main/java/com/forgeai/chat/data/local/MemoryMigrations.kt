@@ -27,6 +27,7 @@ val MIGRATION_1_2 = object : Migration(1, 2) {
                 updated_at INTEGER NOT NULL,
                 last_accessed_at INTEGER,
                 is_pinned INTEGER NOT NULL,
+                revision INTEGER NOT NULL DEFAULT 0,
                 PRIMARY KEY(memory_id)
             )
             """.trimIndent()
@@ -43,11 +44,6 @@ val MIGRATION_1_2 = object : Migration(1, 2) {
     }
 }
 
-
-/**
- * Additive LTM expansion. Existing conversations, messages, and memories are
- * not rebuilt or rewritten. No foreign keys are added to legacy tables.
- */
 val MIGRATION_2_3 = object : Migration(2, 3) {
     override fun migrate(db: SupportSQLiteDatabase) {
         db.execSQL(
@@ -72,7 +68,6 @@ val MIGRATION_2_3 = object : Migration(2, 3) {
         db.execSQL(
             "CREATE INDEX IF NOT EXISTS index_user_preferences_sensitivity_status ON user_preferences(sensitivity, status)"
         )
-
         db.execSQL(
             """
             CREATE TABLE IF NOT EXISTS memory_events (
@@ -99,7 +94,6 @@ val MIGRATION_2_3 = object : Migration(2, 3) {
         db.execSQL(
             "CREATE INDEX IF NOT EXISTS index_memory_events_source_conversation_id ON memory_events(source_conversation_id)"
         )
-
         db.execSQL(
             """
             CREATE TABLE IF NOT EXISTS correction_records (
@@ -125,6 +119,17 @@ val MIGRATION_2_3 = object : Migration(2, 3) {
         )
         db.execSQL(
             "CREATE INDEX IF NOT EXISTS index_correction_records_source_conversation_id ON correction_records(source_conversation_id)"
+        )
+    }
+}
+
+/**
+ * Adds the monotonic optimistic-concurrency token without rebuilding the memories table.
+ */
+val MIGRATION_3_4 = object : Migration(3, 4) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+            "ALTER TABLE memories ADD COLUMN revision INTEGER NOT NULL DEFAULT 0"
         )
     }
 }
