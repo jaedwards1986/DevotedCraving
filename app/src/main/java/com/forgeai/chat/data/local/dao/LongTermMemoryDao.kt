@@ -35,7 +35,7 @@ interface LongTermMemoryDao {
     @Query("SELECT * FROM memory_events WHERE status = 'ACTIVE' ORDER BY created_at DESC")
     suspend fun getActiveEvents(): List<MemoryEventEntity>
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insertCorrection(correction: CorrectionRecordEntity)
 
     @Query("SELECT * FROM correction_records WHERE memory_id = :memoryId ORDER BY corrected_at DESC")
