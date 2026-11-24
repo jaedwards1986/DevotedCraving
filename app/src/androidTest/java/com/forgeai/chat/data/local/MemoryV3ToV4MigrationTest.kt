@@ -89,7 +89,7 @@ class MemoryV3ToV4MigrationTest {
         Index(value = ["source_conversation_id"])
     ]
 )
-private data class MemoryEntityV3(
+internal data class MemoryEntityV3(
     @PrimaryKey @ColumnInfo(name = "memory_id") val memoryId: String,
     val category: String,
     val subject: String,
@@ -119,4 +119,4 @@ private data class MemoryEntityV3(
     version = 3,
     exportSchema = false
 )
-private abstract class AppDatabaseV3 : RoomDatabase()
+internal abstract class AppDatabaseV3 : RoomDatabase()
