@@ -28,6 +28,33 @@ class RuleBasedTextExtractorTest {
     }
 
     @Test
+    fun explicitDoNotLikeIsClassifiedAsDislike() {
+        val result = extractor.extract("I do not like noisy restaurants.").single()
+
+        assertEquals(ExtractionCategory.DISLIKE, result.category)
+        assertEquals("noisy restaurants", result.value)
+    }
+
+    @Test
+    fun emphaticDoLikeRemainsPositive() {
+        val result = extractor.extract("I do like quiet mornings.").single()
+
+        assertEquals(ExtractionCategory.PREFERENCE, result.category)
+        assertEquals("quiet mornings", result.value)
+    }
+
+    @Test
+    fun doubleNegatedDislikeIsNotMisclassifiedAsPositiveOrNegative() {
+        assertTrue(extractor.extract("I don't dislike coffee.").isEmpty())
+        assertTrue(extractor.extract("I do not hate coffee.").isEmpty())
+    }
+
+    @Test
+    fun negatedLoveIsNotMisclassifiedAsPositivePreference() {
+        assertTrue(extractor.extract("I don't love crowded places.").isEmpty())
+    }
+
+    @Test
     fun uncertainPlanIsNotPromotedToEventOrPreference() {
         val result = extractor.extract("Maybe I'll move next year.").single()
 
