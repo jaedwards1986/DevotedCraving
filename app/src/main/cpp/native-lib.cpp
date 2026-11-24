@@ -126,19 +126,15 @@ Java_com_forgeai_chat_nativebridge_NativeBridge_nativeLoadModel(
     if (model_path == nullptr) return toJavaString(env, "ERROR|Model path is null");
     if (context_size < 512 || context_size > 32768) return toJavaString(env, "ERROR|Context size must be 512..32768");
     if (threads < 1 || threads > 32) return toJavaString(env, "ERROR|Thread count must be 1..32");
-
     const std::string path = utf16ToUtf8(env, model_path);
     std::lock_guard<std::mutex> lock(g_model_mutex);
     if (g_model != nullptr || g_context != nullptr) return toJavaString(env, "ERROR|A model is already loaded");
-
     std::call_once(g_backend_once, [] { llama_backend_init(); });
     llama_model_params model_params = llama_model_default_params();
-    model_params.n_gpu_layers = 0; // Explicit CPU-only baseline.
+    model_params.n_gpu_layers = 0;
     model_params.load_mode = LLAMA_LOAD_MODE_MMAP;
-
     llama_model* model = llama_model_load_from_file(path.c_str(), model_params);
     if (model == nullptr) return toJavaString(env, "ERROR|llama_model_load_from_file failed");
-
     llama_context_params context_params = llama_context_default_params();
     context_params.n_ctx = static_cast<uint32_t>(context_size);
     context_params.n_batch = 512;
@@ -147,13 +143,11 @@ Java_com_forgeai_chat_nativebridge_NativeBridge_nativeLoadModel(
     context_params.n_threads_batch = threads;
     context_params.offload_kqv = false;
     context_params.op_offload = false;
-
     llama_context* context = llama_init_from_model(model, context_params);
     if (context == nullptr) {
         llama_model_free(model);
         return toJavaString(env, "ERROR|llama_init_from_model failed");
     }
-
     g_model = model;
     g_context = context;
     const char* quant = llama_ftype_name(llama_model_ftype(model));
@@ -161,21 +155,41 @@ Java_com_forgeai_chat_nativebridge_NativeBridge_nativeLoadModel(
     return toJavaString(env, std::string("OK|quant=") + (quant ? quant : "unknown") +
         "|tensor_bytes=" + std::to_string(model_bytes) +
         "|context=" + std::to_string(llama_n_ctx(context)) +
-        "|threads=" + std::to_string(threads) +
-        "|load=mmap|backend=cpu");
+        "|threads=" + std::to_string(threads) + "|load=mmap|backend=cpu");
+}
+
+extern "C" JNIEXPORT jintArray JNICALL
+Java_com_forgeai_chat_nativebridge_NativeBridge_nativeTokenize(JNIEnv* env, jobject, jstring text, jboolean add_bos) {
+    if (text == nullptr) return nullptr;
+    std::lock_guard<std::mutex> lock(g_model_mutex);
+    if (g_model == nullptr) return nullptr;
+    const std::string input = utf16ToUtf8(env, text);
+    const llama_vocab* vocab = llama_model_get_vocab(g_model);
+    int32_t capacity = static_cast<int32_t>(input.size()) + 16;
+    std::vector<llama_token> tokens(static_cast<size_t>(capacity));
+    int32_t count = llama_tokenize(vocab, input.data(), static_cast<int32_t>(input.size()),
+        tokens.data(), capacity, add_bos == JNI_TRUE, false);
+    if (count < 0) {
+        capacity = -count;
+        tokens.resize(static_cast<size_t>(capacity));
+        count = llama_tokenize(vocab, input.data(), static_cast<int32_t>(input.size()),
+            tokens.data(), capacity, add_bos == JNI_TRUE, false);
+    }
+    if (count < 0) return nullptr;
+    jintArray result = env->NewIntArray(count);
+    if (result == nullptr) return nullptr;
+    if (count > 0) {
+        std::vector<jint> values(tokens.begin(), tokens.begin() + count);
+        env->SetIntArrayRegion(result, 0, count, values.data());
+    }
+    return result;
 }
 
 extern "C" JNIEXPORT jboolean JNICALL
 Java_com_forgeai_chat_nativebridge_NativeBridge_nativeUnloadModel(JNIEnv*, jobject) {
     std::lock_guard<std::mutex> lock(g_model_mutex);
-    if (g_context != nullptr) {
-        llama_free(g_context);
-        g_context = nullptr;
-    }
-    if (g_model != nullptr) {
-        llama_model_free(g_model);
-        g_model = nullptr;
-    }
+    if (g_context != nullptr) { llama_free(g_context); g_context = nullptr; }
+    if (g_model != nullptr) { llama_model_free(g_model); g_model = nullptr; }
     return JNI_TRUE;
 }
 
