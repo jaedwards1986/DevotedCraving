@@ -63,7 +63,7 @@ object DeviceAcceptanceRunbook {
                     val pss = Debug.getPss()
                     peakPss = maxOf(peakPss, pss)
                     if (!result.success || result.text.isBlank()) {
-                        AcceptanceRun(label, configurationId, result.tokensPerSecond, 0.0, result.elapsedMs, result.outputTokens, pss, false, "\${result.status}: \${result.message}")
+                        AcceptanceRun(label, configurationId, result.tokensPerSecond, 0.0, result.elapsedMs, result.outputTokens, pss, false, "${result.status}: ${result.message}")
                     } else {
                         val rating = rater.rate(configurationId, fixture.id, result.text)
                         val fidelity = PersonaFidelityScorer.summarize(listOf(rating)).fidelityScore
@@ -72,7 +72,7 @@ object DeviceAcceptanceRunbook {
                 } catch (error: Exception) {
                     val pss = Debug.getPss()
                     peakPss = maxOf(peakPss, pss)
-                    AcceptanceRun(label, configurationId, 0.0, 0.0, 0L, 0, pss, false, "\${error.javaClass.simpleName}: \${error.message}")
+                    AcceptanceRun(label, configurationId, 0.0, 0.0, 0L, 0, pss, false, "${error.javaClass.simpleName}: ${error.message}")
                 }
             }
         }
