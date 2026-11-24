@@ -55,6 +55,31 @@ interface MemoryDao {
     @Query("UPDATE memories SET last_accessed_at = :now WHERE memory_id IN (:memoryIds)")
     suspend fun markAccessed(memoryIds: List<String>, now: Long = System.currentTimeMillis())
 
+    /**
+     * Authoritative compare-and-swap correction update. The previous value,
+     * conversation ownership, active state, and revision are all checked by
+     * SQLite in the same UPDATE statement.
+     */
+    @Query("""
+        UPDATE memories
+        SET content = :correctedValue,
+            revision = revision + 1,
+            updated_at = :now
+        WHERE memory_id = :memoryId
+          AND source_conversation_id = :conversationId
+          AND status = 'ACTIVE'
+          AND normalized_key = :expectedNormalizedKey
+          AND revision = :expectedRevision
+    """)
+    suspend fun applyCorrectionIfUnchanged(
+        memoryId: String,
+        conversationId: Long,
+        expectedNormalizedKey: String,
+        expectedRevision: Long,
+        correctedValue: String,
+        now: Long = System.currentTimeMillis()
+    ): Int
+
     @Query("DELETE FROM memories WHERE memory_id = :memoryId")
     suspend fun delete(memoryId: String)
 
