@@ -79,7 +79,7 @@ object CpuMatrixRunner {
                         maxTokens = 128, timeoutMs = timeoutMs, seed = 1000 + index, configurationId = id
                     )
                     if (!result.success || result.text.isBlank()) {
-                        failures += "$id/\${fixture.id}/$index: \${result.status}: \${result.message}"
+                        failures += "$id/${fixture.id}/$index: ${result.status}: ${result.message}"
                         observations += RuntimeObservation(RuntimeBackend.CPU, id, result.tokensPerSecond.coerceAtLeast(0.0), 0.0, result.elapsedMs, result.outputTokens, false)
                     } else {
                         val rating = rater.rate(id, fixture.id, result.text)
@@ -87,7 +87,7 @@ object CpuMatrixRunner {
                         observations += RuntimeObservation(RuntimeBackend.CPU, id, result.tokensPerSecond, fidelity, result.elapsedMs, result.outputTokens, true)
                     }
                 } catch (error: Exception) {
-                    failures += "$id/\${fixture.id}/$index: \${error.javaClass.simpleName}: \${error.message}"
+                    failures += "$id/${fixture.id}/$index: ${error.javaClass.simpleName}: ${error.message}"
                     observations += RuntimeObservation(RuntimeBackend.CPU, id, 0.0, 0.0, 0, 0, false)
                 }
             }
