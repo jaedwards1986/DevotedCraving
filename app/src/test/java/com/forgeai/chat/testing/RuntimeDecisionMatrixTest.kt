@@ -8,7 +8,7 @@ class RuntimeDecisionMatrixTest {
     @Test
     fun fidelityHasHighestWeightAndCpuWinsFivePercentTie() {
         val observations = listOf(
-            RuntimeObservation(RuntimeBackend.CPU, "HV-1", 10.0, 20.0, 1000, 100, true),
+            RuntimeObservation(RuntimeBackend.CPU, "HV-1", 9.0, 20.0, 1000, 100, true),
             RuntimeObservation(RuntimeBackend.VULKAN, "HV-1", 10.2, 20.0, 980, 100, true)
         )
         val complexity = listOf(
