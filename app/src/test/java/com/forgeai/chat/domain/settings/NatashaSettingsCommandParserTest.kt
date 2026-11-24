@@ -18,15 +18,15 @@ class NatashaSettingsCommandParserTest {
         val result = NatashaSettingsCommandParser.apply("Make yourself more playful", "Natasha identity")
         requireNotNull(result)
         assert(result.updatedSystemPrompt.startsWith("Natasha identity"))
-        assert(result.updatedSystemPrompt.contains("more playful"))
+        assert(result.updatedSystemPrompt.contains("User-requested style preference: playful."))
     }
 
     @Test
     fun styleCommandReplacesPreviousStyleInsteadOfAccumulatingConflicts() {
         val first = requireNotNull(NatashaSettingsCommandParser.apply("Make yourself more playful", "Natasha identity"))
         val second = requireNotNull(NatashaSettingsCommandParser.apply("Make yourself more explicit and direct", first.updatedSystemPrompt))
-        assert(!second.updatedSystemPrompt.contains("more playful"))
-        assert(second.updatedSystemPrompt.contains("more explicit and direct"))
+        assert(!second.updatedSystemPrompt.contains("playful"))
+        assert(second.updatedSystemPrompt.contains("User-requested style preference: explicit and direct."))
     }
 
     @Test
