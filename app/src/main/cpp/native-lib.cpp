@@ -33,15 +33,15 @@ std::string jsonEscape(const std::string& value) {
     std::ostringstream out;
     for (unsigned char ch : value) {
         switch (ch) {
-            case '"': out << "\\\\\\\""; break;
-            case '\\\\': out << "\\\\\\\\"; break;
-            case '\\b': out << "\\\\b"; break;
-            case '\\f': out << "\\\\f"; break;
-            case '\\n': out << "\\\\n"; break;
-            case '\\r': out << "\\\\r"; break;
-            case '\\t': out << "\\\\t"; break;
+            case '"': out << "\\\""; break;
+            case '\\': out << "\\\\"; break;
+            case '\b': out << "\\b"; break;
+            case '\f': out << "\\f"; break;
+            case '\n': out << "\\n"; break;
+            case '\r': out << "\\r"; break;
+            case '\t': out << "\\t"; break;
             default:
-                if (ch < 0x20) out << "\\\\u" << std::hex << std::setw(4) << std::setfill('0') << static_cast<int>(ch) << std::dec;
+                if (ch < 0x20) out << "\\u" << std::hex << std::setw(4) << std::setfill('0') << static_cast<int>(ch) << std::dec;
                 else out << static_cast<char>(ch);
         }
     }
@@ -230,6 +230,122 @@ Java_com_forgeai_chat_nativebridge_NativeBridge_nativeTokenize(JNIEnv* env, jobj
         env->SetIntArrayRegion(result, 0, count, values.data());
     }
     return result;
+}
+
+
+extern "C" JNIEXPORT jstring JNICALL
+Java_com_forgeai_chat_nativebridge_NativeBridge_nativeGenerate(
+    JNIEnv* env, jobject, jstring prompt_text, jfloat temperature, jfloat top_p,
+    jfloat frequency_penalty, jfloat presence_penalty, jint max_tokens,
+    jint timeout_ms, jint seed) {
+    const auto errorJson = [&](const char* message, const char* status = "ERROR") {
+        return toJavaString(env, std::string("{\"status\":\"") + status +
+            "\",\"message\":\"" + jsonEscape(message) + "\"}");
+    };
+    if (prompt_text == nullptr) return errorJson("Prompt is null");
+    if (!std::isfinite(temperature) || temperature < 0.0f || temperature > 2.0f ||
+        !std::isfinite(top_p) || top_p <= 0.0f || top_p > 1.0f ||
+        !std::isfinite(frequency_penalty) || frequency_penalty < -2.0f || frequency_penalty > 2.0f ||
+        !std::isfinite(presence_penalty) || presence_penalty < -2.0f || presence_penalty > 2.0f ||
+        max_tokens < 1 || max_tokens > 128 || timeout_ms < 100 || timeout_ms > 600000) {
+        return errorJson("Invalid generation parameters");
+    }
+
+    const std::string prompt = utf16ToUtf8(env, prompt_text);
+    std::lock_guard<std::mutex> lock(g_model_mutex);
+    if (g_model == nullptr || g_context == nullptr) return errorJson("No GGUF model is loaded");
+
+    const auto started = std::chrono::steady_clock::now();
+    const int64_t deadline = monotonicNanos() + static_cast<int64_t>(timeout_ms) * 1000000LL;
+    g_decode_deadline_ns.store(deadline, std::memory_order_relaxed);
+    struct DeadlineReset { ~DeadlineReset() { g_decode_deadline_ns.store(0, std::memory_order_relaxed); } } reset;
+
+    const llama_vocab* vocab = llama_model_get_vocab(g_model);
+    int32_t capacity = static_cast<int32_t>(prompt.size()) + 16;
+    std::vector<llama_token> prompt_tokens(static_cast<size_t>(capacity));
+    int32_t prompt_count = llama_tokenize(vocab, prompt.data(), static_cast<int32_t>(prompt.size()),
+        prompt_tokens.data(), capacity, false, true);
+    if (prompt_count < 0) {
+        capacity = -prompt_count;
+        prompt_tokens.resize(static_cast<size_t>(capacity));
+        prompt_count = llama_tokenize(vocab, prompt.data(), static_cast<int32_t>(prompt.size()),
+            prompt_tokens.data(), capacity, false, true);
+    }
+    if (prompt_count <= 0) return errorJson("Prompt tokenization failed");
+    prompt_tokens.resize(static_cast<size_t>(prompt_count));
+    if (static_cast<uint32_t>(prompt_count + max_tokens) > llama_n_ctx(g_context))
+        return errorJson("Prompt plus output exceeds context window");
+
+    llama_batch_ext* batch = llama_batch_ext_init(g_context);
+    if (batch == nullptr) return errorJson("Could not allocate prompt batch");
+    bool batch_ok = true;
+    for (int32_t i = 0; i < prompt_count; ++i) {
+        const int32_t idx = llama_batch_ext_add_token(batch, 0, prompt_tokens[static_cast<size_t>(i)]);
+        const llama_pos pos = i;
+        if (idx < 0 || !llama_batch_ext_set_pos(batch, idx, &pos) ||
+            !llama_batch_ext_set_output_logits(batch, idx, i == prompt_count - 1)) {
+            batch_ok = false;
+            break;
+        }
+    }
+    const int32_t prompt_result = batch_ok ? llama_process(g_context, LLAMA_PROCESS_TYPE_DECODE, batch) : -1;
+    llama_batch_ext_free(batch);
+    if (!batch_ok || prompt_result != 0) {
+        const bool timeout = monotonicNanos() >= deadline;
+        return errorJson(timeout ? "Timed out during prompt evaluation" : "Prompt evaluation failed",
+                         timeout ? "TIMEOUT" : "ERROR");
+    }
+
+    llama_sampler_chain_params params = llama_sampler_chain_default_params();
+    llama_sampler* sampler = llama_sampler_chain_init(params);
+    if (sampler == nullptr) return errorJson("Sampler initialization failed");
+    llama_sampler_chain_add(sampler, llama_sampler_init_top_p(top_p, 1));
+    llama_sampler_chain_add(sampler, llama_sampler_init_penalties(
+        llama_vocab_n_tokens(vocab), 64, 1.0f, frequency_penalty, presence_penalty));
+    llama_sampler_chain_add(sampler, llama_sampler_init_temp(temperature));
+    llama_sampler_chain_add(sampler, llama_sampler_init_dist(seed < 0 ? LLAMA_DEFAULT_SEED : static_cast<uint32_t>(seed)));
+
+    std::string output;
+    std::vector<llama_token> output_ids;
+    bool timeout = false;
+    bool eog = false;
+    int32_t decode_result = 0;
+    for (int32_t i = 0; i < max_tokens; ++i) {
+        if (monotonicNanos() >= deadline) { timeout = true; break; }
+        const llama_token token = llama_sampler_sample(sampler, g_context, -1);
+        if (llama_vocab_is_eog(vocab, token)) { eog = true; break; }
+        output_ids.push_back(token);
+        output += tokenPiece(vocab, token);
+
+        llama_batch_ext* next = llama_batch_ext_init(g_context);
+        if (next == nullptr) { decode_result = -1; break; }
+        const int32_t idx = llama_batch_ext_add_token(next, 0, token);
+        const llama_pos pos = prompt_count + i;
+        const bool valid = idx >= 0 && llama_batch_ext_set_pos(next, idx, &pos) &&
+            llama_batch_ext_set_output_logits(next, idx, true);
+        decode_result = valid ? llama_process(g_context, LLAMA_PROCESS_TYPE_DECODE, next) : -1;
+        llama_batch_ext_free(next);
+        if (!valid || decode_result != 0) {
+            timeout = monotonicNanos() >= deadline;
+            break;
+        }
+    }
+    llama_sampler_free(sampler);
+    const auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::steady_clock::now() - started).count();
+    const double rate = elapsed > 0 ? output_ids.size() * 1000.0 / elapsed : 0.0;
+
+    std::ostringstream json;
+    json << "{\"status\":\"" << (timeout ? "TIMEOUT" : (decode_result != 0 ? "ERROR" : "OK"))
+         << "\",\"message\":\"" << (timeout ? "Generation deadline exceeded" :
+             (decode_result != 0 ? "Token decode failed" : ""))
+         << "\",\"text\":\"" << jsonEscape(output) << "\",\"prompt_tokens\":" << prompt_count
+         << ",\"output_tokens\":" << output_ids.size() << ",\"elapsed_ms\":" << elapsed
+         << ",\"tokens_per_sec\":" << std::fixed << std::setprecision(3) << rate
+         << ",\"eog\":" << (eog ? "true" : "false") << ",\"token_ids\":[";
+    for (size_t i = 0; i < output_ids.size(); ++i) { if (i) json << ","; json << output_ids[i]; }
+    json << "]}";
+    return toJavaString(env, json.str());
 }
 
 extern "C" JNIEXPORT jboolean JNICALL
