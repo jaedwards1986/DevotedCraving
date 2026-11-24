@@ -46,8 +46,16 @@ object RuntimeDecisionScorer {
         }.sortedByDescending { it.totalScore }
         val cpu = scores.firstOrNull { it.backend == RuntimeBackend.CPU }
         val best = scores.first()
-        if (cpu != null && best.backend != RuntimeBackend.CPU && best.totalScore - cpu.totalScore <= kotlin.math.abs(cpu.totalScore) * tieTolerance) {
-            return RuntimeDecision(RuntimeBackend.CPU, scores, "Scores are within 5%; CPU wins the robustness tie-break.")
+        val bestNonCpu = scores.firstOrNull { it.backend != RuntimeBackend.CPU }
+        if (cpu != null && bestNonCpu != null &&
+            kotlin.math.abs(bestNonCpu.totalScore - cpu.totalScore) <=
+            kotlin.math.abs(cpu.totalScore) * tieTolerance
+        ) {
+            return RuntimeDecision(
+                RuntimeBackend.CPU,
+                scores,
+                "Scores are within ${(tieTolerance * 100).toInt()}%; CPU wins the robustness tie-break."
+            )
         }
         return RuntimeDecision(best.backend, scores, "Selected the highest weighted score from measured observations.")
     }
