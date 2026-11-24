@@ -71,14 +71,16 @@ class RuleBasedTextExtractor : TextExtractor {
         ExtractionRules.notInsteadCorrection.matchEntire(input)?.let { match ->
             val corrected = match.groupValues[2].trim()
             val previous = match.groupValues[3].trim()
-            return ExtractionCandidate(
-                category = ExtractionCategory.CORRECTION,
-                value = corrected,
-                previousValue = previous,
-                confidence = 0.93,
-                sensitivity = SensitivityLevel.LOW,
-                sourceMessageId = sourceMessageId,
-                matchedRule = "explicit-not-instead-correction"
+            return listOf(
+                ExtractionCandidate(
+                    category = ExtractionCategory.CORRECTION,
+                    value = corrected,
+                    previousValue = previous,
+                    confidence = 0.93,
+                    sensitivity = SensitivityLevel.LOW,
+                    sourceMessageId = sourceMessageId,
+                    matchedRule = "explicit-not-instead-correction"
+                )
             )
         }
 
