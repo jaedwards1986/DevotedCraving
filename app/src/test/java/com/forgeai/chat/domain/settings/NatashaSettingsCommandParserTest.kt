@@ -9,7 +9,7 @@ class NatashaSettingsCommandParserTest {
     fun callMeCommandUpdatesAddressingPreference() {
         val result = NatashaSettingsCommandParser.apply("Call me Studly", "Natasha identity")
         requireNotNull(result)
-        assertEquals("I'll address you as Studly.", result.confirmation)
+        assertEquals("Got it. I'll call you Studly.", result.confirmation)
         assert(result.updatedSystemPrompt.contains("Address the user as \"Studly\""))
     }
 
@@ -19,6 +19,22 @@ class NatashaSettingsCommandParserTest {
         requireNotNull(result)
         assert(result.updatedSystemPrompt.startsWith("Natasha identity"))
         assert(result.updatedSystemPrompt.contains("more playful"))
+    }
+
+    @Test
+    fun styleCommandReplacesPreviousStyleInsteadOfAccumulatingConflicts() {
+        val first = requireNotNull(NatashaSettingsCommandParser.apply("Make yourself more playful", "Natasha identity"))
+        val second = requireNotNull(NatashaSettingsCommandParser.apply("Make yourself more explicit and direct", first.updatedSystemPrompt))
+        assert(!second.updatedSystemPrompt.contains("more playful"))
+        assert(second.updatedSystemPrompt.contains("more explicit and direct"))
+    }
+
+    @Test
+    fun stylePreferenceCanBeCleared() {
+        val first = requireNotNull(NatashaSettingsCommandParser.apply("Be more playful", "Natasha identity"))
+        val cleared = requireNotNull(NatashaSettingsCommandParser.apply("Clear my style preference", first.updatedSystemPrompt))
+        assert(!cleared.updatedSystemPrompt.contains("User-requested style preference:"))
+        assert(cleared.updatedSystemPrompt.contains("Natasha identity"))
     }
 
     @Test
