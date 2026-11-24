@@ -2,6 +2,7 @@ package com.forgeai.chat.data.memory.resolution
 
 import com.forgeai.chat.data.memory.extraction.ExtractionCategory
 import java.util.Locale
+import kotlinx.coroutines.CancellationException
 
 sealed interface CorrectionResolution {
     data class Resolved(
@@ -60,6 +61,8 @@ class AnchorValidator(
 
         val context = try {
             contextProvider.getContext(anchor.conversationId, anchor.sourceMessageId)
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (error: Exception) {
             return CorrectionResolution.Unresolved("Correction context is unavailable.")
         }
