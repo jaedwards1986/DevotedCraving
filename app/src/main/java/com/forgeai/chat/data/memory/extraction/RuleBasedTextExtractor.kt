@@ -34,23 +34,17 @@ class RuleBasedTextExtractor : TextExtractor {
             )
         }
 
-        ExtractionRules.negativePreference.matchEntire(input)?.let { match ->
+        NegationHandler.classify(input)?.let { match ->
+            val category = when (match.polarity) {
+                PreferencePolarity.POSITIVE -> ExtractionCategory.PREFERENCE
+                PreferencePolarity.NEGATIVE -> ExtractionCategory.DISLIKE
+            }
             return candidate(
-                category = ExtractionCategory.DISLIKE,
-                value = match.groupValues[1].trim(),
-                confidence = 0.96,
+                category = category,
+                value = match.value,
+                confidence = 0.97,
                 sourceMessageId = sourceMessageId,
-                rule = "explicit-negative-preference"
-            )
-        }
-
-        ExtractionRules.positivePreference.matchEntire(input)?.let { match ->
-            return candidate(
-                category = ExtractionCategory.PREFERENCE,
-                value = match.groupValues[1].trim(),
-                confidence = 0.96,
-                sourceMessageId = sourceMessageId,
-                rule = "explicit-positive-preference"
+                rule = match.matchedRule
             )
         }
 
