@@ -37,7 +37,11 @@ object DeviceAcceptanceRunbook {
         manager: GGUFManager, systemPrompt: String, rater: PersonaOutputRater, modelPath: String,
         deviceModel: String = android.os.Build.MODEL, timeoutMs: Int = 180_000
     ): DeviceAcceptanceReport = withContext(Dispatchers.Default) {
-        check(manager.state.value is GGUFManager.State.Ready) { "Load the production GGUF before running acceptance tests" }
+        val ready = manager.state.value as? GGUFManager.State.Ready
+        check(ready != null) { "Load the production GGUF before running acceptance tests" }
+        check(ready.threads == REQUIRED_CPU_THREADS) {
+            "CPU baseline requires exactly $REQUIRED_CPU_THREADS thread; model was loaded with ${ready.threads}"
+        }
         val baselineSampler = SamplerConfig(temperature = 0.7f, topP = 0.95f, frequencyPenalty = 0.0f, presencePenalty = 0.0f)
         val stressSampler = SamplerConfigurationIds.highVarianceMatrix().first { it.first == STRESS_CONFIGURATION_ID }.second
         val suite = InferenceTestFixtures.personaSuite()
@@ -75,6 +79,6 @@ object DeviceAcceptanceRunbook {
 
         val baseline = executeSequence("CPU_BASELINE", BASELINE_CONFIGURATION_ID, baselineSampler, baselinePrompts)
         val stress = executeSequence("CPU_STRESS_HV3", STRESS_CONFIGURATION_ID, stressSampler, stressPrompts)
-        DeviceAcceptanceReport(deviceModel, baseline, stress, peakPss, REQUIRED_CPU_THREADS, modelPath)
+        DeviceAcceptanceReport(deviceModel, baseline, stress, peakPss, ready.threads, ready.path)
     }
 }
