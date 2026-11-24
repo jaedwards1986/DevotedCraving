@@ -1,4 +1,5 @@
 #include <jni.h>
+#include <algorithm>
 #include <cstdint>
 #include <atomic>
 #include <chrono>
