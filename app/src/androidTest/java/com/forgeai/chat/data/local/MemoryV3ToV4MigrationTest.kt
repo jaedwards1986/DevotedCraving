@@ -21,6 +21,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Test
 import org.junit.runner.RunWith
+import kotlinx.coroutines.runBlocking
 
 /**
  * Builds a real Room v3 database, then opens it through the production v4 database
@@ -67,7 +68,7 @@ class MemoryV3ToV4MigrationTest {
             .build()
         v4 = upgraded
 
-        val memory = upgraded.memoryDao().getById("legacy-memory")
+        val memory = runBlocking { upgraded.memoryDao().getById("legacy-memory") }
         assertNotNull(memory)
         assertEquals("Qwen", memory?.content)
         assertEquals("PREFERENCE", memory?.category)
