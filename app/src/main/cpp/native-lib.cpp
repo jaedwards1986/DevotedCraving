@@ -1,5 +1,10 @@
 #include <jni.h>
 #include <cstdint>
+#include <atomic>
+#include <chrono>
+#include <cmath>
+#include <iomanip>
+#include <sstream>
 #include <mutex>
 #include <string>
 #include <vector>
@@ -12,6 +17,46 @@ std::mutex g_model_mutex;
 llama_model* g_model = nullptr;
 llama_context* g_context = nullptr;
 std::once_flag g_backend_once;
+std::atomic<int64_t> g_decode_deadline_ns{0};
+
+int64_t monotonicNanos() {
+    return std::chrono::duration_cast<std::chrono::nanoseconds>(
+        std::chrono::steady_clock::now().time_since_epoch()).count();
+}
+
+bool decodeAbortCallback(void*) {
+    const int64_t deadline = g_decode_deadline_ns.load(std::memory_order_relaxed);
+    return deadline > 0 && monotonicNanos() >= deadline;
+}
+
+std::string jsonEscape(const std::string& value) {
+    std::ostringstream out;
+    for (unsigned char ch : value) {
+        switch (ch) {
+            case '"': out << "\\\\\\\""; break;
+            case '\\\\': out << "\\\\\\\\"; break;
+            case '\\b': out << "\\\\b"; break;
+            case '\\f': out << "\\\\f"; break;
+            case '\\n': out << "\\\\n"; break;
+            case '\\r': out << "\\\\r"; break;
+            case '\\t': out << "\\\\t"; break;
+            default:
+                if (ch < 0x20) out << "\\\\u" << std::hex << std::setw(4) << std::setfill('0') << static_cast<int>(ch) << std::dec;
+                else out << static_cast<char>(ch);
+        }
+    }
+    return out.str();
+}
+
+std::string tokenPiece(const llama_vocab* vocab, llama_token token) {
+    std::vector<char> buffer(256);
+    int32_t count = llama_token_to_piece(vocab, token, buffer.data(), static_cast<int32_t>(buffer.size()), 0, false);
+    if (count < 0) {
+        buffer.resize(static_cast<size_t>(-count));
+        count = llama_token_to_piece(vocab, token, buffer.data(), static_cast<int32_t>(buffer.size()), 0, false);
+    }
+    return count > 0 ? std::string(buffer.data(), static_cast<size_t>(count)) : std::string();
+}
 
 std::string utf16ToUtf8(JNIEnv* env, jstring value) {
     if (value == nullptr) return {};
@@ -143,6 +188,8 @@ Java_com_forgeai_chat_nativebridge_NativeBridge_nativeLoadModel(
     context_params.n_threads_batch = threads;
     context_params.offload_kqv = false;
     context_params.op_offload = false;
+    context_params.abort_callback = decodeAbortCallback;
+    context_params.abort_callback_data = nullptr;
     llama_context* context = llama_init_from_model(model, context_params);
     if (context == nullptr) {
         llama_model_free(model);
