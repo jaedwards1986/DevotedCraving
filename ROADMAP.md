@@ -1,5 +1,9 @@
 # ForgeAI delivery roadmap
 
+## Current phase execution order
+
+The detailed gated implementation sequence for the model core, turn-aware history, and offline Key Facts/RAG work is in [Phase Execution Plan](docs/PHASE_EXECUTION_MODEL_HISTORY_RAG.md). The required order is Bridge -> Model -> Parameters -> History -> RAG; Phase 2 and Phase 3 work must not begin until the Phase 1 on-device model acceptance gate passes.
+
 This roadmap tracks the eight major delivery milestones. A milestone is only marked complete after its acceptance checks pass; a code commit by itself is not proof of completion.
 
 ## Batch 1 — product foundation through maintenance
