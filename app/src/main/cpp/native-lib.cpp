@@ -168,7 +168,7 @@ Java_com_forgeai_chat_nativebridge_NativeBridge_nativeTokenize(JNIEnv* env, jobj
     int32_t capacity = static_cast<int32_t>(input.size()) + 16;
     std::vector<llama_token> tokens(static_cast<size_t>(capacity));
     int32_t count = llama_tokenize(vocab, input.data(), static_cast<int32_t>(input.size()),
-        tokens.data(), capacity, add_bos == JNI_TRUE, false);
+        tokens.data(), capacity, add_bos == JNI_TRUE, true);
     if (count < 0) {
         capacity = -count;
         tokens.resize(static_cast<size_t>(capacity));
