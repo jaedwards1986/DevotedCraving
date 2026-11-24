@@ -60,7 +60,8 @@ class GGUFManager {
         presencePenalty: Float = 0f,
         maxTokens: Int = 128,
         timeoutMs: Int = 120_000,
-        seed: Int = -1
+        seed: Int = -1,
+        configurationId: String = "baseline"
     ): NativeBridge.GenerationResult = withContext(Dispatchers.IO) {
         mutex.withLock {
             check(mutableState.value is State.Ready) { "Load a GGUF model before generation" }
@@ -72,7 +73,8 @@ class GGUFManager {
                 presencePenalty = presencePenalty,
                 maxTokens = maxTokens,
                 timeoutMs = timeoutMs,
-                seed = seed
+                seed = seed,
+                configurationId = configurationId
             )
         }
     }
@@ -86,12 +88,13 @@ class GGUFManager {
         presencePenalty: Float = 0f,
         maxTokens: Int = 128,
         timeoutMs: Int = 120_000,
-        seed: Int = -1
+        seed: Int = -1,
+        configurationId: String = "baseline"
     ): NativeBridge.GenerationResult {
         val prompt = Llama3PromptBuilder.build(systemPrompt, userMessage).text
         return generate(
             prompt, temperature, topP, frequencyPenalty, presencePenalty,
-            maxTokens, timeoutMs, seed
+            maxTokens, timeoutMs, seed, configurationId
         )
     }
 
