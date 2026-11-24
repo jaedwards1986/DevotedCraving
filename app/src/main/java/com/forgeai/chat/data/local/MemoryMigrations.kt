@@ -108,6 +108,8 @@ val MIGRATION_2_3 = object : Migration(2, 3) {
                 previous_value TEXT NOT NULL,
                 corrected_value TEXT NOT NULL,
                 reason TEXT,
+                sensitivity TEXT NOT NULL,
+                status TEXT NOT NULL,
                 source_conversation_id INTEGER,
                 source_message_id INTEGER,
                 corrected_at INTEGER NOT NULL,
@@ -117,6 +119,9 @@ val MIGRATION_2_3 = object : Migration(2, 3) {
         )
         db.execSQL(
             "CREATE INDEX IF NOT EXISTS index_correction_records_memory_id_corrected_at ON correction_records(memory_id, corrected_at)"
+        )
+        db.execSQL(
+            "CREATE INDEX IF NOT EXISTS index_correction_records_status_corrected_at ON correction_records(status, corrected_at)"
         )
         db.execSQL(
             "CREATE INDEX IF NOT EXISTS index_correction_records_source_conversation_id ON correction_records(source_conversation_id)"
