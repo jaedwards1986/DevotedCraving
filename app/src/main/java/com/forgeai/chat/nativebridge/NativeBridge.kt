@@ -2,6 +2,11 @@ package com.forgeai.chat.nativebridge
 
 import org.json.JSONObject
 
+/** Receives the first non-empty decoded text piece on the native generation thread. */
+fun interface FirstTokenCallback {
+    fun onFirstToken(tokenPiece: String)
+}
+
 /**
  * JNI boundary for the embedded llama.cpp CPU runtime.
  * Tokenization uses the vocabulary of the currently loaded GGUF model.
@@ -16,9 +21,11 @@ object NativeBridge {
     private external fun nativeTokenize(text: String, addBos: Boolean): IntArray?
     private external fun nativeUnloadModel(): Boolean
     private external fun nativeIsModelLoaded(): Boolean
+    private external fun nativeCancelGeneration(): Boolean
     private external fun nativeGenerate(
         prompt: String, configurationId: String, temperature: Float, topP: Float, frequencyPenalty: Float,
-        presencePenalty: Float, maxTokens: Int, timeoutMs: Int, seed: Int
+        presencePenalty: Float, maxTokens: Int, timeoutMs: Int, seed: Int,
+        firstTokenCallback: FirstTokenCallback?
     ): String
 
     data class HealthResult(
@@ -43,6 +50,7 @@ object NativeBridge {
     ) {
         val success: Boolean get() = status == "OK"
         val timedOut: Boolean get() = status == "TIMEOUT"
+        val cancelled: Boolean get() = status == "CANCELLED"
     }
 
     fun runHealthCheck(): HealthResult {
@@ -75,11 +83,12 @@ object NativeBridge {
         maxTokens: Int = 128,
         timeoutMs: Int = 120_000,
         seed: Int = -1,
-        configurationId: String = "baseline"
+        configurationId: String = "baseline",
+        firstTokenCallback: FirstTokenCallback? = null
     ): GenerationResult {
         val raw = nativeGenerate(
             prompt, configurationId, temperature, topP, frequencyPenalty, presencePenalty,
-            maxTokens.coerceAtMost(128), timeoutMs, seed
+            maxTokens.coerceAtMost(128), timeoutMs, seed, firstTokenCallback
         )
         val json = JSONObject(raw)
         val ids = json.optJSONArray("token_ids")
@@ -96,6 +105,9 @@ object NativeBridge {
             tokenIds = if (ids == null) emptyList() else List(ids.length()) { ids.getInt(it) }
         )
     }
+
+    /** Sets a lock-free cooperative abort flag; safe while nativeGenerate holds the model mutex. */
+    fun cancelGeneration(): Boolean = nativeCancelGeneration()
 
     fun unloadModel(): Boolean = nativeUnloadModel()
     fun isModelLoaded(): Boolean = nativeIsModelLoaded()
