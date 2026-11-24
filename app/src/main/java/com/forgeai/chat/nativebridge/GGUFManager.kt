@@ -77,6 +77,24 @@ class GGUFManager {
         }
     }
 
+    suspend fun generateChat(
+        systemPrompt: String,
+        userMessage: String,
+        temperature: Float = 0.7f,
+        topP: Float = 0.95f,
+        frequencyPenalty: Float = 0f,
+        presencePenalty: Float = 0f,
+        maxTokens: Int = 128,
+        timeoutMs: Int = 120_000,
+        seed: Int = -1
+    ): NativeBridge.GenerationResult {
+        val prompt = Llama3PromptBuilder.build(systemPrompt, userMessage).text
+        return generate(
+            prompt, temperature, topP, frequencyPenalty, presencePenalty,
+            maxTokens, timeoutMs, seed
+        )
+    }
+
     suspend fun unload(): Boolean = withContext(Dispatchers.IO) {
         mutex.withLock {
             val previousPath = (mutableState.value as? State.Ready)?.path
