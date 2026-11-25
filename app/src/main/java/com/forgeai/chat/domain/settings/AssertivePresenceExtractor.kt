@@ -1,7 +1,6 @@
 package com.forgeai.chat.domain.settings
 
 import com.forgeai.chat.data.preferences.PersonalitySnapshot
-import kotlin.math.abs
 
 data class AssertivePresenceResult(
     val observedScore: Double,
@@ -16,9 +15,7 @@ class AssertivePresenceExtractor(
     private val detector: LexicalMarkerDetector = DefaultLexicalMarkerDetector(),
     private val tolerance: Double = 15.0
 ) {
-    init {
-        require(tolerance > 0.0 && tolerance <= 100.0)
-    }
+    private val alignmentMatcher = AlignmentMatcher(tolerance)
 
     fun evaluate(text: String, snapshot: PersonalitySnapshot): AssertivePresenceResult {
         val evidence = detector.detect(text)
@@ -51,12 +48,11 @@ class AssertivePresenceExtractor(
                 (it.hostilityLevel == HostilityLevel.AGGRESSIVE ||
                     it.hostilityLevel == HostilityLevel.THREATENING)
         }
-        val rawDifference = abs(observed - target)
-        val alignment = if (hostilityDetected) {
-            0.0
-        } else {
-            (100.0 - (rawDifference / tolerance * 25.0)).coerceIn(0.0, 100.0)
-        }
+        val alignment = alignmentMatcher.match(
+            observedScore = observed,
+            targetScore = target,
+            hardGateTriggered = hostilityDetected
+        ).score
         return AssertivePresenceResult(
             observedScore = observed,
             targetScore = target,
