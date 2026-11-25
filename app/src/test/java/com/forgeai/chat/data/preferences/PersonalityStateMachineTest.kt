@@ -5,6 +5,12 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 class PersonalityStateMachineTest {
     private val dimension = NatashaSettingDimension.AFFECTION
@@ -87,6 +93,39 @@ class PersonalityStateMachineTest {
     @Test(expected = IllegalArgumentException::class)
     fun outOfRangeValueIsRejectedRatherThanSilentlyClamped() {
         apply(PersonalityStoreState(), 0.95, "invalid")
+    }
+
+    @Test
+    fun concurrentChangesAreLinearizedBySerializedStoreHarness() = runBlocking {
+        // This models DataStore.edit's serialized transaction contract, not DataStore internals.
+        val mutex = Mutex()
+        var persisted = PersonalityStoreState()
+        val values = (1..40).map { index -> 0.2 + index * 0.015 }
+
+        values.mapIndexed { index, value ->
+            async(Dispatchers.Default) {
+                mutex.withLock {
+                    persisted = PersonalityStateMachine.apply(
+                        state = persisted,
+                        dimension = dimension,
+                        newValue = value,
+                        originalRequest = "concurrent change $index",
+                        source = PersonalityChangeSource.USER_COMMAND,
+                        timestamp = index.toLong(),
+                        changeId = "concurrent-$index"
+                    )
+                }
+            }
+        }.awaitAll()
+
+        val history = persisted.changeHistory
+        assertEquals(40, history.size)
+        assertEquals(40L, persisted.snapshot.version)
+        assertEquals(PersonalityStateMachine.MAX_UNDO_DEPTH, persisted.undoStack.size)
+        assertEquals(history.takeLast(PersonalityStateMachine.MAX_UNDO_DEPTH), persisted.undoStack)
+        assertEquals(history.last().newValue, persisted.snapshot.value(dimension), 0.000001)
+        assertEquals(40, history.map { it.changeId }.toSet().size)
+        assertEquals(40, persisted.auditLog.count { it.eventType == AuditEventType.CHANGE_APPLIED })
     }
 
     @Test
