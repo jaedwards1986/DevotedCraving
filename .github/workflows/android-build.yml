@@ -68,7 +68,7 @@ jobs:
           echo "2fde00ce69dd4899c70d020845e2638353015bba0fdf161b3eb965f2bca4464e" > app/src/main/assets/models/model.sha256
 
       - name: Run unit tests and assemble APKs
-        run: gradle testDebugUnitTest lintDebug assembleDebug assembleRelease --no-daemon --stacktrace
+        run: gradle compileDebugAndroidTestKotlin testDebugUnitTest lintDebug assembleDebug assembleRelease --no-daemon --stacktrace
 
       - name: Verify model is inside the installable APK
         run: |
