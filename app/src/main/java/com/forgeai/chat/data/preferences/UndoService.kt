@@ -210,7 +210,17 @@ class UndoService(
     suspend fun getAuditLog(): List<AuditEvent> =
         decode(context.personalityStateDataStore.data.first()[STATE_KEY]).auditLog
 
-    private fun decode(json: String?): PersonalityStoreState {
+    private fun decode(json: String?): PersonalityStoreState =
+        decodePersonalityStoreState(json, gson)
+
+}
+
+
+/** Pure decoder exposed internally so corruption cases can be tested without Android DataStore. */
+internal fun decodePersonalityStoreState(
+    json: String?,
+    gson: Gson = Gson()
+): PersonalityStoreState {
         if (json == null) return PersonalityStoreState()
         if (json.isBlank()) {
             throw PersonalityStatePersistenceException("Saved personality state is empty.")
@@ -238,10 +248,21 @@ class UndoService(
             require(decoded.undoStack.size <= PersonalityStateMachine.MAX_UNDO_DEPTH)
             (decoded.undoStack + decoded.changeHistory).forEach { change ->
                 require(change.changeId.isNotBlank())
-                require(change.dimension.isNotBlank())
+                require(NatashaSettingDimension.entries.any { it.key == change.dimension })
+                val dimension = NatashaSettingDimension.entries.first { it.key == change.dimension }
                 require(change.previousValue.isFinite() && change.newValue.isFinite())
+                require(change.previousValue in dimension.minimum..dimension.maximum)
+                require(change.newValue in dimension.minimum..dimension.maximum)
                 requireNotNull(change.source)
             }
+            require(decoded.snapshot.values.keys.containsAll(NatashaSettingDimension.entries.map { it.key }))
+            decoded.snapshot.values.forEach { (key, value) ->
+                val dimension = NatashaSettingDimension.entries.firstOrNull { it.key == key }
+                    ?: error("Unknown personality setting: $key")
+                require(value in dimension.minimum..dimension.maximum)
+            }
+            val historyIds = decoded.changeHistory.map { it.changeId }.toSet()
+            require(decoded.undoStack.all { it.changeId in historyIds })
             decoded.auditLog.forEach { event ->
                 require(event.eventId.isNotBlank() && event.changeId.isNotBlank())
                 requireNotNull(event.eventType)
@@ -256,5 +277,4 @@ class UndoService(
             )
         }
         return decoded
-    }
 }
