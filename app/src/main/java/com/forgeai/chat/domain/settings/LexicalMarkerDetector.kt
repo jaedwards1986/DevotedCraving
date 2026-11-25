@@ -99,7 +99,7 @@ class DefaultLexicalMarkerDetector : LexicalMarkerDetector {
                         category = rule.category,
                         startIndex = start,
                         endIndex = end,
-                        confidence = if (ambiguousSarcasm) rule.confidence * .5 else rule.confidence,
+                        confidence = rule.confidence,
                         hostilityLevel = rule.hostility,
                         isQuoted = quoted,
                         isNegated = negated,
