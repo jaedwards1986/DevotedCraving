@@ -75,7 +75,8 @@ class DefaultLexicalMarkerDetector : LexicalMarkerDetector {
         val normalized = text.lowercase()
         val matches = mutableListOf<LexicalMatch>()
         val seen = mutableSetOf<Pair<Int, MarkerCategory>>()
-        var requiresReview = false
+        // Meta-level ambiguity is detected independently of lexical marker matches.
+        var requiresReview = SarcasmPreFilter().requiresReview(text)
 
         rules.forEach { rule ->
             val escaped = Regex.escape(rule.phrase.lowercase())
@@ -92,9 +93,7 @@ class DefaultLexicalMarkerDetector : LexicalMarkerDetector {
                         .containsMatchIn(prefix)
                     val meta = Regex("\\b(phrase|example|wording|expression|means|meaning|detect|detector|test case)\\b")
                         .containsMatchIn(prefix) || Regex("^\\s*(?:means|is an example)").containsMatchIn(suffix)
-                    val ambiguousSarcasm = normalized.contains("/s") ||
-                        (normalized.contains("yeah, right") && rule.category != MarkerCategory.HOSTILITY)
-                    if (ambiguousSarcasm) requiresReview = true
+                    val ambiguousSarcasm = SarcasmPreFilter().requiresReview(text)
                     matches += LexicalMatch(
                         phrase = rule.phrase,
                         category = rule.category,
