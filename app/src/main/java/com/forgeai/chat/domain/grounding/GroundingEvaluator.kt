@@ -19,11 +19,19 @@ class GroundingEvaluator {
             it.verification == EvidenceVerification.VERIFIED
         }
         val supports = extraction.claims.map { claim ->
-            if (claim.type == ClaimType.FICTION || !claim.verifiable) {
+            if (claim.type == ClaimType.FICTION) {
                 ClaimSupport(
                     claimId = claim.claimId,
                     disposition = GroundingDisposition.FICTION,
                     confidence = 1.0,
+                    evidenceIds = emptyList(),
+                    contradictionIds = emptyList()
+                )
+            } else if (!claim.verifiable) {
+                ClaimSupport(
+                    claimId = claim.claimId,
+                    disposition = GroundingDisposition.INSUFFICIENT_EVIDENCE,
+                    confidence = 0.5,
                     evidenceIds = emptyList(),
                     contradictionIds = emptyList()
                 )
