@@ -21,23 +21,64 @@ class GGUFManager {
         data class Error(val message: String) : State
     }
 
+    enum class ReadinessStatus {
+        INVALID_FILE, INVALID_METADATA, INVALID_CONTEXT, LOAD_FAILURE, SMOKE_TEST_FAILURE, READY_FOR_CHAT
+    }
+
+    data class Readiness(
+        val status: ReadinessStatus,
+        val metadata: GgufMetadataReader.ModelMetadata? = null,
+        val detail: String = ""
+    )
+
     data class LoadOptions(
         val contextSize: Int = 4096,
-        val threads: Int = (Runtime.getRuntime().availableProcessors() - 1).coerceAtLeast(1)
+        val threads: Int = (Runtime.getRuntime().availableProcessors() - 1).coerceAtLeast(1),
+        val smokeTimeoutMs: Int = 5_000
     )
 
     private val mutex = Mutex()
     private val mutableState = MutableStateFlow<State>(State.NotLoaded)
+    private val mutableReadiness = MutableStateFlow<Readiness?>(null)
     val state: StateFlow<State> = mutableState.asStateFlow()
+    val readiness: StateFlow<Readiness?> = mutableReadiness.asStateFlow()
 
     suspend fun load(modelFile: File, options: LoadOptions = LoadOptions()): State.Ready =
         withContext(Dispatchers.IO) {
             mutex.withLock {
                 val canonical = modelFile.canonicalFile
                 mutableState.value = State.Validating(canonical.absolutePath)
-                validateGguf(canonical)
+                mutableReadiness.value = null
+
+                try {
+                    validateGguf(canonical)
+                } catch (error: Throwable) {
+                    val detail = error.message ?: "Model file validation failed"
+                    mutableReadiness.value = Readiness(ReadinessStatus.INVALID_FILE, detail = detail)
+                    mutableState.value = State.Error(detail)
+                    throw error
+                }
+
+                val metadata = try {
+                    GgufMetadataReader.read(canonical)
+                } catch (error: Throwable) {
+                    val detail = error.message ?: "GGUF metadata validation failed"
+                    mutableReadiness.value = Readiness(ReadinessStatus.INVALID_METADATA, detail = detail)
+                    mutableState.value = State.Error(detail)
+                    throw error
+                }
+
                 require(options.contextSize in 512..32768) { "Context size must be 512..32768" }
                 require(options.threads in 1..32) { "Thread count must be 1..32" }
+                require(options.smokeTimeoutMs in 500..30_000) { "Smoke timeout must be 500..30000 ms" }
+
+                if (options.contextSize > metadata.declaredContextLength) {
+                    val detail = "Requested context " + options.contextSize + " exceeds declared model context " + metadata.declaredContextLength
+                    mutableReadiness.value = Readiness(ReadinessStatus.INVALID_CONTEXT, metadata, detail)
+                    mutableState.value = State.Error(detail)
+                    error(detail)
+                }
+
                 check(!NativeBridge.isModelLoaded()) { "A model is already loaded; unload it before loading another" }
 
                 mutableState.value = State.Loading(canonical.absolutePath)
@@ -45,9 +86,24 @@ class GGUFManager {
                 val result = NativeBridge.loadModel(canonical.absolutePath, options.contextSize, options.threads)
                 val elapsedMs = (System.nanoTime() - started) / 1_000_000L
                 if (!result.success) {
+                    mutableReadiness.value = Readiness(ReadinessStatus.LOAD_FAILURE, metadata, result.detail)
                     mutableState.value = State.Error(result.detail)
                     error(result.detail)
                 }
+
+                val smokeFailure = runSmokeTest(options.smokeTimeoutMs)
+                if (smokeFailure != null) {
+                    NativeBridge.unloadModel()
+                    mutableReadiness.value = Readiness(ReadinessStatus.SMOKE_TEST_FAILURE, metadata, smokeFailure)
+                    mutableState.value = State.Error(smokeFailure)
+                    error(smokeFailure)
+                }
+
+                mutableReadiness.value = Readiness(
+                    ReadinessStatus.READY_FOR_CHAT,
+                    metadata,
+                    "Native load and bounded smoke generation passed"
+                )
                 State.Ready(canonical.absolutePath, result.detail, elapsedMs, options.threads).also { mutableState.value = it }
             }
         }
@@ -64,7 +120,9 @@ class GGUFManager {
         configurationId: String = "baseline"
     ): NativeBridge.GenerationResult = withContext(Dispatchers.IO) {
         mutex.withLock {
-            check(mutableState.value is State.Ready) { "Load a GGUF model before generation" }
+            check(mutableReadiness.value?.status == ReadinessStatus.READY_FOR_CHAT) {
+                "Local model is not READY_FOR_CHAT"
+            }
             NativeBridge.generate(
                 prompt = prompt,
                 temperature = temperature,
@@ -128,9 +186,29 @@ class GGUFManager {
             val previousPath = (mutableState.value as? State.Ready)?.path
             mutableState.value = State.Unloading(previousPath)
             val unloaded = NativeBridge.unloadModel()
+            mutableReadiness.value = null
             mutableState.value = State.NotLoaded
             unloaded
         }
+    }
+
+    private fun runSmokeTest(timeoutMs: Int): String? {
+        val tokens = NativeBridge.tokenize("Hello", addBos = true)
+        if (tokens == null || tokens.isEmpty()) return "Smoke test tokenizer failed"
+
+        val result = NativeBridge.generate(
+            prompt = "Hello",
+            temperature = 0f,
+            topP = 1f,
+            maxTokens = 2,
+            timeoutMs = timeoutMs,
+            configurationId = "mdrh-smoke"
+        )
+        if (result.cancelled) return "Smoke test was cancelled"
+        if (result.timedOut) return "Smoke test timed out"
+        if (!result.success) return "Smoke test generation failed: " + result.message
+        if (result.outputTokens <= 0) return "Smoke test produced zero tokens"
+        return null
     }
 
     private fun validateGguf(file: File) {
