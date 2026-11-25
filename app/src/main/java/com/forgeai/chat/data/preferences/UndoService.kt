@@ -8,6 +8,7 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.forgeai.chat.domain.settings.NatashaSettingDimension
 import com.google.gson.Gson
+import com.google.gson.JsonParser
 import kotlinx.coroutines.flow.first
 import java.util.UUID
 
@@ -229,6 +230,34 @@ internal fun decodePersonalityStoreState(
         if (json == null) return PersonalityStoreState()
         if (json.isBlank()) {
             throw PersonalityStatePersistenceException("Saved personality state is empty.")
+        }
+
+        // Gson may populate Kotlin constructor defaults when JSON fields are absent.
+        // Validate the persisted schema before deserialization so missing fields fail closed.
+        val root = try {
+            JsonParser.parseString(json)
+        } catch (error: Exception) {
+            throw PersonalityStatePersistenceException(
+                "Saved personality state is not valid JSON. The stored data was preserved.",
+                error
+            )
+        }
+        val requiredRootFields = listOf("snapshot", "undoStack", "changeHistory", "auditLog")
+        if (!root.isJsonObject || requiredRootFields.any { field ->
+                !root.asJsonObject.has(field) || root.asJsonObject.get(field).isJsonNull
+            }) {
+            throw PersonalityStatePersistenceException(
+                "Saved personality state is missing mandatory fields. The stored data was preserved."
+            )
+        }
+        val snapshotJson = root.asJsonObject.getAsJsonObject("snapshot")
+        if (snapshotJson == null || !snapshotJson.has("values") ||
+            snapshotJson.get("values").isJsonNull || !snapshotJson.has("version") ||
+            snapshotJson.get("version").isJsonNull
+        ) {
+            throw PersonalityStatePersistenceException(
+                "Saved personality snapshot is incomplete. The stored data was preserved."
+            )
         }
 
         val decoded = try {
