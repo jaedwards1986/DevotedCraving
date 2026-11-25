@@ -1,6 +1,6 @@
 # Default model artifact lock
 
-Status: pinned candidate; awaiting a successful clean CI download, checksum verification, APK packaging, and device smoke test.
+Status: provenance verified and clean CI download/SHA-256 verification passed. APK packaging now distributes the model separately because Android's APK ZIP32 packager cannot accept a single 4.69 GB entry. Standalone model artifact publication and Pixel device validation remain pending.
 
 ## Canonical artifact
 
@@ -21,12 +21,19 @@ The previous TensorBlock repository advertised a Q4_K_S file but the workflow's 
 
 The Hugging Face file page identifies bartowski's quantization commit as verified and publishes the SHA-256 and remote file size. The workflow pins both the immutable repository revision and SHA-256 so a moving branch cannot silently change the model bytes.
 
-## Acceptance gates still required
+## Packaging decision
 
-1. Clean CI download succeeds from the pinned revision.
-2. Downloaded file SHA-256 equals the value above.
-3. GGUF is packaged into the APK at the expected asset path.
-4. APK build succeeds and the artifact is published.
-5. Pixel 9 Pro XL offline load/inference smoke test passes.
+The model is downloaded to the CI runner's temporary staging directory, independently size-checked and SHA-256-verified, then published as a separate `forgeai-default-model` workflow artifact. The installable APK is built without embedding the GGUF. This avoids the Android ZIP32 per-entry limit (4,294,967,295 bytes), which the 4.69 GB model exceeds.
 
-Until all five gates pass, this is a provenance-verified artifact lock, not a runtime-validated model.
+The app still needs a user-facing model import/download and storage lifecycle that places the GGUF at an app-accessible file path before `GGUFManager.load(File)` can be invoked. Separate artifact publication does not itself prove that end-user model installation flow.
+
+## Acceptance gates
+
+1. Clean CI download succeeds from the pinned revision. **Passed in run 45655559189.**
+2. Downloaded file SHA-256 equals the value above. **Passed in run 45655559189.**
+3. Installable APK packages successfully without the standalone GGUF. **Pending rerun.**
+4. APK archive and standalone model artifact publish successfully. **Pending rerun.**
+5. Pixel 9 Pro XL offline model load/inference smoke test passes. **Pending device test.**
+6. App-level model import/storage flow is implemented and tested. **Not yet implemented.**
+
+Until the remaining gates pass, this is a provenance-verified model artifact with a validated CI download/checksum, not a runtime-validated app integration.
