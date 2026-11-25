@@ -2,9 +2,9 @@ package com.forgeai.chat.nativebridge
 
 import java.io.ByteArrayOutputStream
 import java.io.File
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertThrows
+import org.junit.Test
 
 class GgufMetadataReaderTest {
     @Test
@@ -41,7 +41,7 @@ class GgufMetadataReaderTest {
         )
 
         try {
-            assertFailsWith<IllegalArgumentException> { GgufMetadataReader.read(file) }
+            assertThrows(IllegalArgumentException::class.java) { GgufMetadataReader.read(file) }
         } finally {
             file.delete()
         }
@@ -58,7 +58,7 @@ class GgufMetadataReaderTest {
         )
 
         try {
-            assertFailsWith<IllegalStateException> { GgufMetadataReader.read(file) }
+            assertThrows(IllegalStateException::class.java) { GgufMetadataReader.read(file) }
         } finally {
             file.delete()
         }
