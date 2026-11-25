@@ -14,28 +14,16 @@ import java.util.UUID
 private val Context.personalityStateDataStore: DataStore<Preferences> by
     preferencesDataStore(name = "natasha_personality_state")
 
-enum class PersonalityChangeSource {
-    USER_COMMAND,
-    SYSTEM_ACTION,
-    DISCOVERY_RECOMMENDATION
-}
+enum class PersonalityChangeSource { USER_COMMAND, SYSTEM_ACTION, DISCOVERY_RECOMMENDATION }
+enum class AuditEventType { CHANGE_APPLIED, CHANGE_UNDONE }
 
-enum class AuditEventType {
-    CHANGE_APPLIED,
-    CHANGE_UNDONE
-}
-
-data class PersonalitySnapshot(
-    val values: Map<String, Double>,
-    val version: Long
-) {
+data class PersonalitySnapshot(val values: Map<String, Double>, val version: Long) {
     fun value(dimension: NatashaSettingDimension): Double =
         values[dimension.key] ?: dimension.defaultValue
 
     companion object {
         fun defaults() = PersonalitySnapshot(
-            values = NatashaSettingDimension.entries.associate { it.key to it.defaultValue },
-            version = 0L
+            NatashaSettingDimension.entries.associate { it.key to it.defaultValue }, 0L
         )
     }
 }
@@ -66,15 +54,12 @@ data class AuditEvent(
 data class PersonalityStoreState(
     val snapshot: PersonalitySnapshot = PersonalitySnapshot.defaults(),
     val undoStack: List<PersonalityChange> = emptyList(),
+    val changeHistory: List<PersonalityChange> = emptyList(),
     val auditLog: List<AuditEvent> = emptyList()
 )
 
 sealed interface UndoResult {
-    data class Restored(
-        val snapshot: PersonalitySnapshot,
-        val undoneChange: PersonalityChange
-    ) : UndoResult
-
+    data class Restored(val snapshot: PersonalitySnapshot, val undoneChange: PersonalityChange) : UndoResult
     data object NothingToUndo : UndoResult
 }
 
@@ -94,55 +79,45 @@ internal object PersonalityStateMachine {
         require(newValue in dimension.minimum..dimension.maximum) {
             "${dimension.key} must be between ${dimension.minimum} and ${dimension.maximum}."
         }
-
         val previous = state.snapshot.value(dimension)
         if (previous == newValue) return state
 
         val change = PersonalityChange(
-            changeId = changeId,
-            dimension = dimension.key,
-            previousValue = previous,
-            newValue = newValue,
-            originalRequest = originalRequest,
-            source = source,
-            timestamp = timestamp
+            changeId, dimension.key, previous, newValue, originalRequest, source, timestamp
         )
-        val updatedValues = state.snapshot.values + (dimension.key to newValue)
-        val updatedSnapshot = PersonalitySnapshot(updatedValues, state.snapshot.version + 1)
+        val snapshot = PersonalitySnapshot(
+            state.snapshot.values + (dimension.key to newValue),
+            state.snapshot.version + 1
+        )
         val audit = AuditEvent(
-            eventId = UUID.randomUUID().toString(),
-            changeId = changeId,
-            eventType = AuditEventType.CHANGE_APPLIED,
-            source = source,
-            originalRequest = originalRequest,
-            previousValue = previous,
-            newValue = newValue,
-            timestamp = timestamp
+            UUID.randomUUID().toString(), changeId, AuditEventType.CHANGE_APPLIED,
+            source, originalRequest, previous, newValue, timestamp
         )
         return state.copy(
-            snapshot = updatedSnapshot,
+            snapshot = snapshot,
             undoStack = (state.undoStack + change).takeLast(MAX_UNDO_DEPTH),
+            changeHistory = state.changeHistory + change,
             auditLog = state.auditLog + audit
         )
     }
 
-    fun undo(state: PersonalityStoreState, timestamp: Long): Pair<PersonalityStoreState, PersonalityChange?> {
+    fun undo(
+        state: PersonalityStoreState,
+        timestamp: Long,
+        undoEventId: String = UUID.randomUUID().toString()
+    ): Pair<PersonalityStoreState, PersonalityChange?> {
         val change = state.undoStack.lastOrNull() ?: return state to null
         val dimension = NatashaSettingDimension.entries.firstOrNull { it.key == change.dimension }
             ?: return state to null
         val current = state.snapshot.value(dimension)
-        val restoredValues = state.snapshot.values + (dimension.key to change.previousValue)
-        val snapshot = PersonalitySnapshot(restoredValues, state.snapshot.version + 1)
+        val snapshot = PersonalitySnapshot(
+            state.snapshot.values + (dimension.key to change.previousValue),
+            state.snapshot.version + 1
+        )
         val audit = AuditEvent(
-            eventId = UUID.randomUUID().toString(),
-            changeId = change.changeId,
-            eventType = AuditEventType.CHANGE_UNDONE,
-            source = change.source,
-            originalRequest = change.originalRequest,
-            previousValue = current,
-            newValue = change.previousValue,
-            timestamp = timestamp,
-            details = "Restored the value recorded before change ${change.changeId}."
+            undoEventId, change.changeId, AuditEventType.CHANGE_UNDONE,
+            PersonalityChangeSource.USER_COMMAND, "undo that", current, change.previousValue,
+            timestamp, details = "Undid the original change: ${change.originalRequest}"
         )
         return state.copy(
             snapshot = snapshot,
@@ -153,8 +128,8 @@ internal object PersonalityStateMachine {
 }
 
 /**
- * Persists the current snapshot, undo stack, and append-only audit log in one
- * Preferences DataStore value. Each edit is a single atomic DataStore transaction.
+ * Snapshot, undo stack, change history, and audit log share one serialized
+ * DataStore value. Each apply/undo is committed by one atomic DataStore edit.
  */
 class UndoService(
     private val context: Context,
@@ -177,15 +152,9 @@ class UndoService(
         }
         var result = PersonalitySnapshot.defaults()
         context.personalityStateDataStore.edit { preferences ->
-            val current = decode(preferences[STATE_KEY])
             val updated = PersonalityStateMachine.apply(
-                state = current,
-                dimension = dimension,
-                newValue = newValue,
-                originalRequest = originalRequest,
-                source = source,
-                timestamp = clock(),
-                changeId = UUID.randomUUID().toString()
+                decode(preferences[STATE_KEY]), dimension, newValue, originalRequest,
+                source, clock(), UUID.randomUUID().toString()
             )
             preferences[STATE_KEY] = gson.toJson(updated)
             result = updated.snapshot
@@ -196,13 +165,12 @@ class UndoService(
     suspend fun undoLastChange(): UndoResult {
         var result: UndoResult = UndoResult.NothingToUndo
         context.personalityStateDataStore.edit { preferences ->
-            val current = decode(preferences[STATE_KEY])
-            val (updated, change) = PersonalityStateMachine.undo(current, clock())
+            val (updated, change) = PersonalityStateMachine.undo(
+                decode(preferences[STATE_KEY]), clock()
+            )
             if (change != null) {
                 preferences[STATE_KEY] = gson.toJson(updated)
                 result = UndoResult.Restored(updated.snapshot, change)
-            } else {
-                result = UndoResult.NothingToUndo
             }
         }
         return result
@@ -214,7 +182,7 @@ class UndoService(
     suspend fun getRecentHistory(limit: Int = 10): List<PersonalityChange> {
         require(limit >= 0)
         return decode(context.personalityStateDataStore.data.first()[STATE_KEY])
-            .undoStack.takeLast(limit).asReversed()
+            .changeHistory.takeLast(limit).asReversed()
     }
 
     suspend fun getAuditLog(): List<AuditEvent> =
