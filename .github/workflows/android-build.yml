@@ -57,27 +57,30 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p app/src/main/assets/models
-          MODEL_NAME="Qwen_Qwen3-4B-Instruct-2507-Q4_K_M.gguf"
+          MODEL_REPO="tensorblock/Llama-3-8B-Lexi-Uncensored-GGUF"
+          MODEL_NAME="Llama-3-8B-Lexi-Uncensored-Q4_K_S.gguf"
+          MODEL_SHA256="42733ea3d86323f51b4333304f4ca8327dcdcec6c3de7e3936cf96485554c351"
           python -m pip install --upgrade "huggingface_hub[hf_xet]"
-          hf download bartowski/Qwen_Qwen3-4B-Instruct-2507-GGUF "$MODEL_NAME" --local-dir app/src/main/assets/models
-          MODEL_SIZE=$(stat -c%s "app/src/main/assets/models/$MODEL_NAME")
-          echo "Bundled model size: $MODEL_SIZE bytes"
-          test "$MODEL_SIZE" -ge 2300000000
-          test "$MODEL_SIZE" -le 2800000000
-          echo "2fde00ce69dd4899c70d020845e2638353015bba0fdf161b3eb965f2bca4464e  app/src/main/assets/models/$MODEL_NAME" | sha256sum --check
-          echo "2fde00ce69dd4899c70d020845e2638353015bba0fdf161b3eb965f2bca4464e" > app/src/main/assets/models/model.sha256
+          hf download "$MODEL_REPO" "$MODEL_NAME" --local-dir app/src/main/assets/models
+          MODEL_PATH="app/src/main/assets/models/$MODEL_NAME"
+          MODEL_SIZE=$(stat -c%s "$MODEL_PATH")
+          echo "Bundled model: $MODEL_REPO/$MODEL_NAME ($MODEL_SIZE bytes)"
+          test "$MODEL_SIZE" -ge 4200000000
+          test "$MODEL_SIZE" -le 4600000000
+          echo "$MODEL_SHA256  $MODEL_PATH" | sha256sum --check
+          printf '%s  %s\\n' "$MODEL_SHA256" "$MODEL_NAME" > app/src/main/assets/models/model.sha256
 
       - name: Run unit tests and assemble APKs
         run: gradle compileDebugAndroidTestKotlin testDebugUnitTest lintDebug assembleDebug assembleRelease --no-daemon --stacktrace
 
-      - name: Verify model is inside the installable APK
+      - name: Verify pinned Llama 3 GGUF is inside the installable APK
         run: |
           set -euo pipefail
           APK=app/build/outputs/apk/debug/app-debug.apk
-          unzip -l "$APK" | grep -F "assets/models/Qwen_Qwen3-4B-Instruct-2507-Q4_K_M.gguf"
+          unzip -l "$APK" | grep -F "assets/models/Llama-3-8B-Lexi-Uncensored-Q4_K_S.gguf"
           APK_SIZE=$(stat -c%s "$APK")
           echo "Installable APK size: $APK_SIZE bytes"
-          test "$APK_SIZE" -gt 1800000000
+          test "$APK_SIZE" -gt 4000000000
 
       - name: Stage APKs and write archive outside checkout
         run: |
