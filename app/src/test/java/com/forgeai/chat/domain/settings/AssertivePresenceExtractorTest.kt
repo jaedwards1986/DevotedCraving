@@ -52,6 +52,19 @@ class AssertivePresenceExtractorTest {
         assertTrue(result.requiresReview)
     }
 
+    @Test fun sarcasmPrefilterFlagsStandaloneCueWithoutLexicalMatch() {
+        val result = detector.detect("Yeah, right. Another brilliant idea.")
+        assertTrue(result.requiresReview)
+        assertTrue(result.matches.isEmpty())
+        assertTrue(result.positiveEvidence.isEmpty())
+        assertEquals(0.0, result.hostilityPenalty, 0.0)
+    }
+
+    @Test fun sarcasmPrefilterDoesNotFlagOrdinaryPositiveStatement() {
+        val result = detector.detect("I am sure we can work this out.")
+        assertFalse(result.requiresReview)
+    }
+
     @Test fun h09_repeatedPositivePhrasesAreCategoryCapped() {
         val once = detector.detect("I am sure.")
         val repeated = detector.detect("I am sure. I am sure. I am sure.")
