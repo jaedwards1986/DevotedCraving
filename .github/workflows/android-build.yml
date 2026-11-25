@@ -68,7 +68,7 @@ jobs:
           test "$MODEL_SIZE" -ge 4200000000
           test "$MODEL_SIZE" -le 4600000000
           echo "$MODEL_SHA256  $MODEL_PATH" | sha256sum --check
-          printf '%s  %s\\n' "$MODEL_SHA256" "$MODEL_NAME" > app/src/main/assets/models/model.sha256
+          printf '%s  %s\n' "$MODEL_SHA256" "$MODEL_NAME" > app/src/main/assets/models/model.sha256
 
       - name: Run unit tests and assemble APKs
         run: gradle compileDebugAndroidTestKotlin testDebugUnitTest lintDebug assembleDebug assembleRelease --no-daemon --stacktrace
