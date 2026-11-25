@@ -61,7 +61,18 @@ data class PersonalityStoreState(
 sealed interface UndoResult {
     data class Restored(val snapshot: PersonalitySnapshot, val undoneChange: PersonalityChange) : UndoResult
     data object NothingToUndo : UndoResult
+    data class Failed(val reason: String, val cause: Throwable? = null) : UndoResult
 }
+
+/**
+ * Raised when persisted personality state cannot safely be read or written.
+ * The original DataStore value is deliberately left untouched for recovery.
+ */
+class PersonalityStatePersistenceException(
+    message: String,
+    cause: Throwable? = null
+) : IllegalStateException(message, cause)
+
 
 internal object PersonalityStateMachine {
     const val MAX_UNDO_DEPTH = 10
@@ -189,9 +200,50 @@ class UndoService(
         decode(context.personalityStateDataStore.data.first()[STATE_KEY]).auditLog
 
     private fun decode(json: String?): PersonalityStoreState {
-        if (json.isNullOrBlank()) return PersonalityStoreState()
-        return runCatching {
-            gson.fromJson(json, PersonalityStoreState::class.java) ?: PersonalityStoreState()
-        }.getOrElse { PersonalityStoreState() }
+        if (json == null) return PersonalityStoreState()
+        if (json.isBlank()) {
+            throw PersonalityStatePersistenceException("Saved personality state is empty.")
+        }
+
+        val decoded = try {
+            gson.fromJson(json, PersonalityStoreState::class.java)
+        } catch (error: Exception) {
+            throw PersonalityStatePersistenceException(
+                "Saved personality state could not be decoded. The stored data was preserved.",
+                error
+            )
+        } ?: throw PersonalityStatePersistenceException(
+            "Saved personality state is missing. The stored data was preserved."
+        )
+
+        val valid = runCatching {
+            requireNotNull(decoded.snapshot)
+            requireNotNull(decoded.snapshot.values)
+            require(decoded.snapshot.version >= 0L)
+            require(decoded.snapshot.values.values.all { it.isFinite() })
+            requireNotNull(decoded.undoStack)
+            requireNotNull(decoded.changeHistory)
+            requireNotNull(decoded.auditLog)
+            require(decoded.undoStack.size <= PersonalityStateMachine.MAX_UNDO_DEPTH)
+            (decoded.undoStack + decoded.changeHistory).forEach { change ->
+                require(change.changeId.isNotBlank())
+                require(change.dimension.isNotBlank())
+                require(change.previousValue.isFinite() && change.newValue.isFinite())
+                requireNotNull(change.source)
+            }
+            decoded.auditLog.forEach { event ->
+                require(event.eventId.isNotBlank() && event.changeId.isNotBlank())
+                requireNotNull(event.eventType)
+                requireNotNull(event.source)
+                require(event.previousValue.isFinite() && event.newValue.isFinite())
+            }
+        }.isSuccess
+
+        if (!valid) {
+            throw PersonalityStatePersistenceException(
+                "Saved personality state failed integrity checks. The stored data was preserved."
+            )
+        }
+        return decoded
     }
 }
