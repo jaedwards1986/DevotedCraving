@@ -11,7 +11,7 @@ class SarcasmPreFilter {
         Regex("""(?i)\\byeah\\s*,?\\s*right\\b"""),
         Regex("""(?i)\\bas\\s+if\\b"""),
         Regex("""(?i)\\bwhat\\s+could\\s+possibly\\s+go\\s+wrong\\b"""),
-        Regex("""(?i)\\b(sure|totally|obviously)\\s*[.!…]*\\s*(yeah\\s*,?\\s*right)?""")
+        Regex("""(?i)\\b(oh\\s*,?\\s*)?(brilliant|genius|great)\\s+(idea|work|job)\\b""")
     )
 
     fun requiresReview(text: String): Boolean =
