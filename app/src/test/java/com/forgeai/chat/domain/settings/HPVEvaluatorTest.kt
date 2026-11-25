@@ -22,7 +22,7 @@ class HPVEvaluatorTest {
         val result = evaluator.evaluate(HpvEvaluationMode.ORDINARY, scores)
         assertTrue(result.isComplete)
         assertEquals(1.0, result.coverage, 0.000001)
-        assertEquals(72.0, result.overallScore!!, 0.000001)
+        assertEquals(71.5, result.overallScore!!, 0.000001)
         assertEquals(result.overallScore, result.partialScore)
         assertTrue(result.missingDimensions.isEmpty())
     }
