@@ -41,6 +41,19 @@ class HPVEvaluatorTest {
         assertEquals(30.0, intimate.overallScore!!, 0.000001)
     }
 
+    @Test fun sexualConfidenceExtractorFeedsOnlyItsOwnHpvDimension() {
+        val measured = SexualConfidenceExtractor().evaluate(
+            "I have an idea. I want to be clear and lead this conversation.",
+            "How was your day?"
+        )
+        val result = evaluator.evaluateSexualConfidence(HpvEvaluationMode.INTIMATE, measured)
+        assertEquals(setOf(HpvDimension.SEXUAL_CONFIDENCE), result.componentScores.keys)
+        assertEquals(0.30, result.coverage, 0.000001)
+        assertNull(result.overallScore)
+        assertNotNull(result.partialScore)
+        assertEquals(measured.score, result.componentScores.getValue(HpvDimension.SEXUAL_CONFIDENCE).score, 0.0)
+    }
+
     @Test fun missingDimensionsNeverBecomePerfectScores() {
         val result = evaluator.evaluate(
             HpvEvaluationMode.ORDINARY,
