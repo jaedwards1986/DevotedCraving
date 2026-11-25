@@ -73,7 +73,7 @@ class ContextualScorer(
     private fun sentenceIndex(text: String, offset: Int): Int {
         if (offset <= 0 || text.isEmpty()) return 0
         return text.take(offset.coerceAtMost(text.length))
-            .count { it == '.' || it == '!' || it == '?' || it == '\\n' }
+            .count { it == '.' || it == '!' || it == '?' || it == '\n' }
     }
 
     companion object {
