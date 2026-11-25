@@ -14,6 +14,9 @@ import java.util.UUID
 private val Context.personalityStateDataStore: DataStore<Preferences> by
     preferencesDataStore(name = "natasha_personality_state")
 
+/** Shared key so instrumentation tests can seed the real DataStore before service reads. */
+internal val PERSONALITY_STATE_KEY = stringPreferencesKey("personality_state_v1")
+
 enum class PersonalityChangeSource { USER_COMMAND, SYSTEM_ACTION, DISCOVERY_RECOMMENDATION }
 enum class AuditEventType { CHANGE_APPLIED, CHANGE_UNDONE }
 
@@ -145,13 +148,15 @@ internal object PersonalityStateMachine {
  * DataStore value. Each apply/undo is committed by one atomic DataStore edit.
  */
 class UndoService(
-    private val context: Context,
+    private val dataStore: DataStore<Preferences>,
     private val gson: Gson = Gson(),
     private val clock: () -> Long = System::currentTimeMillis
 ) {
-    private companion object {
-        val STATE_KEY = stringPreferencesKey("personality_state_v1")
-    }
+    constructor(
+        context: Context,
+        gson: Gson = Gson(),
+        clock: () -> Long = System::currentTimeMillis
+    ) : this(dataStore, gson, clock)
 
     suspend fun applyChange(
         dimension: NatashaSettingDimension,
@@ -164,12 +169,12 @@ class UndoService(
             "Non-user changes require explicit user authorization."
         }
         var result = PersonalitySnapshot.defaults()
-        context.personalityStateDataStore.edit { preferences ->
+        dataStore.edit { preferences ->
             val updated = PersonalityStateMachine.apply(
-                decode(preferences[STATE_KEY]), dimension, newValue, originalRequest,
+                decode(preferences[PERSONALITY_STATE_KEY]), dimension, newValue, originalRequest,
                 source, clock(), UUID.randomUUID().toString()
             )
-            preferences[STATE_KEY] = gson.toJson(updated)
+            preferences[PERSONALITY_STATE_KEY] = gson.toJson(updated)
             result = updated.snapshot
         }
         return result
@@ -178,12 +183,12 @@ class UndoService(
     suspend fun undoLastChange(): UndoResult {
         return try {
             var result: UndoResult = UndoResult.NothingToUndo
-            context.personalityStateDataStore.edit { preferences ->
+            dataStore.edit { preferences ->
                 val (updated, change) = PersonalityStateMachine.undo(
-                    decode(preferences[STATE_KEY]), clock()
+                    decode(preferences[PERSONALITY_STATE_KEY]), clock()
                 )
                 if (change != null) {
-                    preferences[STATE_KEY] = gson.toJson(updated)
+                    preferences[PERSONALITY_STATE_KEY] = gson.toJson(updated)
                     result = UndoResult.Restored(updated.snapshot, change)
                 }
             }
@@ -199,16 +204,16 @@ class UndoService(
     }
 
     suspend fun getCurrentSnapshot(): PersonalitySnapshot =
-        decode(context.personalityStateDataStore.data.first()[STATE_KEY]).snapshot
+        decode(dataStore.data.first()[PERSONALITY_STATE_KEY]).snapshot
 
     suspend fun getRecentHistory(limit: Int = 10): List<PersonalityChange> {
         require(limit >= 0)
-        return decode(context.personalityStateDataStore.data.first()[STATE_KEY])
+        return decode(dataStore.data.first()[PERSONALITY_STATE_KEY])
             .changeHistory.takeLast(limit).asReversed()
     }
 
     suspend fun getAuditLog(): List<AuditEvent> =
-        decode(context.personalityStateDataStore.data.first()[STATE_KEY]).auditLog
+        decode(dataStore.data.first()[PERSONALITY_STATE_KEY]).auditLog
 
     private fun decode(json: String?): PersonalityStoreState =
         decodePersonalityStoreState(json, gson)
