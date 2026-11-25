@@ -53,6 +53,9 @@ jobs:
           gradle --version
           sdkmanager --list_installed
 
+      - name: Run unit tests and lint before model packaging
+        run: gradle testDebugUnitTest lintDebug --no-daemon --stacktrace
+
       - name: Download the bundled default model
         run: |
           set -euo pipefail
@@ -70,8 +73,8 @@ jobs:
           echo "$MODEL_SHA256  $MODEL_PATH" | sha256sum --check
           printf '%s  %s\n' "$MODEL_SHA256" "$MODEL_NAME" > app/src/main/assets/models/model.sha256
 
-      - name: Run unit tests and assemble APKs
-        run: gradle compileDebugAndroidTestKotlin testDebugUnitTest lintDebug assembleDebug assembleRelease --no-daemon --stacktrace
+      - name: Assemble debug and release APKs
+        run: gradle compileDebugAndroidTestKotlin assembleDebug assembleRelease --no-daemon --stacktrace
 
       - name: Verify pinned Llama 3 GGUF is inside the installable APK
         run: |
