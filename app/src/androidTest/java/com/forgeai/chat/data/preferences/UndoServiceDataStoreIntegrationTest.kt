@@ -24,7 +24,7 @@ class UndoServiceDataStoreIntegrationTest {
     @Test
     fun corruptStoredPayloadIsRejectedAndPreservedAcrossServiceOperations() = runBlocking {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val fileName = "natasha_personality_corruption_test_${UUID.randomUUID()}.preferences_pb"
+        val fileName = "natasha_personality_corruption_test_${UUID.randomUUID()}"
         val dataStore = PreferenceDataStoreFactory.create(
             scope = CoroutineScope(SupervisorJob() + Dispatchers.IO),
             produceFile = { context.preferencesDataStoreFile(fileName) }
