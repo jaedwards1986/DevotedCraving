@@ -119,7 +119,9 @@ internal object PersonalityStateMachine {
     ): Pair<PersonalityStoreState, PersonalityChange?> {
         val change = state.undoStack.lastOrNull() ?: return state to null
         val dimension = NatashaSettingDimension.entries.firstOrNull { it.key == change.dimension }
-            ?: return state to null
+            ?: throw IllegalStateException(
+                "Undo history references an unknown personality setting: ${change.dimension}"
+            )
         val current = state.snapshot.value(dimension)
         val snapshot = PersonalitySnapshot(
             state.snapshot.values + (dimension.key to change.previousValue),
