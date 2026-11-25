@@ -56,35 +56,39 @@ jobs:
       - name: Run unit tests and lint before model packaging
         run: gradle testDebugUnitTest lintDebug --no-daemon --stacktrace
 
-      - name: Download the bundled default model
+      - name: Download and verify the separately distributed default model
         run: |
           set -euo pipefail
-          mkdir -p app/src/main/assets/models
+          MODEL_DIR="$RUNNER_TEMP/forgeai-model"
+          mkdir -p "$MODEL_DIR"
           MODEL_REPO="bartowski/Lexi-Llama-3-8B-Uncensored-GGUF"
           MODEL_NAME="Lexi-Llama-3-8B-Uncensored-Q4_K_S.gguf"
           MODEL_SHA256="5039334f503f8110e81bbfd04add9c84f7284c0d31f12e2f8c857cd34626eaee"
           MODEL_REVISION="5ef9a5e9e4883c33d7e3db2860b8cdf6829db54e"
           python -m pip install --upgrade "huggingface_hub[hf_xet]"
-          hf download "$MODEL_REPO" "$MODEL_NAME" --revision "$MODEL_REVISION" --local-dir app/src/main/assets/models
-          MODEL_PATH="app/src/main/assets/models/$MODEL_NAME"
+          hf download "$MODEL_REPO" "$MODEL_NAME" --revision "$MODEL_REVISION" --local-dir "$MODEL_DIR"
+          MODEL_PATH="$MODEL_DIR/$MODEL_NAME"
           MODEL_SIZE=$(stat -c%s "$MODEL_PATH")
-          echo "Bundled model: $MODEL_REPO/$MODEL_NAME ($MODEL_SIZE bytes)"
+          echo "Verified standalone model: $MODEL_REPO/$MODEL_NAME ($MODEL_SIZE bytes)"
           test "$MODEL_SIZE" -ge 4000000000
           test "$MODEL_SIZE" -le 5200000000
           echo "$MODEL_SHA256  $MODEL_PATH" | sha256sum --check
-          printf '%s  %s\n' "$MODEL_SHA256" "$MODEL_NAME" > app/src/main/assets/models/model.sha256
+          printf '%s  %s\n' "$MODEL_SHA256" "$MODEL_NAME" > "$MODEL_DIR/model.sha256"
 
       - name: Assemble debug and release APKs
         run: gradle compileDebugAndroidTestKotlin assembleDebug assembleRelease --no-daemon --stacktrace
 
-      - name: Verify pinned Llama 3 GGUF is inside the installable APK
+      - name: Verify the installable APK excludes the standalone GGUF
         run: |
           set -euo pipefail
           APK=app/build/outputs/apk/debug/app-debug.apk
-          unzip -l "$APK" | grep -F "assets/models/Lexi-Llama-3-8B-Uncensored-Q4_K_S.gguf"
+          if unzip -l "$APK" | grep -F "Lexi-Llama-3-8B-Uncensored-Q4_K_S.gguf"; then
+            echo "The standalone GGUF must not be embedded in the APK" >&2
+            exit 1
+          fi
           APK_SIZE=$(stat -c%s "$APK")
-          echo "Installable APK size: $APK_SIZE bytes"
-          test "$APK_SIZE" -gt 4000000000
+          echo "Installable APK size without model: $APK_SIZE bytes"
+          test "$APK_SIZE" -lt 2000000000
 
       - name: Stage APKs and write archive outside checkout
         run: |
@@ -103,5 +107,16 @@ jobs:
         with:
           name: forgeai-apks
           path: ${{ runner.temp }}/forgeai-apks.zip
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Publish separately verified GGUF model
+        uses: actions/upload-artifact@v4
+        with:
+          name: forgeai-default-model
+          path: |
+            ${{ runner.temp }}/forgeai-model/Lexi-Llama-3-8B-Uncensored-Q4_K_S.gguf
+            ${{ runner.temp }}/forgeai-model/model.sha256
+          compression-level: 0
           if-no-files-found: error
           retention-days: 14
