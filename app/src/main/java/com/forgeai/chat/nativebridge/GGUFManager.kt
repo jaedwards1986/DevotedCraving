@@ -81,7 +81,7 @@ class GGUFManager {
 
     suspend fun generateChat(
         systemPrompt: String,
-        userMessage: String,
+        messages: List<Llama3PromptBuilder.ChatTurn>,
         temperature: Float = 0.7f,
         topP: Float = 0.95f,
         frequencyPenalty: Float = 0f,
@@ -91,12 +91,37 @@ class GGUFManager {
         seed: Int = -1,
         configurationId: String = "baseline"
     ): NativeBridge.GenerationResult {
-        val prompt = Llama3PromptBuilder.build(systemPrompt, userMessage).text
+        val prompt = Llama3PromptBuilder.build(systemPrompt, messages).text
         return generate(
             prompt, temperature, topP, frequencyPenalty, presencePenalty,
             maxTokens, timeoutMs, seed, configurationId
         )
     }
+
+    /** Backwards-compatible single-user-turn entry point. */
+    suspend fun generateChat(
+        systemPrompt: String,
+        userMessage: String,
+        temperature: Float = 0.7f,
+        topP: Float = 0.95f,
+        frequencyPenalty: Float = 0f,
+        presencePenalty: Float = 0f,
+        maxTokens: Int = 128,
+        timeoutMs: Int = 120_000,
+        seed: Int = -1,
+        configurationId: String = "baseline"
+    ): NativeBridge.GenerationResult = generateChat(
+        systemPrompt = systemPrompt,
+        messages = listOf(Llama3PromptBuilder.ChatTurn(role = "user", content = userMessage)),
+        temperature = temperature,
+        topP = topP,
+        frequencyPenalty = frequencyPenalty,
+        presencePenalty = presencePenalty,
+        maxTokens = maxTokens,
+        timeoutMs = timeoutMs,
+        seed = seed,
+        configurationId = configurationId
+    )
 
     suspend fun unload(): Boolean = withContext(Dispatchers.IO) {
         mutex.withLock {
