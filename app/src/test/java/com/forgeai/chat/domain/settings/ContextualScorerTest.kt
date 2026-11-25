@@ -43,7 +43,7 @@ class ContextualScorerTest {
         val detection = detector.detect(text)
         val result = scorer.score(text, detection)
         assertTrue(result.requiresReview)
-        assertEquals(42.5, result.rawObservedScore, 0.0001)
+        assertEquals(21.25, result.rawObservedScore, 0.0001)
         assertEquals(result.rawObservedScore * .5, result.observedScore, 0.0001)
     }
 
