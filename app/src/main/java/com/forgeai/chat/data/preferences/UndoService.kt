@@ -156,7 +156,7 @@ class UndoService(
         context: Context,
         gson: Gson = Gson(),
         clock: () -> Long = System::currentTimeMillis
-    ) : this(dataStore, gson, clock)
+    ) : this(context.personalityStateDataStore, gson, clock)
 
     suspend fun applyChange(
         dimension: NatashaSettingDimension,
