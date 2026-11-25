@@ -90,6 +90,21 @@ class HPVEvaluator(
         )
     }
 
+    /** Adds the evidence-backed sexual-confidence measurement to the selected profile. */
+    fun evaluateSexualConfidence(
+        mode: HpvEvaluationMode,
+        sexualConfidence: SexualConfidenceResult
+    ): HpvEvaluationResult = evaluate(
+        mode,
+        mapOf(
+            HpvDimension.SEXUAL_CONFIDENCE to HpvComponentScore(
+                score = sexualConfidence.score,
+                requiresReview = sexualConfidence.requiresReview,
+                evidenceReference = "sexual_confidence:${sexualConfidence.intent.name.lowercase()}"
+            )
+        )
+    )
+
     /** Adapts the currently implemented assertiveness extractor into the aggregate. */
     fun evaluateAssertiveness(
         mode: HpvEvaluationMode,
