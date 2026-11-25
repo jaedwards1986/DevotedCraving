@@ -35,17 +35,17 @@ object Llama3PromptBuilder {
 
         val prompt = buildString {
             append("<|begin_of_text|>")
-            append("<|start_header_id|>system<|end_header_id|>\\n\\n")
+            append("<|start_header_id|>system<|end_header_id|>\n\n")
             append(systemPrompt.trim())
             append("<|eot_id|>")
             messages.forEach { turn ->
                 append("<|start_header_id|>")
                 append(turn.role)
-                append("<|end_header_id|>\\n\\n")
+                append("<|end_header_id|>\n\n")
                 append(turn.content.trim())
                 append("<|eot_id|>")
             }
-            append("<|start_header_id|>assistant<|end_header_id|>\\n\\n")
+            append("<|start_header_id|>assistant<|end_header_id|>\n\n")
         }
         return BuiltPrompt(prompt, prompt.toByteArray(Charsets.UTF_8).size)
     }
