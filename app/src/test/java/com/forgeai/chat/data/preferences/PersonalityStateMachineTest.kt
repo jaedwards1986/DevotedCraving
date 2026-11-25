@@ -90,6 +90,63 @@ class PersonalityStateMachineTest {
     }
 
     @Test
+    fun decoderTreatsMissingPayloadAsNewInstallOnly() {
+        assertEquals(PersonalityStoreState(), decodePersonalityStoreState(null))
+    }
+
+    @Test
+    fun decoderRejectsTruncatedJsonWithoutReplacingIt() {
+        val error = try {
+            decodePersonalityStoreState("""{"snapshot":{"values":""")
+            null
+        } catch (caught: PersonalityStatePersistenceException) {
+            caught
+        }
+        assertTrue(error != null)
+        assertTrue(error!!.message!!.contains("preserved"))
+    }
+
+    @Test
+    fun decoderRejectsBlankAndExplicitNullPayloads() {
+        listOf("", "   ", "null").forEach { payload ->
+            var rejected = false
+            try {
+                decodePersonalityStoreState(payload)
+            } catch (_: PersonalityStatePersistenceException) {
+                rejected = true
+            }
+            assertTrue("Expected rejection for payload: '$payload'", rejected)
+        }
+    }
+
+    @Test
+    fun decoderRejectsMissingMandatoryFieldsAndUnknownUndoDimension() {
+        val missingSnapshot = """{"undoStack":[],"changeHistory":[],"auditLog":[]}"""
+        var missingRejected = false
+        try {
+            decodePersonalityStoreState(missingSnapshot)
+        } catch (_: PersonalityStatePersistenceException) {
+            missingRejected = true
+        }
+        assertTrue(missingRejected)
+
+        val corrupt = PersonalityStateMachine.apply(
+            PersonalityStoreState(), dimension, 0.7, "test",
+            PersonalityChangeSource.USER_COMMAND, 1L, "known-change"
+        ).copy(undoStack = listOf(
+            PersonalityChange("bad", "NOT_A_SETTING", 0.5, 0.7, "bad",
+                PersonalityChangeSource.USER_COMMAND, 2L)
+        ))
+        var undoRejected = false
+        try {
+            PersonalityStateMachine.undo(corrupt, 3L)
+        } catch (_: IllegalStateException) {
+            undoRejected = true
+        }
+        assertTrue(undoRejected)
+    }
+
+    @Test
     fun applyingSameValueDoesNotCreateUndoOrAuditEntry() {
         val initial = PersonalityStoreState()
         val unchanged = apply(initial, dimension.defaultValue, "no-op")
