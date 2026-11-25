@@ -174,17 +174,26 @@ class UndoService(
     }
 
     suspend fun undoLastChange(): UndoResult {
-        var result: UndoResult = UndoResult.NothingToUndo
-        context.personalityStateDataStore.edit { preferences ->
-            val (updated, change) = PersonalityStateMachine.undo(
-                decode(preferences[STATE_KEY]), clock()
-            )
-            if (change != null) {
-                preferences[STATE_KEY] = gson.toJson(updated)
-                result = UndoResult.Restored(updated.snapshot, change)
+        return try {
+            var result: UndoResult = UndoResult.NothingToUndo
+            context.personalityStateDataStore.edit { preferences ->
+                val (updated, change) = PersonalityStateMachine.undo(
+                    decode(preferences[STATE_KEY]), clock()
+                )
+                if (change != null) {
+                    preferences[STATE_KEY] = gson.toJson(updated)
+                    result = UndoResult.Restored(updated.snapshot, change)
+                }
             }
+            result
+        } catch (cancelled: kotlinx.coroutines.CancellationException) {
+            throw cancelled
+        } catch (error: Exception) {
+            UndoResult.Failed(
+                reason = error.message ?: "Personality state could not be restored.",
+                cause = error
+            )
         }
-        return result
     }
 
     suspend fun getCurrentSnapshot(): PersonalitySnapshot =
