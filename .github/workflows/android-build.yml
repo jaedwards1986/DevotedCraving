@@ -60,11 +60,12 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p app/src/main/assets/models
-          MODEL_REPO="tensorblock/Llama-3-8B-Lexi-Uncensored-GGUF"
-          MODEL_NAME="Llama-3-8B-Lexi-Uncensored-Q4_K_S.gguf"
-          MODEL_SHA256="42733ea3d86323f51b4333304f4ca8327dcdcec6c3de7e3936cf96485554c351"
+          MODEL_REPO="bartowski/Lexi-Llama-3-8B-Uncensored-GGUF"
+          MODEL_NAME="Lexi-Llama-3-8B-Uncensored-Q4_K_S.gguf"
+          MODEL_SHA256="5039334f503f8110e81bbfd04add9c84f7284c0d31f12e2f8c857cd34626eaee"
+          MODEL_REVISION="5ef9a5e9e4883c33d7e3db2860b8cdf6829db54e"
           python -m pip install --upgrade "huggingface_hub[hf_xet]"
-          hf download "$MODEL_REPO" "$MODEL_NAME" --local-dir app/src/main/assets/models
+          hf download "$MODEL_REPO" "$MODEL_NAME" --revision "$MODEL_REVISION" --local-dir app/src/main/assets/models
           MODEL_PATH="app/src/main/assets/models/$MODEL_NAME"
           MODEL_SIZE=$(stat -c%s "$MODEL_PATH")
           echo "Bundled model: $MODEL_REPO/$MODEL_NAME ($MODEL_SIZE bytes)"
@@ -80,7 +81,7 @@ jobs:
         run: |
           set -euo pipefail
           APK=app/build/outputs/apk/debug/app-debug.apk
-          unzip -l "$APK" | grep -F "assets/models/Llama-3-8B-Lexi-Uncensored-Q4_K_S.gguf"
+          unzip -l "$APK" | grep -F "assets/models/Lexi-Llama-3-8B-Uncensored-Q4_K_S.gguf"
           APK_SIZE=$(stat -c%s "$APK")
           echo "Installable APK size: $APK_SIZE bytes"
           test "$APK_SIZE" -gt 4000000000
