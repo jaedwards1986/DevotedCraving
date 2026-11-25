@@ -261,6 +261,12 @@ Java_com_forgeai_chat_nativebridge_NativeBridge_nativeGenerate(
     std::lock_guard<std::mutex> lock(g_model_mutex);
     if (g_model == nullptr || g_context == nullptr) return errorJson("No GGUF model is loaded");
 
+    // Each call is an independent request today. Clear the full llama.cpp memory
+    // (KV cache and sequence metadata) before restarting token positions at zero.
+    // Conversation continuity must be supplied explicitly in the prompt until a
+    // session-aware cache API is implemented.
+    llama_memory_clear(llama_get_memory(g_context), true);
+
     g_cancel_requested.store(false, std::memory_order_relaxed);
     jclass callback_class = nullptr;
     jmethodID started_method = nullptr;
