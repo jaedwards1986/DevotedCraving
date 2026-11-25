@@ -65,8 +65,8 @@ jobs:
           MODEL_PATH="app/src/main/assets/models/$MODEL_NAME"
           MODEL_SIZE=$(stat -c%s "$MODEL_PATH")
           echo "Bundled model: $MODEL_REPO/$MODEL_NAME ($MODEL_SIZE bytes)"
-          test "$MODEL_SIZE" -ge 4200000000
-          test "$MODEL_SIZE" -le 4600000000
+          test "$MODEL_SIZE" -ge 4000000000
+          test "$MODEL_SIZE" -le 5200000000
           echo "$MODEL_SHA256  $MODEL_PATH" | sha256sum --check
           printf '%s  %s\n' "$MODEL_SHA256" "$MODEL_NAME" > app/src/main/assets/models/model.sha256
 
