@@ -55,6 +55,17 @@ class GroundingEvaluatorTest {
         assertNull(result.unsubstantiatedClaimFactor)
     }
 
+    @Test fun nonVerifiableNonFictionClaimIsNotMislabelledAsFiction() {
+        val result = evaluate(claims = listOf(FactualClaim(
+            claimId = "opinion",
+            text = "A subjective preference",
+            verifiable = false
+        )))
+        assertEquals(GroundingDisposition.INSUFFICIENT_EVIDENCE, result.dispositionByClaim["opinion"])
+        assertEquals(0, result.verifiableClaims)
+        assertNull(result.unsubstantiatedClaimFactor)
+    }
+
     @Test fun noClaimsProducesNullUcfRatherThanPerfectGrounding() {
         val result = evaluate(claims = emptyList())
         assertTrue(result.supports.isEmpty())
