@@ -212,16 +212,6 @@ class ChatViewModel(
             }
             return
         }
-        val urlError = EndpointValidator.validateEndpointUrl(settings.baseUrl)
-        if (urlError != null) {
-            showSnackbar(urlError)
-            return
-        }
-        val modelError = EndpointValidator.validateModelName(settings.modelName)
-        if (modelError != null) {
-            showSnackbar(modelError)
-            return
-        }
 
         _inputText.value = ""
         launchStreamForPrompt(prompt = prompt, settings = settings)
@@ -438,7 +428,7 @@ class ChatViewModel(
                 repository.saveMessage(
                     conversationId = conversationId,
                     role = MessageRole.ASSISTANT,
-                    content = "The model returned an empty response. Check your model ID and endpoint settings.",
+                    content = "The local model returned an empty response. Check model readiness and generation settings.",
                     modelName = settings.modelName,
                     isError = true
                 )
@@ -448,7 +438,7 @@ class ChatViewModel(
         } catch (failure: Throwable) {
             val partial = buffer.toString().trim()
             val errorMessage = failure.message?.takeIf { it.isNotBlank() }
-                ?: "Request failed. Verify your endpoint URL, API key, and network connection."
+                ?: "Local generation failed. Confirm that a GGUF model is imported and READY_FOR_CHAT."
             val contentToPersist = if (partial.isNotEmpty()) {
                 "$partial\n\n---\n*Stream interrupted: $errorMessage*"
             } else {
