@@ -8,6 +8,7 @@ import com.forgeai.chat.data.local.dao.ChatDao
 import com.forgeai.chat.data.local.dao.MemoryDao
 import com.forgeai.chat.data.local.dao.LongTermMemoryDao
 import com.forgeai.chat.data.memory.MemoryService
+import com.forgeai.chat.data.memory.RelationshipMemoryService
 import com.forgeai.chat.data.local.entity.ConversationEntity
 import com.forgeai.chat.data.local.entity.ConversationWithPreview
 import com.forgeai.chat.data.local.entity.MessageEntity
@@ -66,7 +67,8 @@ class DefaultChatRepository(
     private val memoryDao: MemoryDao? = null,
     private val localGenerationAdapter: LocalGenerationFlowAdapter? = null,
     private val memoryService: MemoryService = MemoryService(memoryDao),
-    private val longTermMemoryDao: LongTermMemoryDao? = null
+    private val longTermMemoryDao: LongTermMemoryDao? = null,
+    private val relationshipMemoryService: RelationshipMemoryService = RelationshipMemoryService(longTermMemoryDao)
 ) : ChatRepository {
 
     override val settingsFlow: Flow<AppSettings> = settingsRepository.settingsFlow
@@ -154,7 +156,7 @@ class DefaultChatRepository(
         val latestUserText = recentHistory.lastOrNull { it.role == MessageRole.USER.wireValue }
             ?.content.orEmpty()
         val memoryRetrieval = memoryService.retrieveForPrompt(latestUserText)
-        val retrievedContext = memoryRetrieval.memories
+        val retrievedContext = memoryRetrieval.memories + relationshipMemoryService.retrieveForPrompt()
         val preferenceFacts = longTermMemoryDao?.getActivePreferences().orEmpty().map { preference ->
             PreferenceFact(
                 id = preference.settingName,
