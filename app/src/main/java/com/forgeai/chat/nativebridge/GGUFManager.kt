@@ -43,6 +43,7 @@ class GGUFManager(
     private val mutex = Mutex()
     private val mutableState = MutableStateFlow<State>(State.NotLoaded)
     private val mutableReadiness = MutableStateFlow<Readiness?>(null)
+    private var nativeModelHandle: NativeModelHandle? = null
     val state: StateFlow<State> = mutableState.asStateFlow()
     val readiness: StateFlow<Readiness?> = mutableReadiness.asStateFlow()
 
@@ -52,6 +53,7 @@ class GGUFManager(
                 val canonical = modelFile.canonicalFile
                 mutableState.value = State.Validating(canonical.absolutePath)
                 mutableReadiness.value = null
+                nativeModelHandle = null
 
                 try {
                     try {
@@ -106,17 +108,12 @@ class GGUFManager(
 
                     mutableState.value = State.Loading(canonical.absolutePath)
                     val started = System.nanoTime()
-                    val result = backend.loadModel(
+                    nativeModelHandle = backend.loadModel(
                         canonical.absolutePath,
                         options.contextSize,
                         options.threads
                     )
                     val elapsedMs = (System.nanoTime() - started) / 1_000_000L
-                    // The production backend throws NativeLoadException for native failure.
-                    // Keep the result guard for deterministic test/custom backends.
-                    if (!result.success) {
-                        throw NativeLoadException(result.detail.ifBlank { "Native model load failed" })
-                    }
 
                     try {
                         runSmokeTest(options.smokeTimeoutMs)
@@ -138,7 +135,7 @@ class GGUFManager(
                     )
                     State.Ready(
                         canonical.absolutePath,
-                        result.detail,
+                        "Native model loaded successfully",
                         elapsedMs,
                         options.threads
                     ).also { mutableState.value = it }
@@ -146,6 +143,7 @@ class GGUFManager(
                     if (mutableState.value is State.Loading) {
                         runCatching { backend.unloadModel() }
                     }
+                    nativeModelHandle = null
                     mutableReadiness.value = null
                     mutableState.value = State.NotLoaded
                     throw cancelled
@@ -154,6 +152,7 @@ class GGUFManager(
                     if (mutableState.value is State.Loading) {
                         runCatching { backend.unloadModel() }
                     }
+                    nativeModelHandle = null
                     if (mutableReadiness.value == null) {
                         val status = when {
                             !canonical.exists() || !canonical.isFile || !canonical.canRead() ->
@@ -193,10 +192,13 @@ class GGUFManager(
         seed: Int = -1,
         configurationId: String = "baseline",
         generationCallback: GenerationCallback? = null
-    ): NativeBridge.GenerationResult = withContext(Dispatchers.IO) {
+    ): NativeGenerationResult = withContext(Dispatchers.IO) {
         mutex.withLock {
             check(mutableReadiness.value?.status == ReadinessStatus.READY_FOR_CHAT) {
                 "Local model is not READY_FOR_CHAT"
+            }
+            check(nativeModelHandle != null) {
+                "Local model handle is unavailable"
             }
             backend.generate(
                 prompt = prompt,
@@ -225,7 +227,7 @@ class GGUFManager(
         seed: Int = -1,
         configurationId: String = "baseline",
         generationCallback: GenerationCallback? = null
-    ): NativeBridge.GenerationResult {
+    ): NativeGenerationResult {
         val prompt = Llama3PromptBuilder.build(systemPrompt, messages).text
         return generate(
             prompt, temperature, topP, frequencyPenalty, presencePenalty,
@@ -245,7 +247,7 @@ class GGUFManager(
         timeoutMs: Int = 120_000,
         seed: Int = -1,
         configurationId: String = "baseline"
-    ): NativeBridge.GenerationResult = generateChat(
+    ): NativeGenerationResult = generateChat(
         systemPrompt = systemPrompt,
         messages = listOf(Llama3PromptBuilder.ChatTurn(role = "user", content = userMessage)),
         temperature = temperature,
@@ -263,6 +265,7 @@ class GGUFManager(
             val previousPath = (mutableState.value as? State.Ready)?.path
             mutableState.value = State.Unloading(previousPath)
             val unloaded = backend.unloadModel()
+            nativeModelHandle = null
             mutableReadiness.value = null
             mutableState.value = State.NotLoaded
             unloaded
@@ -286,7 +289,7 @@ class GGUFManager(
             NativeEngineErrorCode.SMOKE_TEST_TIMEOUT, "Smoke test timed out"
         )
         if (!result.success) throw SmokeTestException(
-            message = "Smoke test generation failed: ${result.message}"
+            message = "Smoke test generation failed: ${result.errorMessage ?: "unknown native error"}"
         )
         if (result.outputTokens <= 0) throw SmokeTestException(
             message = "Smoke test produced zero tokens"
