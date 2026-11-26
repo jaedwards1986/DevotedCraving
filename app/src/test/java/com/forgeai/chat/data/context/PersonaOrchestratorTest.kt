@@ -54,6 +54,19 @@ class PersonaOrchestratorTest {
     }
 
     @Test
+    fun fidelityDirectiveUsesRealLineBreaksInPromptContext() {
+        val decision = IntentAwareFidelity.assess("Please explain Kotlin build errors.", 4)
+        val context = PersonaOrchestrator.assemble(
+            persona = persona,
+            memories = emptyList(),
+            fidelityDecision = decision
+        )
+
+        assertTrue(context.contains("\n\nCURRENT TURN INTENT AND INTENSITY\n"))
+        assertFalse(context.contains("\\n\\nCURRENT TURN INTENT AND INTENSITY\\n"))
+    }
+
+    @Test
     fun validatedRescueInstructionIsOptionalAndDoesNotChangeStoredPersona() {
         val baseline = PersonaOrchestrator.assemble(persona, emptyList())
         val corrected = PersonaOrchestrator.assemble(
