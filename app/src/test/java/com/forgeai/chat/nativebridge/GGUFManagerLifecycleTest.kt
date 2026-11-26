@@ -78,6 +78,21 @@ class GGUFManagerLifecycleTest {
     }
 
     @Test
+    fun truncatedGgufMetadataIsRejectedBeforeNativeLoad() = runBlocking {
+        val file = File.createTempFile("truncated-metadata", ".gguf")
+        file.writeBytes(byteArrayOf(0x47, 0x47, 0x55, 0x46))
+        val backend = FakeBackend()
+        try {
+            val manager = GGUFManager(backend)
+            runCatching { manager.load(file) }
+            assertEquals(GGUFManager.ReadinessStatus.INVALID_METADATA, manager.readiness.value?.status)
+            assertEquals(0, backend.loadCalls)
+        } finally {
+            file.delete()
+        }
+    }
+
+    @Test
     fun missingFileNeverReachesNativeBackend() = runBlocking {
         val file = File.createTempFile("missing", ".gguf")
         file.delete()
