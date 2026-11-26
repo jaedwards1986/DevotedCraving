@@ -41,11 +41,11 @@ class MemoryServiceTest {
         val rows = listOf(
             memory("z", subject = "coffee", updatedAt = 10),
             memory("a", subject = "coffee", updatedAt = 10),
-            memory("recent", subject = "coffee coffee", updatedAt = 1)
+            memory("recent", subject = "coffee tea", updatedAt = 1)
         )
         assertEquals(
             listOf("recent", "a", "z"),
-            MemoryService.select(rows, "coffee coffee").map { it.memoryId }
+            MemoryService.select(rows, "coffee tea").map { it.memoryId }
         )
     }
 
