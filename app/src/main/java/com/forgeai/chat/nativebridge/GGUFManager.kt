@@ -22,7 +22,7 @@ class GGUFManager {
     }
 
     enum class ReadinessStatus {
-        INVALID_FILE, INVALID_METADATA, INVALID_CONTEXT, LOAD_FAILURE, SMOKE_TEST_FAILURE, READY_FOR_CHAT
+        INVALID_FILE, INVALID_METADATA, INVALID_CONTEXT, INVALID_CONFIGURATION, LOAD_FAILURE, SMOKE_TEST_FAILURE, READY_FOR_CHAT
     }
 
     data class Readiness(
@@ -51,7 +51,15 @@ class GGUFManager {
                 mutableReadiness.value = null
 
                 try {
-                    validateOptions(options)
+                    try {
+                        validateOptions(options)
+                    } catch (error: IllegalArgumentException) {
+                        mutableReadiness.value = Readiness(
+                            ReadinessStatus.INVALID_CONFIGURATION,
+                            detail = error.message ?: "Invalid model load configuration"
+                        )
+                        throw error
+                    }
                     validateGguf(canonical)
 
                     val metadata = try {
@@ -126,12 +134,13 @@ class GGUFManager {
                     throw cancelled
                 } catch (error: Throwable) {
                     val detail = error.message ?: "Model load failed"
+                    if (mutableState.value is State.Loading) {
+                        runCatching { NativeBridge.unloadModel() }
+                    }
                     if (mutableReadiness.value == null) {
                         val status = when {
                             !canonical.exists() || !canonical.isFile || !canonical.canRead() ->
                                 ReadinessStatus.INVALID_FILE
-                            detail.contains("context", ignoreCase = true) ->
-                                ReadinessStatus.INVALID_CONTEXT
                             mutableState.value is State.Loading ->
                                 ReadinessStatus.LOAD_FAILURE
                             else -> ReadinessStatus.INVALID_FILE
