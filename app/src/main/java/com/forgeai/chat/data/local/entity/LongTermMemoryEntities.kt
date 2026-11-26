@@ -52,6 +52,8 @@ data class MemoryEventEntity(
     val eventId: String,
     @ColumnInfo(name = "narrative_snippet")
     val narrativeSnippet: String,
+    @ColumnInfo(name = "event_type")
+    val eventType: String = "GENERAL",
     @ColumnInfo(name = "related_entity_id")
     val relatedEntityId: String? = null,
     @ColumnInfo(name = "confidence_score")
