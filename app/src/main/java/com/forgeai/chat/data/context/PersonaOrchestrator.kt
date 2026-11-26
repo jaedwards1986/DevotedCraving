@@ -41,7 +41,8 @@ object PersonaOrchestrator {
         persona: PersonaSpecification,
         memories: List<RetrievedMemory>,
         preferences: List<PreferenceFact> = emptyList(),
-        validatedRescueInstruction: String? = null
+        validatedRescueInstruction: String? = null,
+        fidelityDecision: FidelityDecision? = null
     ): String {
         var context = PromptContextAssembler.assemble(persona.canonicalPrompt, memories)
 
@@ -64,6 +65,10 @@ object PersonaOrchestrator {
                     append("\n")
                 }
             }.trimEnd()
+        }
+
+        fidelityDecision?.let { decision ->
+            context += "\\n\\nCURRENT TURN INTENT AND INTENSITY\\n${decision.directive}"
         }
 
         val rescue = validatedRescueInstruction?.trim().orEmpty()
