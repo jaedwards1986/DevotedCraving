@@ -130,7 +130,7 @@ class GGUFManagerLifecycleTest {
         var unloadCalls = 0
         private var loaded = false
 
-        override fun isModelLoaded() = loaded
+        override fun getModelStatus() = NativeModelStatus(loaded)
 
         override fun loadModel(path: String, contextSize: Int, threads: Int): NativeBridge.ModelLoadResult {
             loadCalls++
