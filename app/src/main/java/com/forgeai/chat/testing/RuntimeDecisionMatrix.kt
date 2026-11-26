@@ -88,7 +88,7 @@ object CpuMatrixRunner {
                         maxTokens = 128, timeoutMs = timeoutMs, seed = 1000 + index, configurationId = id
                     )
                     if (!result.success || result.output.isBlank()) {
-                        failures += "$id/${fixture.id}/$index: ${result.status}: ${result.message}"
+                        failures += "$id/${fixture.id}/$index: ${result.errorMessage ?: "native generation failed"}"
                         observations += RuntimeObservation(RuntimeBackend.CPU, id, result.tokensPerSecond.coerceAtLeast(0.0), 0.0, result.elapsedMs, result.outputTokens, false)
                     } else {
                         val rating = rater.rate(id, fixture.id, result.output)
