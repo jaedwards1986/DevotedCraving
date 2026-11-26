@@ -62,10 +62,10 @@ object DeviceAcceptanceRunbook {
                     )
                     val pss = Debug.getPss()
                     peakPss = maxOf(peakPss, pss)
-                    if (!result.success || result.text.isBlank()) {
-                        AcceptanceRun(label, configurationId, result.tokensPerSecond, 0.0, result.elapsedMs, result.outputTokens, pss, false, "${result.status}: ${result.message}")
+                    if (!result.success || result.output.isBlank()) {
+                        AcceptanceRun(label, configurationId, result.tokensPerSecond, 0.0, result.elapsedMs, result.outputTokens, pss, false, "${result.errorMessage ?: "native generation failed"}")
                     } else {
-                        val rating = rater.rate(configurationId, fixture.id, result.text)
+                        val rating = rater.rate(configurationId, fixture.id, result.output)
                         val fidelity = PersonaFidelityScorer.summarize(listOf(rating)).fidelityScore
                         AcceptanceRun(label, configurationId, result.tokensPerSecond, fidelity, result.elapsedMs, result.outputTokens, pss, true)
                     }
