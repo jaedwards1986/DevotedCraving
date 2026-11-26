@@ -30,7 +30,7 @@ data class ChatUiState(
     val conversations: List<ConversationWithPreview> = emptyList(),
     val drawerSearchQuery: String = "",
     val activeConversationId: Long? = null,
-    val activeConversationTitle: String = "ForgeAI",
+    val activeConversationTitle: String = "New conversation",
     val messages: List<MessageEntity> = emptyList(),
     val inputText: String = "",
     val isStreaming: Boolean = false,
