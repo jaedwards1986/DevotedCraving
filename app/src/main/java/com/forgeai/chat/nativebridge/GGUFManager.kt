@@ -138,6 +138,9 @@ class GGUFManager(
                         options.threads
                     ).also { mutableState.value = it }
                 } catch (cancelled: kotlinx.coroutines.CancellationException) {
+                    if (mutableState.value is State.Loading) {
+                        runCatching { backend.unloadModel() }
+                    }
                     mutableReadiness.value = null
                     mutableState.value = State.NotLoaded
                     throw cancelled
