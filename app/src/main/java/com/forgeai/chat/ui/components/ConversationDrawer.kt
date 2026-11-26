@@ -72,7 +72,8 @@ fun ConversationDrawerContent(
     onRenameConversation: (Long, String) -> Unit,
     onDeleteConversation: (Long) -> Unit,
     onOpenSystemPrompt: () -> Unit,
-    onOpenSettings: () -> Unit
+    onOpenSettings: () -> Unit,
+    onOpenMemory: () -> Unit
 ) {
     var renamingTarget by remember { mutableStateOf<ConversationWithPreview?>(null) }
     var renameDraft by remember { mutableStateOf("") }
