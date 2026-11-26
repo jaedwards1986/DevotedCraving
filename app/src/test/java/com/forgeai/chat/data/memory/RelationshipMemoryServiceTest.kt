@@ -1,5 +1,6 @@
 package com.forgeai.chat.data.memory
 
+import com.forgeai.chat.data.context.RetrievedMemory
 import com.forgeai.chat.data.local.entity.MemoryEventEntity
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -36,7 +37,7 @@ class RelationshipMemoryServiceTest {
         assertEquals("relationship_milestone", result.single().category)
         assertEquals("primary-persona", result.single().subject)
         assertEquals(
-            RetrievedMemoryStatus.CONFIRMED,
+            RetrievedMemory.Status.CONFIRMED,
             result.single().status
         )
     }
