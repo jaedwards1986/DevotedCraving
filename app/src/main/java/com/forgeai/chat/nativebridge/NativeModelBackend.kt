@@ -28,15 +28,35 @@ class SmokeTestException(
     cause: Throwable? = null
 ) : NativeEngineException(code, message, cause)
 
-data class NativeModelStatus(val isLoaded: Boolean)
+@JvmInline
+value class NativeModelHandle(val id: String)
+
+data class NativeModelStatus(
+    val isLoaded: Boolean,
+    val modelId: String? = null
+)
+
+data class NativeGenerationResult(
+    val success: Boolean,
+    val output: String,
+    val outputTokens: Int,
+    val promptTokens: Int = 0,
+    val elapsedMs: Long = 0L,
+    val tokensPerSecond: Double = 0.0,
+    val timedOut: Boolean = false,
+    val cancelled: Boolean = false,
+    val errorMessage: String? = null
+)
 
 /**
  * Injectable boundary around the native model runtime. Filesystem/metadata
  * validation and MDRH readiness policy remain owned by GGUFManager.
+ *
+ * NativeBridge DTOs must not cross this boundary.
  */
 interface NativeModelBackend {
     fun getModelStatus(): NativeModelStatus
-    fun loadModel(path: String, contextSize: Int, threads: Int): NativeBridge.ModelLoadResult
+    fun loadModel(path: String, contextSize: Int, threads: Int): NativeModelHandle
     fun tokenize(text: String, addBos: Boolean = true): IntArray?
     fun generate(
         prompt: String,
@@ -49,27 +69,31 @@ interface NativeModelBackend {
         seed: Int = -1,
         configurationId: String = "baseline",
         generationCallback: GenerationCallback? = null
-    ): NativeBridge.GenerationResult
+    ): NativeGenerationResult
     fun cancelGeneration(): Boolean
     fun unloadModel(): Boolean
 }
 
-/** Production adapter: JNI-specific return codes are normalized at this boundary. */
+/** Production adapter: JNI-specific return values are normalized at this boundary. */
 object JniNativeModelBackend : NativeModelBackend {
+    private const val SINGLE_MODEL_HANDLE_ID = "local-single-model"
+
     override fun getModelStatus(): NativeModelStatus = try {
         NativeModelStatus(NativeBridge.isModelLoaded())
     } catch (error: Exception) {
         throw NativeStateException("Unable to inspect native model state", error)
     }
 
-    override fun loadModel(path: String, contextSize: Int, threads: Int): NativeBridge.ModelLoadResult {
+    override fun loadModel(path: String, contextSize: Int, threads: Int): NativeModelHandle {
         val result = try {
             NativeBridge.loadModel(path, contextSize, threads)
         } catch (error: Exception) {
             throw NativeLoadException("Native model load threw: ${error.message}", error)
         }
-        if (!result.success) throw NativeLoadException(result.detail.ifBlank { "Native model load failed" })
-        return result
+        if (!result.success) {
+            throw NativeLoadException(result.detail.ifBlank { "Native model load failed" })
+        }
+        return NativeModelHandle(SINGLE_MODEL_HANDLE_ID)
     }
 
     override fun tokenize(text: String, addBos: Boolean) = NativeBridge.tokenize(text, addBos)
@@ -78,10 +102,23 @@ object JniNativeModelBackend : NativeModelBackend {
         prompt: String, temperature: Float, topP: Float, frequencyPenalty: Float,
         presencePenalty: Float, maxTokens: Int, timeoutMs: Int, seed: Int,
         configurationId: String, generationCallback: GenerationCallback?
-    ) = NativeBridge.generate(
-        prompt, temperature, topP, frequencyPenalty, presencePenalty,
-        maxTokens, timeoutMs, seed, configurationId, generationCallback
-    )
+    ): NativeGenerationResult {
+        val result = NativeBridge.generate(
+            prompt, temperature, topP, frequencyPenalty, presencePenalty,
+            maxTokens, timeoutMs, seed, configurationId, generationCallback
+        )
+        return NativeGenerationResult(
+            success = result.success,
+            output = result.text,
+            outputTokens = result.outputTokens,
+            promptTokens = result.promptTokens,
+            elapsedMs = result.elapsedMs,
+            tokensPerSecond = result.tokensPerSecond,
+            timedOut = result.timedOut,
+            cancelled = result.cancelled,
+            errorMessage = result.message.takeIf { it.isNotBlank() }
+        )
+    }
 
     override fun cancelGeneration() = NativeBridge.cancelGeneration()
     override fun unloadModel() = NativeBridge.unloadModel()
