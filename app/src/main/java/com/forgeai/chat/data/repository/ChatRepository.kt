@@ -5,6 +5,7 @@ import com.forgeai.chat.data.context.PersonaSpecification
 import com.forgeai.chat.data.context.RetrievedMemory
 import com.forgeai.chat.data.local.dao.ChatDao
 import com.forgeai.chat.data.local.dao.MemoryDao
+import com.forgeai.chat.data.memory.MemoryService
 import com.forgeai.chat.data.local.entity.ConversationEntity
 import com.forgeai.chat.data.local.entity.ConversationWithPreview
 import com.forgeai.chat.data.local.entity.MessageEntity
@@ -61,7 +62,8 @@ class DefaultChatRepository(
     private val settingsRepository: SettingsRepository,
     private val streamClient: LlmStreamClient,
     private val memoryDao: MemoryDao? = null,
-    private val localGenerationAdapter: LocalGenerationFlowAdapter? = null
+    private val localGenerationAdapter: LocalGenerationFlowAdapter? = null,
+    private val memoryService: MemoryService = MemoryService(memoryDao)
 ) : ChatRepository {
 
     override val settingsFlow: Flow<AppSettings> = settingsRepository.settingsFlow
@@ -148,36 +150,8 @@ class DefaultChatRepository(
         val recentHistory = history.filterNot { it.isError }.takeLast(40)
         val latestUserText = recentHistory.lastOrNull { it.role == MessageRole.USER.wireValue }
             ?.content.orEmpty()
-        val retrieved = memoryDao?.getActiveMemories()
-            ?.let { memories ->
-                val queryTerms = latestUserText.lowercase()
-                    .split(Regex("[^\\p{L}\\p{N}]+"))
-                    .filter { it.length >= 3 }
-                    .toSet()
-                memories.map { memory ->
-                    val searchable = "${memory.subject} ${memory.content} ${memory.category}".lowercase()
-                    val score = queryTerms.count { term -> searchable.contains(term) }
-                    memory to score
-                }
-                    .filter { (memory, score) -> score > 0 || memory.isPinned }
-                    .sortedWith(
-                        compareByDescending<Pair<com.forgeai.chat.data.local.entity.MemoryEntity, Int>> { it.first.isPinned }
-                            .thenByDescending { it.second }
-                            .thenByDescending { it.first.updatedAt }
-                    )
-                    .take(8)
-                    .map { it.first }
-            }.orEmpty()
-
-        val retrievedContext = retrieved.map { memory ->
-            RetrievedMemory(
-                memoryId = memory.memoryId,
-                category = memory.category,
-                subject = memory.subject,
-                content = memory.content,
-                status = RetrievedMemory.Status.CONFIRMED
-            )
-        }
+        val memoryRetrieval = memoryService.retrieveForPrompt(latestUserText)
+        val retrievedContext = memoryRetrieval.memories
         val system = PersonaOrchestrator.assemble(
             persona = PersonaSpecification(
                 revision = "settings-system-prompt-v1",
@@ -200,10 +174,6 @@ class DefaultChatRepository(
                     content = message.content
                 )
             }
-
-        if (retrieved.isNotEmpty()) {
-            memoryDao?.markAccessed(retrieved.map { it.memoryId })
-        }
 
         emitAll(
             adapter.generateChat(
