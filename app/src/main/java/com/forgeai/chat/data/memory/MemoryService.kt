@@ -19,6 +19,72 @@ class MemoryService(
         val accessedMemoryIds: List<String>
     )
 
+    enum class MutationResult {
+        UPDATED,
+        NOT_FOUND,
+        NOT_PENDING,
+        NOT_EDITABLE
+    }
+
+    /** Explicitly approve a candidate. Only PENDING_CONSENT rows can transition. */
+    suspend fun approve(memoryId: String): MutationResult {
+        val dao = memoryDao ?: return MutationResult.NOT_FOUND
+        val changed = dao.approve(memoryId, clock())
+        return if (changed == 1) MutationResult.UPDATED else {
+            if (dao.getById(memoryId) == null) MutationResult.NOT_FOUND else MutationResult.NOT_PENDING
+        }
+    }
+
+    /** Reject a candidate without deleting its audit/history row. */
+    suspend fun reject(memoryId: String): MutationResult {
+        val dao = memoryDao ?: return MutationResult.NOT_FOUND
+        val changed = dao.reject(memoryId, clock())
+        return if (changed == 1) MutationResult.UPDATED else {
+            if (dao.getById(memoryId) == null) MutationResult.NOT_FOUND else MutationResult.NOT_PENDING
+        }
+    }
+
+    /**
+     * Correct an existing memory in place. Consent status and provenance are
+     * preserved; correcting a pending candidate does not silently approve it.
+     */
+    suspend fun correct(
+        memoryId: String,
+        category: String,
+        subject: String,
+        content: String
+    ): MutationResult {
+        val dao = memoryDao ?: return MutationResult.NOT_FOUND
+        val current = dao.getById(memoryId) ?: return MutationResult.NOT_FOUND
+        if (current.status != ACTIVE_STATUS && current.status != "PENDING_CONSENT") {
+            return MutationResult.NOT_EDITABLE
+        }
+        val cleanCategory = category.trim()
+        val cleanSubject = subject.trim()
+        val cleanContent = content.trim()
+        require(cleanCategory.isNotEmpty()) { "Memory category must not be blank" }
+        require(cleanSubject.isNotEmpty()) { "Memory subject must not be blank" }
+        require(cleanContent.isNotEmpty()) { "Memory content must not be blank" }
+
+        dao.upsert(
+            current.copy(
+                category = cleanCategory,
+                subject = cleanSubject,
+                content = cleanContent,
+                updatedAt = clock()
+            )
+        )
+        return MutationResult.UPDATED
+    }
+
+    /** Permanently remove a memory at the user's explicit request. */
+    suspend fun delete(memoryId: String): MutationResult {
+        val dao = memoryDao ?: return MutationResult.NOT_FOUND
+        if (dao.getById(memoryId) == null) return MutationResult.NOT_FOUND
+        dao.delete(memoryId)
+        return MutationResult.UPDATED
+    }
+
     suspend fun retrieveForPrompt(userText: String, limit: Int = DEFAULT_LIMIT): Retrieval {
         require(limit in 1..MAX_LIMIT) { "Memory retrieval limit must be between 1 and $MAX_LIMIT" }
         val dao = memoryDao ?: return Retrieval(emptyList(), emptyList())
