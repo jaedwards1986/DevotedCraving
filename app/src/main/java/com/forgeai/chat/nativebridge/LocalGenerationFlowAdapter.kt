@@ -57,7 +57,7 @@ class LocalGenerationFlowAdapter(
                             session.cancellationRequested
                         }
                         if (cancelNow) {
-                            NativeBridge.cancelGeneration()
+                            ggufManager.cancelGeneration()
                         }
                     }
 
@@ -79,7 +79,7 @@ class LocalGenerationFlowAdapter(
                     generationCallback = callback
                 )
                 if (!result.success) {
-                    throw IllegalStateException(result.message.ifBlank { result.status })
+                    throw IllegalStateException(result.errorMessage ?: "Local generation failed")
                 }
             } finally {
                 synchronized(session.monitor) {
@@ -101,7 +101,7 @@ class LocalGenerationFlowAdapter(
                     GenerationPhase.UNWINDING, GenerationPhase.IDLE -> false
                 }
             }
-            if (cancelNative) NativeBridge.cancelGeneration()
+            if (cancelNative) ggufManager.cancelGeneration()
             worker.cancel()
             if (!cancelNative) {
                 synchronized(session.monitor) {
