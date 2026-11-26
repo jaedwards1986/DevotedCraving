@@ -88,7 +88,7 @@ object NativeBridge {
         timeoutMs: Int = 120_000,
         seed: Int = -1,
         configurationId: String = "baseline",
-        firstTokenCallback: FirstTokenCallback? = null
+        generationCallback: GenerationCallback? = null
     ): GenerationResult {
         val raw = nativeGenerate(
             prompt, configurationId, temperature, topP, frequencyPenalty, presencePenalty,
