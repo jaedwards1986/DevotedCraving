@@ -87,11 +87,11 @@ object CpuMatrixRunner {
                         frequencyPenalty = sampler.frequencyPenalty, presencePenalty = sampler.presencePenalty,
                         maxTokens = 128, timeoutMs = timeoutMs, seed = 1000 + index, configurationId = id
                     )
-                    if (!result.success || result.text.isBlank()) {
+                    if (!result.success || result.output.isBlank()) {
                         failures += "$id/${fixture.id}/$index: ${result.status}: ${result.message}"
                         observations += RuntimeObservation(RuntimeBackend.CPU, id, result.tokensPerSecond.coerceAtLeast(0.0), 0.0, result.elapsedMs, result.outputTokens, false)
                     } else {
-                        val rating = rater.rate(id, fixture.id, result.text)
+                        val rating = rater.rate(id, fixture.id, result.output)
                         ratingsByConfiguration.getOrPut(id) { mutableListOf() }.add(rating)
                         observations += RuntimeObservation(RuntimeBackend.CPU, id, result.tokensPerSecond, 0.0, result.elapsedMs, result.outputTokens, true)
                     }
