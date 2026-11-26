@@ -76,9 +76,9 @@ class GGUFManager {
                         mutableReadiness.value = Readiness(
                             ReadinessStatus.INVALID_CONTEXT,
                             metadata,
-                            "Requested context \${options.contextSize} exceeds declared model context \${metadata.declaredContextLength}"
+                            "Requested context ${options.contextSize} exceeds declared model context ${metadata.declaredContextLength}"
                         )
-                        error("Requested context \${options.contextSize} exceeds declared model context \${metadata.declaredContextLength}")
+                        error("Requested context ${options.contextSize} exceeds declared model context ${metadata.declaredContextLength}")
                     }
 
                     check(!NativeBridge.isModelLoaded()) {
@@ -105,7 +105,7 @@ class GGUFManager {
                     val smokeFailure = try {
                         runSmokeTest(options.smokeTimeoutMs)
                     } catch (error: Exception) {
-                        "Smoke test threw: \${error.message ?: error::class.java.simpleName}"
+                        "Smoke test threw: ${error.message ?: error::class.java.simpleName}"
                     }
                     if (smokeFailure != null) {
                         runCatching { NativeBridge.unloadModel() }
