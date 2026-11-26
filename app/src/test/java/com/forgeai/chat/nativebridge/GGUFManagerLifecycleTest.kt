@@ -132,10 +132,11 @@ class GGUFManagerLifecycleTest {
 
         override fun getModelStatus() = NativeModelStatus(loaded)
 
-        override fun loadModel(path: String, contextSize: Int, threads: Int): NativeBridge.ModelLoadResult {
+        override fun loadModel(path: String, contextSize: Int, threads: Int): NativeModelHandle {
             loadCalls++
-            loaded = loadSuccess
-            return NativeBridge.ModelLoadResult(loadSuccess, if (loadSuccess) "loaded" else "native load failed")
+            if (!loadSuccess) throw NativeLoadException("native load failed")
+            loaded = true
+            return NativeModelHandle("test-model")
         }
 
         override fun tokenize(text: String, addBos: Boolean) = intArrayOf(1, 2)
@@ -151,19 +152,16 @@ class GGUFManagerLifecycleTest {
             seed: Int,
             configurationId: String,
             generationCallback: GenerationCallback?
-        ) : NativeBridge.GenerationResult {
+        ): NativeGenerationResult {
             generateCalls++
-            return NativeBridge.GenerationResult(
-                status = if (smokeSuccess) "OK" else "ERROR",
-                configurationId = configurationId,
-                message = if (smokeSuccess) "" else "simulated smoke failure",
-                text = if (smokeSuccess) "OK" else "",
-                promptTokens = 1,
+            return NativeGenerationResult(
+                success = smokeSuccess,
+                output = if (smokeSuccess) "OK" else "",
                 outputTokens = if (smokeSuccess) 1 else 0,
+                promptTokens = 1,
                 elapsedMs = 1,
                 tokensPerSecond = 1.0,
-                reachedEndOfGeneration = true,
-                tokenIds = listOf(1)
+                errorMessage = if (smokeSuccess) null else "simulated smoke failure"
             )
         }
 
