@@ -117,7 +117,8 @@ class GGUFManager {
         maxTokens: Int = 128,
         timeoutMs: Int = 120_000,
         seed: Int = -1,
-        configurationId: String = "baseline"
+        configurationId: String = "baseline",
+        generationCallback: GenerationCallback? = null
     ): NativeBridge.GenerationResult = withContext(Dispatchers.IO) {
         mutex.withLock {
             check(mutableReadiness.value?.status == ReadinessStatus.READY_FOR_CHAT) {
@@ -132,7 +133,8 @@ class GGUFManager {
                 maxTokens = maxTokens,
                 timeoutMs = timeoutMs,
                 seed = seed,
-                configurationId = configurationId
+                configurationId = configurationId,
+                generationCallback = generationCallback
             )
         }
     }
@@ -147,12 +149,13 @@ class GGUFManager {
         maxTokens: Int = 128,
         timeoutMs: Int = 120_000,
         seed: Int = -1,
-        configurationId: String = "baseline"
+        configurationId: String = "baseline",
+        generationCallback: GenerationCallback? = null
     ): NativeBridge.GenerationResult {
         val prompt = Llama3PromptBuilder.build(systemPrompt, messages).text
         return generate(
             prompt, temperature, topP, frequencyPenalty, presencePenalty,
-            maxTokens, timeoutMs, seed, configurationId
+            maxTokens, timeoutMs, seed, configurationId, generationCallback
         )
     }
 
