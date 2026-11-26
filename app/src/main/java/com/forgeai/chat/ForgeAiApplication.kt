@@ -6,6 +6,10 @@ import com.forgeai.chat.data.preferences.SettingsDataStore
 import com.forgeai.chat.data.remote.OpenAiStreamClient
 import com.forgeai.chat.data.repository.ChatRepository
 import com.forgeai.chat.data.repository.DefaultChatRepository
+import com.forgeai.chat.maintenance.MaintenanceScheduler
+import com.forgeai.chat.nativebridge.GGUFManager
+import com.forgeai.chat.nativebridge.LocalGenerationFlowAdapter
+import com.forgeai.chat.nativebridge.LocalModelManager
 
 class AppContainer(application: Application) {
     private val database: AppDatabase by lazy {
@@ -20,11 +24,28 @@ class AppContainer(application: Application) {
         OpenAiStreamClient()
     }
 
+    private val ggufManager: GGUFManager by lazy {
+        GGUFManager()
+    }
+
+    private val localGenerationAdapter: LocalGenerationFlowAdapter by lazy {
+        LocalGenerationFlowAdapter(ggufManager)
+    }
+
+    val localModelManager: LocalModelManager by lazy {
+        LocalModelManager(application, ggufManager)
+    }
+
+    val memoryDao by lazy { database.memoryDao() }
+
     val chatRepository: ChatRepository by lazy {
         DefaultChatRepository(
             chatDao = database.chatDao(),
             settingsRepository = settingsDataStore,
-            streamClient = streamClient
+            streamClient = streamClient,
+            memoryDao = memoryDao,
+            localGenerationAdapter = localGenerationAdapter,
+            longTermMemoryDao = database.longTermMemoryDao()
         )
     }
 }
@@ -36,5 +57,6 @@ class ForgeAiApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         container = AppContainer(this)
+        MaintenanceScheduler.schedule(this)
     }
 }

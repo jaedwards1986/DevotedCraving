@@ -77,21 +77,21 @@ fun SplashScreen(onFinished: () -> Unit) {
             ) {
                 Icon(
                     imageVector = Icons.Rounded.AutoAwesome,
-                    contentDescription = "ForgeAI Logo",
+                    contentDescription = "DavotedCraving Logo",
                     tint = MaterialTheme.colorScheme.onPrimary,
                     modifier = Modifier.size(38.dp)
                 )
             }
             Spacer(Modifier.height(18.dp))
             Text(
-                text = "ForgeAI",
+                text = "DavotedCraving",
                 style = MaterialTheme.typography.headlineLarge,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onBackground
             )
             Spacer(Modifier.height(6.dp))
             Text(
-                text = "Private Native AI Workspace",
+                text = "A private Natasha-centered experience",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )

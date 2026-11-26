@@ -565,7 +565,7 @@ private fun MessageCard(
                         text = if (isUser) {
                             "You"
                         } else {
-                            message.modelName.ifBlank { "ForgeAI" }
+                            message.modelName.ifBlank { "DavotedCraving" }
                         },
                         style = MaterialTheme.typography.labelLarge,
                         color = if (isUser) {
@@ -666,7 +666,7 @@ private fun StreamingAssistantCard(
                     )
                 }
                 Text(
-                    text = modelName.ifBlank { "ForgeAI" },
+                    text = modelName.ifBlank { "DavotedCraving" },
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.onSurface
                 )
@@ -725,7 +725,7 @@ private fun ChatComposerBar(
                     modifier = Modifier.weight(1f),
                     placeholder = {
                         Text(
-                            text = "Message ForgeAI…",
+                            text = "Message…",
                             style = MaterialTheme.typography.bodyLarge,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )

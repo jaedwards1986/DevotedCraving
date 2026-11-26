@@ -5,22 +5,46 @@ package com.forgeai.chat.nativebridge
  * The final assistant header is intentionally open so generation continues in that turn.
  */
 object Llama3PromptBuilder {
+    data class ChatTurn(val role: String, val content: String)
+
     data class BuiltPrompt(
         val text: String,
         val estimatedUtf8Bytes: Int
     )
 
-    fun build(systemPrompt: String, userMessage: String): BuiltPrompt {
+    /** Backwards-compatible single-turn entry point. */
+    fun build(systemPrompt: String, userMessage: String): BuiltPrompt =
+        build(systemPrompt, listOf(ChatTurn(role = "user", content = userMessage)))
+
+    /**
+     * Frames the complete chronological conversation. Only user/assistant turns are accepted;
+     * system instructions are supplied once, separately, to avoid untrusted history overriding them.
+     */
+    fun build(systemPrompt: String, messages: List<ChatTurn>): BuiltPrompt {
         require(systemPrompt.isNotBlank()) { "System prompt must not be blank" }
-        require(userMessage.isNotBlank()) { "User message must not be blank" }
+        require(messages.isNotEmpty()) { "Conversation history must not be empty" }
+        messages.forEachIndexed { index, turn ->
+            require(turn.role == "user" || turn.role == "assistant") {
+                "Unsupported conversation role at index $index: ${turn.role}"
+            }
+            require(turn.content.isNotBlank()) { "Conversation message at index $index must not be blank" }
+        }
+        require(messages.last().role == "user") {
+            "The final conversation turn must be a user message before generation"
+        }
+
         val prompt = buildString {
             append("<|begin_of_text|>")
             append("<|start_header_id|>system<|end_header_id|>\n\n")
             append(systemPrompt.trim())
             append("<|eot_id|>")
-            append("<|start_header_id|>user<|end_header_id|>\n\n")
-            append(userMessage.trim())
-            append("<|eot_id|>")
+            messages.forEach { turn ->
+                append("<|start_header_id|>")
+                append(turn.role)
+                append("<|end_header_id|>\n\n")
+                append(turn.content.trim())
+                append("<|eot_id|>")
+            }
             append("<|start_header_id|>assistant<|end_header_id|>\n\n")
         }
         return BuiltPrompt(prompt, prompt.toByteArray(Charsets.UTF_8).size)

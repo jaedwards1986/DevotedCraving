@@ -102,6 +102,9 @@ dependencies {
     implementation("com.squareup.retrofit2:converter-gson:2.11.0")
     implementation("com.google.code.gson:gson:2.11.0")
 
+    // Persistent, battery-aware daily health checks and monthly release discovery
+    implementation("androidx.work:work-runtime-ktx:2.10.5")
+
     // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2")
 

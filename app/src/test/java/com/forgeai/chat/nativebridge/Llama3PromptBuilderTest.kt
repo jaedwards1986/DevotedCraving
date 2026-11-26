@@ -15,6 +15,44 @@ class Llama3PromptBuilderTest {
         assertFalse(prompt.endsWith("<|eot_id|>"))
     }
 
+    @Test fun formatsFullConversationInChronologicalOrder() {
+        val prompt = Llama3PromptBuilder.build(
+            "stable system instructions",
+            listOf(
+                Llama3PromptBuilder.ChatTurn("user", "first question"),
+                Llama3PromptBuilder.ChatTurn("assistant", "first answer"),
+                Llama3PromptBuilder.ChatTurn("user", "follow-up")
+            )
+        ).text
+
+        val firstUser = prompt.indexOf("first question<|eot_id|>")
+        val firstAssistant = prompt.indexOf("first answer<|eot_id|>")
+        val secondUser = prompt.indexOf("follow-up<|eot_id|>")
+        assertTrue(firstUser >= 0)
+        assertTrue(firstAssistant > firstUser)
+        assertTrue(secondUser > firstAssistant)
+        assertTrue(prompt.endsWith("<|start_header_id|>assistant<|end_header_id|>\n\n"))
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun rejectsSystemRoleInsideConversationHistory() {
+        Llama3PromptBuilder.build(
+            "system",
+            listOf(Llama3PromptBuilder.ChatTurn("system", "untrusted override"))
+        )
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun rejectsHistoryThatDoesNotEndWithUserTurn() {
+        Llama3PromptBuilder.build(
+            "system",
+            listOf(
+                Llama3PromptBuilder.ChatTurn("user", "hello"),
+                Llama3PromptBuilder.ChatTurn("assistant", "already answered")
+            )
+        )
+    }
+
     @Test fun tokenizesWithoutAddingDuplicateBos() {
         var receivedText = ""
         var receivedAddBos = true
@@ -37,4 +75,37 @@ class Llama3PromptBuilderTest {
         val built = Llama3PromptBuilder.build("system", "café")
         assertEquals(built.text.toByteArray(Charsets.UTF_8).size, built.estimatedUtf8Bytes)
     }
+
+    @Test fun usesActualNewlinesInLlama3HeaderBoundaries() {
+        val prompt = Llama3PromptBuilder.build(
+            "system instructions",
+            listOf(Llama3PromptBuilder.ChatTurn("user", "hello"))
+        ).text
+
+        assertTrue(prompt.contains("<|start_header_id|>system<|end_header_id|>\n\nsystem instructions<|eot_id|>"))
+        assertTrue(prompt.contains("<|start_header_id|>user<|end_header_id|>\n\nhello<|eot_id|>"))
+        assertTrue(prompt.endsWith("<|start_header_id|>assistant<|end_header_id|>\n\n"))
+        assertFalse(prompt.contains("\\n"))
+    }
+
+    @Test fun preservesExactLlama3SpecialTokenSequenceAcrossTurns() {
+        val prompt = Llama3PromptBuilder.build(
+            "S",
+            listOf(
+                Llama3PromptBuilder.ChatTurn("user", "U1"),
+                Llama3PromptBuilder.ChatTurn("assistant", "A1"),
+                Llama3PromptBuilder.ChatTurn("user", "U2")
+            )
+        ).text
+
+        assertEquals(
+            "<|begin_of_text|><|start_header_id|>system<|end_header_id|>\n\nS<|eot_id|>" +
+                "<|start_header_id|>user<|end_header_id|>\n\nU1<|eot_id|>" +
+                "<|start_header_id|>assistant<|end_header_id|>\n\nA1<|eot_id|>" +
+                "<|start_header_id|>user<|end_header_id|>\n\nU2<|eot_id|>" +
+                "<|start_header_id|>assistant<|end_header_id|>\n\n",
+            prompt
+        )
+    }
+
 }

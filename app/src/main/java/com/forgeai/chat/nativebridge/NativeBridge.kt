@@ -2,13 +2,13 @@ package com.forgeai.chat.nativebridge
 
 import org.json.JSONObject
 
-/** Receives the first non-empty decoded text piece on the native generation thread. */
-interface FirstTokenCallback {
+/** Receives generation lifecycle and every non-empty decoded text piece on the native generation thread. */
+interface GenerationCallback {
     /** Called after native generation owns the model lock and its cancellation flag is armed. */
     fun onGenerationStarted()
 
-    /** Called once, on the native generation thread, for the first non-empty decoded text piece. */
-    fun onFirstToken(tokenPiece: String)
+    /** Called for every non-empty decoded text piece as it is produced. */
+    fun onTokenPiece(tokenPiece: String)
 }
 
 /**
@@ -29,7 +29,7 @@ object NativeBridge {
     private external fun nativeGenerate(
         prompt: String, configurationId: String, temperature: Float, topP: Float, frequencyPenalty: Float,
         presencePenalty: Float, maxTokens: Int, timeoutMs: Int, seed: Int,
-        firstTokenCallback: FirstTokenCallback?
+        generationCallback: GenerationCallback?
     ): String
 
     data class HealthResult(
@@ -88,11 +88,11 @@ object NativeBridge {
         timeoutMs: Int = 120_000,
         seed: Int = -1,
         configurationId: String = "baseline",
-        firstTokenCallback: FirstTokenCallback? = null
+        generationCallback: GenerationCallback? = null
     ): GenerationResult {
         val raw = nativeGenerate(
             prompt, configurationId, temperature, topP, frequencyPenalty, presencePenalty,
-            maxTokens.coerceAtMost(128), timeoutMs, seed, firstTokenCallback
+            maxTokens.coerceAtMost(128), timeoutMs, seed, generationCallback
         )
         val json = JSONObject(raw)
         val ids = json.optJSONArray("token_ids")

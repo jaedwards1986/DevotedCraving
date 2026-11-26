@@ -240,7 +240,7 @@ extern "C" JNIEXPORT jstring JNICALL
 Java_com_forgeai_chat_nativebridge_NativeBridge_nativeGenerate(
     JNIEnv* env, jobject, jstring prompt_text, jstring configuration_id_text, jfloat temperature, jfloat top_p,
     jfloat frequency_penalty, jfloat presence_penalty, jint max_tokens,
-    jint timeout_ms, jint seed, jobject first_token_callback) {
+    jint timeout_ms, jint seed, jobject generation_callback) {
     const auto errorJson = [&](const char* message, const char* status = "ERROR") {
         return toJavaString(env, std::string("{\"status\":\"") + status +
             "\",\"message\":\"" + jsonEscape(message) + "\"}");
@@ -261,19 +261,25 @@ Java_com_forgeai_chat_nativebridge_NativeBridge_nativeGenerate(
     std::lock_guard<std::mutex> lock(g_model_mutex);
     if (g_model == nullptr || g_context == nullptr) return errorJson("No GGUF model is loaded");
 
+    // Each call is an independent request today. Clear the full llama.cpp memory
+    // (KV cache and sequence metadata) before restarting token positions at zero.
+    // Conversation continuity must be supplied explicitly in the prompt until a
+    // session-aware cache API is implemented.
+    llama_memory_clear(llama_get_memory(g_context), true);
+
     g_cancel_requested.store(false, std::memory_order_relaxed);
     jclass callback_class = nullptr;
     jmethodID started_method = nullptr;
     jmethodID callback_method = nullptr;
-    if (first_token_callback != nullptr) {
-        callback_class = env->GetObjectClass(first_token_callback);
+    if (generation_callback != nullptr) {
+        callback_class = env->GetObjectClass(generation_callback);
         if (callback_class != nullptr) {
             started_method = env->GetMethodID(callback_class, "onGenerationStarted", "()V");
             if (env->ExceptionCheck()) { env->ExceptionClear(); started_method = nullptr; }
-            callback_method = env->GetMethodID(callback_class, "onFirstToken", "(Ljava/lang/String;)V");
+            callback_method = env->GetMethodID(callback_class, "onTokenPiece", "(Ljava/lang/String;)V");
             if (env->ExceptionCheck()) { env->ExceptionClear(); callback_method = nullptr; }
             if (started_method != nullptr) {
-                env->CallVoidMethod(first_token_callback, started_method);
+                env->CallVoidMethod(generation_callback, started_method);
                 if (env->ExceptionCheck()) env->ExceptionClear();
             }
         }
@@ -339,7 +345,6 @@ Java_com_forgeai_chat_nativebridge_NativeBridge_nativeGenerate(
     bool timeout = false;
     bool cancelled = false;
     bool eog = false;
-    bool first_token_sent = false;
     int32_t decode_result = 0;
     for (int32_t i = 0; i < max_tokens; ++i) {
         if (g_cancel_requested.load(std::memory_order_relaxed)) { cancelled = true; break; }
@@ -349,15 +354,12 @@ Java_com_forgeai_chat_nativebridge_NativeBridge_nativeGenerate(
         output_ids.push_back(token);
         const std::string piece = tokenPiece(vocab, token);
         output += piece;
-        if (!first_token_sent && !piece.empty()) {
-            first_token_sent = true;
-            if (callback_method != nullptr) {
-                jstring java_piece = toJavaString(env, piece);
-                if (java_piece != nullptr) {
-                    env->CallVoidMethod(first_token_callback, callback_method, java_piece);
-                    env->DeleteLocalRef(java_piece);
-                    if (env->ExceptionCheck()) env->ExceptionClear();
-                }
+        if (!piece.empty() && callback_method != nullptr) {
+            jstring java_piece = toJavaString(env, piece);
+            if (java_piece != nullptr) {
+                env->CallVoidMethod(generation_callback, callback_method, java_piece);
+                env->DeleteLocalRef(java_piece);
+                if (env->ExceptionCheck()) env->ExceptionClear();
             }
         }
 

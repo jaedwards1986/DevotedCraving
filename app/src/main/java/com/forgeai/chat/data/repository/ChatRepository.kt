@@ -1,6 +1,13 @@
 package com.forgeai.chat.data.repository
 
+import com.forgeai.chat.data.context.PersonaOrchestrator
+import com.forgeai.chat.data.context.PreferenceFact
+import com.forgeai.chat.data.context.PersonaSpecification
+import com.forgeai.chat.data.context.RetrievedMemory
 import com.forgeai.chat.data.local.dao.ChatDao
+import com.forgeai.chat.data.local.dao.MemoryDao
+import com.forgeai.chat.data.local.dao.LongTermMemoryDao
+import com.forgeai.chat.data.memory.MemoryService
 import com.forgeai.chat.data.local.entity.ConversationEntity
 import com.forgeai.chat.data.local.entity.ConversationWithPreview
 import com.forgeai.chat.data.local.entity.MessageEntity
@@ -9,8 +16,11 @@ import com.forgeai.chat.data.preferences.AppSettings
 import com.forgeai.chat.data.preferences.SettingsRepository
 import com.forgeai.chat.data.preferences.ThemeMode
 import com.forgeai.chat.data.remote.LlmStreamClient
-import com.forgeai.chat.data.remote.dto.ApiMessageDto
+import com.forgeai.chat.nativebridge.Llama3PromptBuilder
+import com.forgeai.chat.nativebridge.LocalGenerationFlowAdapter
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flow
 
 interface ChatRepository {
     val settingsFlow: Flow<AppSettings>
@@ -52,7 +62,11 @@ interface ChatRepository {
 class DefaultChatRepository(
     private val chatDao: ChatDao,
     private val settingsRepository: SettingsRepository,
-    private val streamClient: LlmStreamClient
+    private val streamClient: LlmStreamClient,
+    private val memoryDao: MemoryDao? = null,
+    private val localGenerationAdapter: LocalGenerationFlowAdapter? = null,
+    private val memoryService: MemoryService = MemoryService(memoryDao),
+    private val longTermMemoryDao: LongTermMemoryDao? = null
 ) : ChatRepository {
 
     override val settingsFlow: Flow<AppSettings> = settingsRepository.settingsFlow
@@ -135,20 +149,52 @@ class DefaultChatRepository(
     override fun streamAssistantReply(
         settings: AppSettings,
         history: List<MessageEntity>
-    ): Flow<String> {
-        val payloadMessages = buildList {
-            val system = settings.systemPrompt.trim()
-            if (system.isNotEmpty()) {
-                add(ApiMessageDto(role = MessageRole.SYSTEM.wireValue, content = system))
-            }
-            history
-                .filterNot { it.isError }
-                .takeLast(40)
-                .forEach { msg ->
-                    add(ApiMessageDto(role = msg.role, content = msg.content))
-                }
+    ): Flow<String> = flow {
+        val recentHistory = history.filterNot { it.isError }.takeLast(40)
+        val latestUserText = recentHistory.lastOrNull { it.role == MessageRole.USER.wireValue }
+            ?.content.orEmpty()
+        val memoryRetrieval = memoryService.retrieveForPrompt(latestUserText)
+        val retrievedContext = memoryRetrieval.memories
+        val preferenceFacts = longTermMemoryDao?.getActivePreferences().orEmpty().map { preference ->
+            PreferenceFact(
+                id = preference.settingName,
+                category = "preference",
+                subject = preference.settingName,
+                value = preference.settingValue
+            )
         }
-        return streamClient.streamCompletion(settings, payloadMessages)
+        val system = PersonaOrchestrator.assemble(
+            persona = PersonaSpecification(
+                revision = "settings-system-prompt-v1",
+                canonicalPrompt = settings.systemPrompt
+            ),
+            memories = retrievedContext,
+            preferences = preferenceFacts
+        )
+
+        val adapter = localGenerationAdapter
+            ?: throw IllegalStateException("Local generation adapter is not configured")
+        if (!adapter.isReadyForChat()) {
+            throw IllegalStateException("Local model is not READY_FOR_CHAT")
+        }
+
+        val turns = recentHistory
+            .filterNot { it.role == MessageRole.SYSTEM.wireValue }
+            .map { message ->
+                Llama3PromptBuilder.ChatTurn(
+                    role = if (message.role == MessageRole.ASSISTANT.wireValue) "assistant" else "user",
+                    content = message.content
+                )
+            }
+
+        emitAll(
+            adapter.generateChat(
+                systemPrompt = system,
+                messages = turns,
+                temperature = settings.temperature,
+                maxTokens = settings.maxTokens
+            )
+        )
     }
 
     override suspend fun fetchAvailableModels(settings: AppSettings): Result<List<String>> =
