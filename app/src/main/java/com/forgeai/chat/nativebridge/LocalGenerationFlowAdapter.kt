@@ -27,6 +27,9 @@ class LocalGenerationFlowAdapter(
         var cancellationRequested: Boolean = false
     }
 
+    fun isReadyForChat(): Boolean =
+        ggufManager.readiness.value?.status == GGUFManager.ReadinessStatus.READY_FOR_CHAT
+
     fun generate(
         prompt: String,
         temperature: Float = 0.7f,
