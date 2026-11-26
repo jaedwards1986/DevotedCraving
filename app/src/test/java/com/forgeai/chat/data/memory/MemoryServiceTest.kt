@@ -49,6 +49,11 @@ class MemoryServiceTest {
         )
     }
 
+    @Test fun defaultSelectionIncludesTenRelevantMemories() {
+        val rows = (1..12).map { memory("default-$it", subject = "coffee") }
+        assertEquals(10, MemoryService.select(rows, "coffee").size)
+    }
+
     @Test fun selectionIsBoundedByRequestedLimit() {
         val rows = (1..12).map { memory("id-${it}", subject = "coffee") }
         assertEquals(5, MemoryService.select(rows, "coffee", limit = 5).size)
