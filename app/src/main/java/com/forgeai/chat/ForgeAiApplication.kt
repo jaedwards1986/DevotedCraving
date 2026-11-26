@@ -9,6 +9,7 @@ import com.forgeai.chat.data.repository.DefaultChatRepository
 import com.forgeai.chat.maintenance.MaintenanceScheduler
 import com.forgeai.chat.nativebridge.GGUFManager
 import com.forgeai.chat.nativebridge.LocalGenerationFlowAdapter
+import com.forgeai.chat.nativebridge.LocalModelManager
 
 class AppContainer(application: Application) {
     private val database: AppDatabase by lazy {
@@ -29,6 +30,10 @@ class AppContainer(application: Application) {
 
     private val localGenerationAdapter: LocalGenerationFlowAdapter by lazy {
         LocalGenerationFlowAdapter(ggufManager)
+    }
+
+    val localModelManager: LocalModelManager by lazy {
+        LocalModelManager(application, ggufManager)
     }
 
     val chatRepository: ChatRepository by lazy {
