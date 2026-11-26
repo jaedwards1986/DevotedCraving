@@ -260,6 +260,9 @@ class GGUFManager(
         configurationId = configurationId
     )
 
+    /** Cooperative cancellation hook that intentionally does not acquire the lifecycle mutex. */
+    fun cancelGeneration(): Boolean = backend.cancelGeneration()
+
     suspend fun unload(): Boolean = withContext(Dispatchers.IO) {
         mutex.withLock {
             val previousPath = (mutableState.value as? State.Ready)?.path
