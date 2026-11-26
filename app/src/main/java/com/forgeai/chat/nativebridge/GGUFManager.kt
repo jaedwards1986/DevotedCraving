@@ -81,8 +81,14 @@ class GGUFManager {
                         error("Requested context ${options.contextSize} exceeds declared model context ${metadata.declaredContextLength}")
                     }
 
-                    check(!NativeBridge.isModelLoaded()) {
-                        "A model is already loaded; unload it before loading another"
+                    if (NativeBridge.isModelLoaded()) {
+                        val detail = "A model is already loaded; unload it before loading another"
+                        mutableReadiness.value = Readiness(
+                            ReadinessStatus.LOAD_FAILURE,
+                            metadata,
+                            detail
+                        )
+                        error(detail)
                     }
 
                     mutableState.value = State.Loading(canonical.absolutePath)
