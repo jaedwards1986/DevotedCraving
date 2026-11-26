@@ -36,12 +36,14 @@ class AppContainer(application: Application) {
         LocalModelManager(application, ggufManager)
     }
 
+    val memoryDao by lazy { database.memoryDao() }
+
     val chatRepository: ChatRepository by lazy {
         DefaultChatRepository(
             chatDao = database.chatDao(),
             settingsRepository = settingsDataStore,
             streamClient = streamClient,
-            memoryDao = database.memoryDao(),
+            memoryDao = memoryDao,
             localGenerationAdapter = localGenerationAdapter
         )
     }
