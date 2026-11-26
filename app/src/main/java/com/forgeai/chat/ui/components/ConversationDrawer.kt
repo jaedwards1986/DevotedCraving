@@ -28,6 +28,7 @@ import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.DeleteOutline
 import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material.icons.rounded.Psychology
+import androidx.compose.material.icons.rounded.Storage
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.Tune
 import androidx.compose.material3.AlertDialog
@@ -271,6 +272,13 @@ fun ConversationDrawerContent(
                 title = "Model & Endpoint",
                 subtitle = "API URL, key, parameters & theme",
                 onClick = onOpenSettings
+            )
+            Spacer(Modifier.height(6.dp))
+            DrawerActionRow(
+                icon = Icons.Rounded.Storage,
+                title = "Memory",
+                subtitle = "Review, correct and manage saved details",
+                onClick = onOpenMemory
             )
         }
     }
