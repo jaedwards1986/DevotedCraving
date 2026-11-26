@@ -117,7 +117,6 @@ class GGUFManager(
                         "Smoke test threw: ${error.message ?: error::class.java.simpleName}"
                     }
                     if (smokeFailure != null) {
-                        runCatching { backend.unloadModel() }
                         mutableReadiness.value = Readiness(
                             ReadinessStatus.SMOKE_TEST_FAILURE,
                             metadata,
@@ -147,7 +146,7 @@ class GGUFManager(
                 } catch (error: Throwable) {
                     val detail = error.message ?: "Model load failed"
                     if (mutableState.value is State.Loading) {
-                        runCatching { NativeBridge.unloadModel() }
+                        runCatching { backend.unloadModel() }
                     }
                     if (mutableReadiness.value == null) {
                         val status = when {
@@ -257,7 +256,7 @@ class GGUFManager(
         mutex.withLock {
             val previousPath = (mutableState.value as? State.Ready)?.path
             mutableState.value = State.Unloading(previousPath)
-            val unloaded = NativeBridge.unloadModel()
+            val unloaded = backend.unloadModel()
             mutableReadiness.value = null
             mutableState.value = State.NotLoaded
             unloaded
@@ -268,7 +267,7 @@ class GGUFManager(
         val tokens = backend.tokenize("Hello", addBos = true)
         if (tokens == null || tokens.isEmpty()) return "Smoke test tokenizer failed"
 
-        val result = NativeBridge.generate(
+        val result = backend.generate(
             prompt = "Hello",
             temperature = 0f,
             topP = 1f,
