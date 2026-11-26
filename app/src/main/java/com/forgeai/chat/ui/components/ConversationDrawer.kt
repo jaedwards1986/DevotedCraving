@@ -113,7 +113,7 @@ fun ConversationDrawerContent(
                 }
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "ForgeAI",
+                        text = "DavotedCraving",
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold
                     )
