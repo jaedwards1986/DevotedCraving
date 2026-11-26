@@ -153,7 +153,7 @@ class GGUFManager {
             }
         }
 
-    private fun validateOptions(options: LoadOptions) {
+    internal fun validateOptions(options: LoadOptions) {
         require(options.contextSize in 512..32768) {
             "Context size must be 512..32768"
         }
