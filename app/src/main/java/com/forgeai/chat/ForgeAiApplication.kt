@@ -44,7 +44,8 @@ class AppContainer(application: Application) {
             settingsRepository = settingsDataStore,
             streamClient = streamClient,
             memoryDao = memoryDao,
-            localGenerationAdapter = localGenerationAdapter
+            localGenerationAdapter = localGenerationAdapter,
+            longTermMemoryDao = database.longTermMemoryDao()
         )
     }
 }
