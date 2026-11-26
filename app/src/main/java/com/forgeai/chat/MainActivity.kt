@@ -127,6 +127,10 @@ private fun ForgeAiAppRoot(
                     onOpenSettings = {
                         viewModel.navigateTo(AppDestination.SETTINGS)
                         scope.launch { drawerState.close() }
+                    },
+                    onOpenMemory = {
+                        viewModel.navigateTo(AppDestination.MEMORY)
+                        scope.launch { drawerState.close() }
                     }
                 )
             }
