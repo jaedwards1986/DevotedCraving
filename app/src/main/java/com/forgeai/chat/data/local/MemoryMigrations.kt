@@ -128,3 +128,19 @@ val MIGRATION_2_3 = object : Migration(2, 3) {
         )
     }
 }
+
+
+/**
+ * Adds an explicit event discriminator. Existing events remain GENERAL until
+ * explicitly classified; they are never silently promoted to relationship history.
+ */
+val MIGRATION_3_4 = object : Migration(3, 4) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+            "ALTER TABLE memory_events ADD COLUMN event_type TEXT NOT NULL DEFAULT 'GENERAL'"
+        )
+        db.execSQL(
+            "CREATE INDEX IF NOT EXISTS index_memory_events_status_event_type_created_at ON memory_events(status, event_type, created_at)"
+        )
+    }
+}
