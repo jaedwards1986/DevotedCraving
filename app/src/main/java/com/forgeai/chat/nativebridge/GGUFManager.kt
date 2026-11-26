@@ -51,62 +51,110 @@ class GGUFManager {
                 mutableReadiness.value = null
 
                 try {
+                    validateOptions(options)
                     validateGguf(canonical)
+
+                    val metadata = try {
+                        GgufMetadataReader.read(canonical)
+                    } catch (error: Exception) {
+                        mutableReadiness.value = Readiness(
+                            ReadinessStatus.INVALID_METADATA,
+                            detail = error.message ?: "GGUF metadata validation failed"
+                        )
+                        throw error
+                    }
+
+                    if (options.contextSize > metadata.declaredContextLength) {
+                        mutableReadiness.value = Readiness(
+                            ReadinessStatus.INVALID_CONTEXT,
+                            metadata,
+                            "Requested context \${options.contextSize} exceeds declared model context \${metadata.declaredContextLength}"
+                        )
+                        error("Requested context \${options.contextSize} exceeds declared model context \${metadata.declaredContextLength}")
+                    }
+
+                    check(!NativeBridge.isModelLoaded()) {
+                        "A model is already loaded; unload it before loading another"
+                    }
+
+                    mutableState.value = State.Loading(canonical.absolutePath)
+                    val started = System.nanoTime()
+                    val result = NativeBridge.loadModel(
+                        canonical.absolutePath,
+                        options.contextSize,
+                        options.threads
+                    )
+                    val elapsedMs = (System.nanoTime() - started) / 1_000_000L
+                    if (!result.success) {
+                        mutableReadiness.value = Readiness(
+                            ReadinessStatus.LOAD_FAILURE,
+                            metadata,
+                            result.detail
+                        )
+                        error(result.detail.ifBlank { "Native model load failed" })
+                    }
+
+                    val smokeFailure = try {
+                        runSmokeTest(options.smokeTimeoutMs)
+                    } catch (error: Exception) {
+                        "Smoke test threw: \${error.message ?: error::class.java.simpleName}"
+                    }
+                    if (smokeFailure != null) {
+                        runCatching { NativeBridge.unloadModel() }
+                        mutableReadiness.value = Readiness(
+                            ReadinessStatus.SMOKE_TEST_FAILURE,
+                            metadata,
+                            smokeFailure
+                        )
+                        error(smokeFailure)
+                    }
+
+                    mutableReadiness.value = Readiness(
+                        ReadinessStatus.READY_FOR_CHAT,
+                        metadata,
+                        "Native load and bounded smoke generation passed"
+                    )
+                    State.Ready(
+                        canonical.absolutePath,
+                        result.detail,
+                        elapsedMs,
+                        options.threads
+                    ).also { mutableState.value = it }
+                } catch (cancelled: kotlinx.coroutines.CancellationException) {
+                    mutableReadiness.value = null
+                    mutableState.value = State.NotLoaded
+                    throw cancelled
                 } catch (error: Throwable) {
-                    val detail = error.message ?: "Model file validation failed"
-                    mutableReadiness.value = Readiness(ReadinessStatus.INVALID_FILE, detail = detail)
+                    val detail = error.message ?: "Model load failed"
+                    if (mutableReadiness.value == null) {
+                        val status = when {
+                            !canonical.exists() || !canonical.isFile || !canonical.canRead() ->
+                                ReadinessStatus.INVALID_FILE
+                            detail.contains("context", ignoreCase = true) ->
+                                ReadinessStatus.INVALID_CONTEXT
+                            mutableState.value is State.Loading ->
+                                ReadinessStatus.LOAD_FAILURE
+                            else -> ReadinessStatus.INVALID_FILE
+                        }
+                        mutableReadiness.value = Readiness(status, detail = detail)
+                    }
                     mutableState.value = State.Error(detail)
                     throw error
                 }
-
-                val metadata = try {
-                    GgufMetadataReader.read(canonical)
-                } catch (error: Throwable) {
-                    val detail = error.message ?: "GGUF metadata validation failed"
-                    mutableReadiness.value = Readiness(ReadinessStatus.INVALID_METADATA, detail = detail)
-                    mutableState.value = State.Error(detail)
-                    throw error
-                }
-
-                require(options.contextSize in 512..32768) { "Context size must be 512..32768" }
-                require(options.threads in 1..32) { "Thread count must be 1..32" }
-                require(options.smokeTimeoutMs in 500..30_000) { "Smoke timeout must be 500..30000 ms" }
-
-                if (options.contextSize > metadata.declaredContextLength) {
-                    val detail = "Requested context " + options.contextSize + " exceeds declared model context " + metadata.declaredContextLength
-                    mutableReadiness.value = Readiness(ReadinessStatus.INVALID_CONTEXT, metadata, detail)
-                    mutableState.value = State.Error(detail)
-                    error(detail)
-                }
-
-                check(!NativeBridge.isModelLoaded()) { "A model is already loaded; unload it before loading another" }
-
-                mutableState.value = State.Loading(canonical.absolutePath)
-                val started = System.nanoTime()
-                val result = NativeBridge.loadModel(canonical.absolutePath, options.contextSize, options.threads)
-                val elapsedMs = (System.nanoTime() - started) / 1_000_000L
-                if (!result.success) {
-                    mutableReadiness.value = Readiness(ReadinessStatus.LOAD_FAILURE, metadata, result.detail)
-                    mutableState.value = State.Error(result.detail)
-                    error(result.detail)
-                }
-
-                val smokeFailure = runSmokeTest(options.smokeTimeoutMs)
-                if (smokeFailure != null) {
-                    NativeBridge.unloadModel()
-                    mutableReadiness.value = Readiness(ReadinessStatus.SMOKE_TEST_FAILURE, metadata, smokeFailure)
-                    mutableState.value = State.Error(smokeFailure)
-                    error(smokeFailure)
-                }
-
-                mutableReadiness.value = Readiness(
-                    ReadinessStatus.READY_FOR_CHAT,
-                    metadata,
-                    "Native load and bounded smoke generation passed"
-                )
-                State.Ready(canonical.absolutePath, result.detail, elapsedMs, options.threads).also { mutableState.value = it }
             }
         }
+
+    private fun validateOptions(options: LoadOptions) {
+        require(options.contextSize in 512..32768) {
+            "Context size must be 512..32768"
+        }
+        require(options.threads in 1..32) {
+            "Thread count must be 1..32"
+        }
+        require(options.smokeTimeoutMs in 500..30_000) {
+            "Smoke timeout must be 500..30000 ms"
+        }
+    }
 
     suspend fun generate(
         prompt: String,
