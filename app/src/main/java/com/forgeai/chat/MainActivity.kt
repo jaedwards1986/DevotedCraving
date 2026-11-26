@@ -31,6 +31,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.forgeai.chat.ui.components.ConversationDrawerContent
+import com.forgeai.chat.data.local.dao.MemoryDao
+import com.forgeai.chat.ui.screens.MemoryManagementScreen
 import com.forgeai.chat.ui.screens.ChatScreen
 import com.forgeai.chat.ui.screens.SettingsScreen
 import com.forgeai.chat.ui.screens.SplashScreen
@@ -53,6 +55,7 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+            val memoryDao = (application as ForgeAiApplication).container.memoryDao
 
             ForgeAiTheme(
                 themeMode = uiState.settings.themeMode,
@@ -60,7 +63,8 @@ class MainActivity : ComponentActivity() {
             ) {
                 ForgeAiAppRoot(
                     viewModel = viewModel,
-                    uiState = uiState
+                    uiState = uiState,
+                    memoryDao = memoryDao
                 )
             }
         }
@@ -70,7 +74,8 @@ class MainActivity : ComponentActivity() {
 @Composable
 private fun ForgeAiAppRoot(
     viewModel: ChatViewModel,
-    uiState: com.forgeai.chat.ui.viewmodel.ChatUiState
+    uiState: com.forgeai.chat.ui.viewmodel.ChatUiState,
+    memoryDao: MemoryDao
 ) {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val snackbarHostState = remember { SnackbarHostState() }
@@ -177,6 +182,13 @@ private fun ForgeAiAppRoot(
                             onTestConnection = viewModel::testConnection,
                             onUpdateTheme = viewModel::updateTheme,
                             onClearAllConversations = viewModel::clearAllConversations
+                        )
+                    }
+
+                    AppDestination.MEMORY -> {
+                        MemoryManagementScreen(
+                            memoryDao = memoryDao,
+                            onNavigateBack = { viewModel.navigateTo(AppDestination.CHAT) }
                         )
                     }
                 }
