@@ -108,6 +108,33 @@ class LocalGenerationFlowAdapter(
         }
     }
 
+
+    fun generateChat(
+        systemPrompt: String,
+        messages: List<Llama3PromptBuilder.ChatTurn>,
+        temperature: Float = 0.7f,
+        topP: Float = 0.95f,
+        frequencyPenalty: Float = 0f,
+        presencePenalty: Float = 0f,
+        maxTokens: Int = 128,
+        timeoutMs: Int = 120_000,
+        seed: Int = -1,
+        configurationId: String = "baseline"
+    ): Flow<String> {
+        val prompt = Llama3PromptBuilder.build(systemPrompt, messages).text
+        return generate(
+            prompt = prompt,
+            temperature = temperature,
+            topP = topP,
+            frequencyPenalty = frequencyPenalty,
+            presencePenalty = presencePenalty,
+            maxTokens = maxTokens,
+            timeoutMs = timeoutMs,
+            seed = seed,
+            configurationId = configurationId
+        )
+    }
+
     suspend fun collectToString(
         prompt: String,
         temperature: Float = 0.7f,
