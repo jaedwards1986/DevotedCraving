@@ -84,7 +84,14 @@ class GGUFManager(
                         error("Requested context ${options.contextSize} exceeds declared model context ${metadata.declaredContextLength}")
                     }
 
-                    if (backend.isModelLoaded()) {
+                    val alreadyLoaded = try {
+                        backend.isModelLoaded()
+                    } catch (error: Exception) {
+                        val detail = "Unable to inspect native model state: ${error.message ?: error::class.java.simpleName}"
+                        mutableReadiness.value = Readiness(ReadinessStatus.LOAD_FAILURE, metadata, detail)
+                        throw IllegalStateException(detail, error)
+                    }
+                    if (alreadyLoaded) {
                         val detail = "A model is already loaded; unload it before loading another"
                         mutableReadiness.value = Readiness(
                             ReadinessStatus.LOAD_FAILURE,
