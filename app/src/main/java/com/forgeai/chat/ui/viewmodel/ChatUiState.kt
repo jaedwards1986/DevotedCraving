@@ -7,7 +7,8 @@ import com.forgeai.chat.data.preferences.AppSettings
 enum class AppDestination {
     CHAT,
     SYSTEM_PROMPT,
-    SETTINGS
+    SETTINGS,
+    MEMORY
 }
 
 sealed interface ConnectionTestState {
