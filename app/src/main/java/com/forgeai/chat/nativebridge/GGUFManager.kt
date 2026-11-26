@@ -85,11 +85,14 @@ class GGUFManager(
                     }
 
                     val alreadyLoaded = try {
-                        backend.isModelLoaded()
+                        backend.getModelStatus().isLoaded
+                    } catch (error: NativeEngineException) {
+                        mutableReadiness.value = Readiness(ReadinessStatus.LOAD_FAILURE, metadata, error.message.orEmpty())
+                        throw error
                     } catch (error: Exception) {
                         val detail = "Unable to inspect native model state: ${error.message ?: error::class.java.simpleName}"
                         mutableReadiness.value = Readiness(ReadinessStatus.LOAD_FAILURE, metadata, detail)
-                        throw IllegalStateException(detail, error)
+                        throw NativeStateException(detail, error)
                     }
                     if (alreadyLoaded) {
                         val detail = "A model is already loaded; unload it before loading another"
@@ -109,27 +112,23 @@ class GGUFManager(
                         options.threads
                     )
                     val elapsedMs = (System.nanoTime() - started) / 1_000_000L
+                    // The production backend throws NativeLoadException for native failure.
+                    // Keep the result guard for deterministic test/custom backends.
                     if (!result.success) {
-                        mutableReadiness.value = Readiness(
-                            ReadinessStatus.LOAD_FAILURE,
-                            metadata,
-                            result.detail
-                        )
-                        error(result.detail.ifBlank { "Native model load failed" })
+                        throw NativeLoadException(result.detail.ifBlank { "Native model load failed" })
                     }
 
-                    val smokeFailure = try {
+                    try {
                         runSmokeTest(options.smokeTimeoutMs)
-                    } catch (error: Exception) {
-                        "Smoke test threw: ${error.message ?: error::class.java.simpleName}"
-                    }
-                    if (smokeFailure != null) {
+                    } catch (error: NativeEngineException) {
                         mutableReadiness.value = Readiness(
-                            ReadinessStatus.SMOKE_TEST_FAILURE,
-                            metadata,
-                            smokeFailure
+                            ReadinessStatus.SMOKE_TEST_FAILURE, metadata, error.message.orEmpty()
                         )
-                        error(smokeFailure)
+                        throw error
+                    } catch (error: Exception) {
+                        val detail = "Smoke test threw: ${error.message ?: error::class.java.simpleName}"
+                        mutableReadiness.value = Readiness(ReadinessStatus.SMOKE_TEST_FAILURE, metadata, detail)
+                        throw SmokeTestException(message = detail, cause = error)
                     }
 
                     mutableReadiness.value = Readiness(
@@ -270,23 +269,28 @@ class GGUFManager(
         }
     }
 
-    private fun runSmokeTest(timeoutMs: Int): String? {
+    private fun runSmokeTest(timeoutMs: Int) {
         val tokens = backend.tokenize("Hello", addBos = true)
-        if (tokens == null || tokens.isEmpty()) return "Smoke test tokenizer failed"
+        if (tokens == null || tokens.isEmpty()) {
+            throw SmokeTestException(message = "Smoke test tokenizer failed")
+        }
 
         val result = backend.generate(
-            prompt = "Hello",
-            temperature = 0f,
-            topP = 1f,
-            maxTokens = 2,
-            timeoutMs = timeoutMs,
-            configurationId = "mdrh-smoke"
+            prompt = "Hello", temperature = 0f, topP = 1f, maxTokens = 2,
+            timeoutMs = timeoutMs, configurationId = "mdrh-smoke"
         )
-        if (result.cancelled) return "Smoke test was cancelled"
-        if (result.timedOut) return "Smoke test timed out"
-        if (!result.success) return "Smoke test generation failed: " + result.message
-        if (result.outputTokens <= 0) return "Smoke test produced zero tokens"
-        return null
+        if (result.cancelled) throw SmokeTestException(
+            NativeEngineErrorCode.SMOKE_TEST_CANCELLED, "Smoke test was cancelled"
+        )
+        if (result.timedOut) throw SmokeTestException(
+            NativeEngineErrorCode.SMOKE_TEST_TIMEOUT, "Smoke test timed out"
+        )
+        if (!result.success) throw SmokeTestException(
+            message = "Smoke test generation failed: ${result.message}"
+        )
+        if (result.outputTokens <= 0) throw SmokeTestException(
+            message = "Smoke test produced zero tokens"
+        )
     }
 
     private fun validateGguf(file: File) {
