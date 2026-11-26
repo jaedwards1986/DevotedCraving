@@ -1,10 +1,12 @@
 package com.forgeai.chat.data.repository
 
 import com.forgeai.chat.data.context.PersonaOrchestrator
+import com.forgeai.chat.data.context.PreferenceFact
 import com.forgeai.chat.data.context.PersonaSpecification
 import com.forgeai.chat.data.context.RetrievedMemory
 import com.forgeai.chat.data.local.dao.ChatDao
 import com.forgeai.chat.data.local.dao.MemoryDao
+import com.forgeai.chat.data.local.dao.LongTermMemoryDao
 import com.forgeai.chat.data.memory.MemoryService
 import com.forgeai.chat.data.local.entity.ConversationEntity
 import com.forgeai.chat.data.local.entity.ConversationWithPreview
@@ -63,7 +65,8 @@ class DefaultChatRepository(
     private val streamClient: LlmStreamClient,
     private val memoryDao: MemoryDao? = null,
     private val localGenerationAdapter: LocalGenerationFlowAdapter? = null,
-    private val memoryService: MemoryService = MemoryService(memoryDao)
+    private val memoryService: MemoryService = MemoryService(memoryDao),
+    private val longTermMemoryDao: LongTermMemoryDao? = null
 ) : ChatRepository {
 
     override val settingsFlow: Flow<AppSettings> = settingsRepository.settingsFlow
@@ -152,12 +155,21 @@ class DefaultChatRepository(
             ?.content.orEmpty()
         val memoryRetrieval = memoryService.retrieveForPrompt(latestUserText)
         val retrievedContext = memoryRetrieval.memories
+        val preferenceFacts = longTermMemoryDao?.getActivePreferences().orEmpty().map { preference ->
+            PreferenceFact(
+                id = preference.settingName,
+                category = "preference",
+                subject = preference.settingName,
+                value = preference.settingValue
+            )
+        }
         val system = PersonaOrchestrator.assemble(
             persona = PersonaSpecification(
                 revision = "settings-system-prompt-v1",
                 canonicalPrompt = settings.systemPrompt
             ),
-            memories = retrievedContext
+            memories = retrievedContext,
+            preferences = preferenceFacts
         )
 
         val adapter = localGenerationAdapter
