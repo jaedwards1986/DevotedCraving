@@ -58,6 +58,24 @@ class LongTermMemoryMigrationTest {
         dao.upsertEvent(event)
         assertEquals(event, dao.getEvent("event-1"))
 
+        val relationshipEvent = MemoryEventEntity(
+            eventId = "relationship-1",
+            narrativeSnippet = "A confirmed fictional relationship milestone",
+            relatedEntityId = "primary-persona",
+            eventType = "RELATIONSHIP_MILESTONE",
+            status = "ACTIVE"
+        )
+        val pendingRelationshipEvent = relationshipEvent.copy(
+            eventId = "relationship-pending",
+            status = "PENDING_CONSENT"
+        )
+        dao.upsertEvent(relationshipEvent)
+        dao.upsertEvent(pendingRelationshipEvent)
+        assertEquals(
+            listOf(relationshipEvent),
+            dao.getActiveRelationshipEvents(limit = 10)
+        )
+
         val correction = CorrectionRecordEntity(
             correctionId = "correction-1",
             memoryId = "memory-1",
@@ -81,7 +99,7 @@ class LongTermMemoryMigrationTest {
             AppDatabase::class.java,
             LEGACY_DATABASE_NAME
         )
-            .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
+            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
             .build()
         roomDatabase = db
 
@@ -132,6 +150,7 @@ class LongTermMemoryMigrationTest {
         }
         assertTrue(indexedTables.contains("index_user_preferences_status_updated_at"))
         assertTrue(indexedTables.contains("index_memory_events_related_entity_id"))
+        assertTrue(indexedTables.contains("index_memory_events_status_event_type_created_at"))
         assertTrue(indexedTables.contains("index_correction_records_memory_id_corrected_at"))
     }
 
