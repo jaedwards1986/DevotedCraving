@@ -1,5 +1,7 @@
 package com.forgeai.chat.data.memory
 
+import com.forgeai.chat.data.context.PersonaOrchestrator
+import com.forgeai.chat.data.context.PersonaSpecification
 import com.forgeai.chat.data.context.RetrievedMemory
 import com.forgeai.chat.data.local.entity.MemoryEventEntity
 import org.junit.Assert.assertEquals
@@ -39,6 +41,17 @@ class RelationshipMemoryServiceTest {
         assertEquals(
             RetrievedMemory.Status.CONFIRMED,
             result.single().status
+        )
+
+        val personaContext = PersonaOrchestrator.assemble(
+            persona = PersonaSpecification(
+                revision = "pf04-test-v1",
+                canonicalPrompt = "Canonical fictional persona."
+            ),
+            memories = result
+        )
+        org.junit.Assert.assertTrue(
+            personaContext.contains("They agreed to a shared fictional milestone.")
         )
     }
 }
