@@ -68,7 +68,7 @@ object PersonaOrchestrator {
         }
 
         fidelityDecision?.let { decision ->
-            context += "\\n\\nCURRENT TURN INTENT AND INTENSITY\\n${decision.directive}"
+            context += "\n\nCURRENT TURN INTENT AND INTENSITY\n${decision.directive}"
         }
 
         val rescue = validatedRescueInstruction?.trim().orEmpty()
