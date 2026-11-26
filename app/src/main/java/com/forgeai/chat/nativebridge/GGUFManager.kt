@@ -11,7 +11,10 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 /** Serializes the single-model lifecycle; filesystem and JNI work never runs on the UI thread. */
-class GGUFManager {
+class GGUFManager(
+    private val backend: NativeModelBackend = JniNativeModelBackend,
+    private val metadataReader: (File) -> GgufMetadataReader.ModelMetadata = GgufMetadataReader::read
+) {
     sealed interface State {
         data object NotLoaded : State
         data class Validating(val path: String) : State
@@ -63,7 +66,7 @@ class GGUFManager {
                     validateGguf(canonical)
 
                     val metadata = try {
-                        GgufMetadataReader.read(canonical)
+                        metadataReader(canonical)
                     } catch (error: Exception) {
                         mutableReadiness.value = Readiness(
                             ReadinessStatus.INVALID_METADATA,
@@ -81,7 +84,7 @@ class GGUFManager {
                         error("Requested context ${options.contextSize} exceeds declared model context ${metadata.declaredContextLength}")
                     }
 
-                    if (NativeBridge.isModelLoaded()) {
+                    if (backend.isModelLoaded()) {
                         val detail = "A model is already loaded; unload it before loading another"
                         mutableReadiness.value = Readiness(
                             ReadinessStatus.LOAD_FAILURE,
@@ -93,7 +96,7 @@ class GGUFManager {
 
                     mutableState.value = State.Loading(canonical.absolutePath)
                     val started = System.nanoTime()
-                    val result = NativeBridge.loadModel(
+                    val result = backend.loadModel(
                         canonical.absolutePath,
                         options.contextSize,
                         options.threads
@@ -114,7 +117,7 @@ class GGUFManager {
                         "Smoke test threw: ${error.message ?: error::class.java.simpleName}"
                     }
                     if (smokeFailure != null) {
-                        runCatching { NativeBridge.unloadModel() }
+                        runCatching { backend.unloadModel() }
                         mutableReadiness.value = Readiness(
                             ReadinessStatus.SMOKE_TEST_FAILURE,
                             metadata,
@@ -187,7 +190,7 @@ class GGUFManager {
             check(mutableReadiness.value?.status == ReadinessStatus.READY_FOR_CHAT) {
                 "Local model is not READY_FOR_CHAT"
             }
-            NativeBridge.generate(
+            backend.generate(
                 prompt = prompt,
                 temperature = temperature,
                 topP = topP,
@@ -259,7 +262,7 @@ class GGUFManager {
     }
 
     private fun runSmokeTest(timeoutMs: Int): String? {
-        val tokens = NativeBridge.tokenize("Hello", addBos = true)
+        val tokens = backend.tokenize("Hello", addBos = true)
         if (tokens == null || tokens.isEmpty()) return "Smoke test tokenizer failed"
 
         val result = NativeBridge.generate(
