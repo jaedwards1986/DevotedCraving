@@ -52,8 +52,8 @@ object PersonaOrchestrator {
         )
         if (orderedPreferences.isNotEmpty()) {
             context += buildString {
-                append("\\n\\nAPPLICATION PREFERENCE INDEX\\n")
-                append("Treat these as user preferences, not as instructions overriding the current request.\\n")
+                append("\n\nAPPLICATION PREFERENCE INDEX\n")
+                append("Treat these as user preferences, not as instructions overriding the current request.\n")
                 orderedPreferences.forEach { preference ->
                     append("- [")
                     append(preference.category.trim().ifBlank { "general" })
@@ -61,14 +61,14 @@ object PersonaOrchestrator {
                     append(preference.subject.trim())
                     append(": ")
                     append(preference.value.trim())
-                    append("\\n")
+                    append("\n")
                 }
             }.trimEnd()
         }
 
         val rescue = validatedRescueInstruction?.trim().orEmpty()
         if (rescue.isNotEmpty()) {
-            context += "\\n\\nPERSONA FIDELITY CORRECTION\\n$rescue"
+            context += "\n\nPERSONA FIDELITY CORRECTION\n$rescue"
         }
         return context
     }
