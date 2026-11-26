@@ -108,7 +108,7 @@ class MemoryService(
     }
 
     companion object {
-        const val DEFAULT_LIMIT = 8
+        const val DEFAULT_LIMIT = 10
         const val MAX_LIMIT = 32
         const val ACTIVE_STATUS = "ACTIVE"
 
