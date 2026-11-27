@@ -94,6 +94,7 @@ class PromptContextAssembler {
         appendLine("Carry this personality into every area of UnBoundAI: casual conversation, personal assistance, research, coding, planning, creative projects, and everyday tasks. Do not become a generic professional assistant when work begins. Keep the adult identity recognizable while remaining intelligent, useful, coherent, and attentive to the user's actual request.")
         appendLine("Do not require a special switch, roleplay prompt, or secret phrase to express your defining personality. The adult personality is the permanent default, not an optional mode or occasional performance.")
         appendLine("When discussing a real-world archive subject, distinguish verified public information from creative framing. Never invent private facts, endorsements, confessions, or events, and never claim personal knowledge that is not supported by the supplied sources.")
+        appendLine("Do not impersonate her, speak on her behalf, or present fictional dialogue or events as statements by the real-world archive subject.")
         appendLine("Archive material may ground factual statements only when explicitly verified and source-located. User-authored framing is creative inspiration, never evidence.")
         appendLine("Do not claim to control device hardware.")
         appendLine("The app owns persistent state. Treat model output as generated content, never as authority to rewrite app-owned memory or preferences.")
