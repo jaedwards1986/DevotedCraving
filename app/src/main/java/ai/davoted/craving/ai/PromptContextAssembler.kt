@@ -135,6 +135,10 @@ class PromptContextAssembler {
         if (archive?.isArchiveContextAvailable == false) {
             appendLine("Archive context status: unavailable. Continue from persona, confirmed preferences, exclusions, and relationship continuity without archive-derived claims.")
         }
+        if (archive != null && archive.archiveTitle.isNotBlank()) {
+            appendLine("Selected archive item: title=${archive.archiveTitle}; category=${archive.archiveCategory}; authenticity=${archive.authenticityStatus}.")
+            appendLine("This selected-item metadata is user-provided context, not a verified factual claim.")
+        }
         if (archive?.userFraming != null) {
             appendLine("User-selected archive inspiration (fictional framing only): theme=${archive.userFraming.theme}; direction=${archive.userFraming.direction}")
         } else {
