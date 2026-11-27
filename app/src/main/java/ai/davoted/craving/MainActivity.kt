@@ -57,6 +57,7 @@ class MainActivity : ComponentActivity() {
 private fun UnBoundAI() {
     var selected by remember { mutableStateOf<Tool?>(null) }
     var editing by remember { mutableStateOf(false) }
+    var searchQuery by remember { mutableStateOf("") }
     val shortcuts = remember { mutableStateListOf("Start Chat", "Build an App", "Design Something", "Write Code") }
 
     if (selected == null) {
@@ -81,6 +82,22 @@ private fun UnBoundAI() {
                 Spacer(Modifier.height(14.dp))
                 Text("Your ideas.\nWithout limits.", color = Color.White, fontSize = 36.sp, lineHeight = 41.sp, fontWeight = FontWeight.Bold)
                 Text("A creative space to explore, build, design, and bring things to life.", color = Muted, fontSize = 14.sp, modifier = Modifier.padding(top = 10.dp))
+            }
+            item {
+                OutlinedTextField(
+                    value = searchQuery,
+                    onValueChange = { searchQuery = it },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    label = { Text("Search tools") },
+                    placeholder = { Text("Find a tool or workspace") },
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Cyan,
+                        unfocusedBorderColor = Muted.copy(alpha = 0.45f),
+                        focusedLabelColor = Cyan,
+                        cursorColor = Cyan
+                    )
+                )
             }
             item {
                 Card(colors = CardDefaults.cardColors(containerColor = Panel), shape = RoundedCornerShape(24.dp)) {
