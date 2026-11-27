@@ -49,11 +49,15 @@ This README is the **one and only project blueprint**. Product vision, approved 
 
 | D-043 | Learn the user's reminder habits and adapt reminder timing and frequency automatically, while keeping clear user controls. Follow up gently on incomplete tasks and avoid nagging. | Approved; implementation pending |
 
+| D-044 | Design the entire experience around clear, predictable, low-clutter structure that works well for a user with Asperger's/autism, ADHD, and dyslexia. Keep chats conversational and natural, but make their layout, navigation, and information presentation especially easy to follow. | Approved design requirement |
+
 ## 3. Product experience and navigation
 
 ### App launch — approved
 
 On opening UnBoundAI, show a welcome screen with the UnBoundAI logo and a choice of what to do next. Do not automatically open the home dashboard or a chat as the initial launch destination. The welcome screen offers four main actions—Start Chat, Build an App, Design Something, and Write Code—plus customizable shortcuts that users can choose and rearrange. Fine visual layout remains to be designed.
+
+The overall experience should feel like a personal AI companion at the center of a capable creative command center. The app is being designed for a user with Asperger's/autism, ADHD, and dyslexia: keep the interface predictable, clearly structured, readable, and low-clutter. Chat conversations should remain natural and ordinary, but use thoughtful spacing, clear message grouping, readable typography, simple navigation, and consistent placement of controls so the conversation is easy to follow. Avoid dense walls of text, confusing visual changes, unnecessary animations, and overloaded screens. Offer adjustable text size and other practical readability controls where feasible.
 
 The overall experience should feel like a personal AI companion at the center of a capable creative command center. Chat, app building, design, coding, and project work are connected capabilities of one intelligent system, not unrelated apps. It must be as minimalistic and structured as possible, with low visual clutter and low cognitive load. Keep advanced tools out of the way until needed through progressive disclosure. Simplification must not remove pictures or visual content: images and visual assets must remain preserved and easy to find in clearly organized views.
 
@@ -332,6 +336,17 @@ Statuses must be updated only when supported by actual work and test evidence.
 - **Status:** Approved; habit learning, adaptive scheduling, reminder controls, and follow-up implementation pending.
 
 - **2026-11-27:** Question 25 — Reminders: user selected **D**. The companion should learn reminder habits and automatically adjust timing and frequency while keeping the user in control.
+
+### D-044 — Neurodivergent-friendly structure and readability
+
+- **Decision:** Design UnBoundAI around the practical needs of a user with Asperger's/autism, ADHD, and dyslexia. This is a core product requirement, not an optional theme or cosmetic setting.
+- **Chat experience:** Keep conversations natural and normal—not robotic or artificially formatted—but present them in a layout that is easy to scan and follow. Use clear message separation, comfortable spacing, readable typography, and consistent placement of actions and controls.
+- **Interface structure:** Favor predictable navigation, a small number of clear choices, consistent screen patterns, progressive disclosure, and low cognitive load. Avoid clutter, dense walls of text, confusing layout changes, and unnecessary motion or interruptions.
+- **Readability:** Consider adjustable text size, dyslexia-friendly typography options, strong legibility, clear headings, and concise labels. Preserve access to images and visual content while keeping screens organized.
+- **Interaction:** Ask one clear question at a time when clarification is needed. Keep workflows focused and make progress and choices easy to understand.
+- **Status:** Approved design requirement; audit and implementation across the app remain pending.
+
+- **2026-11-27:** User clarified that UnBoundAI is intended for a man with Asperger's, ADHD, and dyslexia. Corrected the earlier typo: **“chats,” not “cats.”** Chats should feel normal and conversational, but the app's layout and structure must be carefully designed for clarity, predictability, and readability.
 
 ### Ongoing change-record format
 
