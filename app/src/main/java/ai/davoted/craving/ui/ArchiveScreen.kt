@@ -3,7 +3,7 @@ package ai.davoted.craving.ui
 import android.content.Context
 import android.net.Uri
 import android.graphics.BitmapFactory
-import android.media.MediaController
+import android.widget.MediaController
 import android.webkit.MimeTypeMap
 import android.widget.VideoView
 import androidx.activity.compose.rememberLauncherForActivityResult
