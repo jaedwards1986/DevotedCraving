@@ -32,9 +32,14 @@ This README is the **one and only project blueprint**. Product vision, approved 
 | D-008 | Code Studio placement (inside App Builder or a separate workspace). | Open |
 | D-009 | Design the home dashboard first, before implementation. | Approved |
 | D-011 | Home dashboard layout: logo at top, central “What do you want to create?” prompt, quick-access tiles for AI Chat, App Builder, Design Studio, and Code Studio, recent projects below, and bottom navigation. | Approved |
+| D-012 | On launch, show a welcome screen with the UnBoundAI logo and a choice of what to do, rather than opening directly to the dashboard or chat. | Approved |
 | D-010 | Keep all project documentation in this single GitHub document. | Approved |
 
 ## 3. Product experience and navigation
+
+### App launch — approved
+
+On opening UnBoundAI, show a welcome screen with the UnBoundAI logo and a choice of what to do next. Do not automatically open the home dashboard or a chat as the initial launch destination. The exact welcome-screen options and layout remain to be designed.
 
 The interface should feel like a combination of a familiar AI chat assistant and a capable creative/development workstation. It should not overwhelm the user with controls; advanced tools should appear when needed.
 
@@ -105,6 +110,7 @@ Statuses must be updated only when supported by actual work and test evidence.
 - **2026-11-27:** Primary navigation established as Home, AI Chat, App Builder, Design Studio, and Projects.
 - **2026-11-27:** Home dashboard selected as the first screen to design.
 - **2026-11-27:** Approved the home dashboard starting layout: top logo, central creation prompt, four quick-access tiles, recent projects, and bottom navigation.
+- **2026-11-27:** Question 2 — App launch behavior: selected **C, Welcome Screen**. Show the UnBoundAI logo and a choice of what to do; exact choices and layout remain open.
 - **2026-11-27:** User requested a single GitHub document as the durable project blueprint and decision record.
 
 ### Ongoing change-record format
