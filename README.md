@@ -63,6 +63,7 @@ This README is the **one and only project blueprint**. Product vision, approved 
 | D-055 | Present information using all three layers: concise summaries, small clearly separated sections, and optional deeper details, with one clear next action. | Approved; interface behavior and implementation pending |
 | D-056 | Adapt the Home screen to what matters most right now, keeping other destinations and information easy to find without clutter. | Approved; personalization and implementation pending |
 | D-057 | Support quick capture from Home, a persistent app-wide capture control, and natural conversational capture, all feeding one organized inbox. | Approved; capture UI and integration pending |
+| D-058 | Automatically organize captured thoughts, provide a concise review, and let the user correct categories and approve suggested tasks or reminders. | Approved; review workflow pending |
 
 ## 3. Product experience and navigation
 
@@ -508,6 +509,18 @@ Statuses must be updated only when supported by actual work and test evidence.
 - **Status:** Approved; capture component, unified inbox, and conversational integration pending.
 
 - **2026-11-27:** Question 38 — Quick capture: user selected **D**. Provide capture from Home, a persistent control throughout the app, and natural conversational capture, all organized in one place.
+
+### D-058 — Assisted review of captured thoughts
+
+- **Decision:** User selected **D — automatically organize captured thoughts, show a short review, and allow corrections or approval of suggested tasks and reminders.**
+- **Automatic organization:** Categorize captured material into clear groups such as tasks, ideas, appointments, questions, and later/maybe. Preserve the original wording and avoid treating uncertain interpretations as facts.
+- **Concise review:** Present a short, readable summary of what was captured and how it was organized. Keep the full inbox available without forcing the user through every item.
+- **Corrections:** Make it easy to change a category, edit wording, combine duplicates, or leave an item uncategorized. Learn from explicit corrections.
+- **Commitment approval:** Clearly distinguish suggestions from confirmed tasks, calendar items, deadlines, and reminders. Ask for approval before creating or scheduling commitments, consistent with D-042 and D-054.
+- **Low cognitive load:** Use small sections, optional detail, and one clear next action, consistent with D-055. Avoid presenting a large review backlog as an urgent demand.
+- **Status:** Approved; categorization, review interface, correction learning, and task/reminder approval workflow pending.
+
+- **2026-11-27:** Question 39 — Captured-thought review: user selected **D**. Automatically organize items, provide a concise review, and allow corrections and approval of proposed commitments.
 
 ### Ongoing change-record format
 
