@@ -201,16 +201,17 @@ Statuses must be updated only when supported by actual work and test evidence.
 
 - **2026-11-27:** User requested protective maintenance/fail-safes and recurring updates to keep the software reliable and the companion experience fresh. Approved direction recorded as D-028 and D-029: non-destructive maintenance, verified/staged updates with recovery, weekly discovery, and monthly curated updates, with user approval and no silent changes.
 
-### D-030 — Explicit update decisions and non-destructive changes
+### D-030 — Automatic system maintenance, explicit feature-update decisions
 
-- **Decision:** Every proposed app, model, feature, content, or companion-experience update must be presented for an explicit user decision with three clear choices: **Accept**, **Deny**, or **Maybe Later**.
-- **No silent changes:** The app must not install, activate, or apply a proposed update without the user's acceptance. “Maybe Later” leaves the current version unchanged and keeps the proposal available for review; “Deny” declines that proposal.
-- **Non-destructive by default:** Updates must be additive and backward-compatible wherever possible. They must not overwrite, remove, disable, reset, or silently change existing features, settings, projects, memories, downloaded models, or the companion's established identity and personality.
-- **Conflict handling:** If an update genuinely requires changing or replacing existing behavior or data, explain exactly what would change and why, preserve a recoverable backup, and request separate explicit approval. If safe coexistence or rollback cannot be guaranteed, do not apply the update.
-- **Versioning and recovery:** Keep prior working versions or a viable rollback path where technically practical. Verify downloads and update packages before activation.
-- **Status:** Approved; implementation pending.
+- **Decision:** Separate essential system maintenance from optional product and experience updates.
+- **Automatic maintenance permitted:** UnBoundAI may automatically install verified, necessary security patches, stability fixes, compatible runtime/dependency updates, and maintenance components required to keep the app functioning. These changes must be non-destructive, compatible with the installed app, and covered by integrity checks and a recovery/rollback plan where technically possible.
+- **Maintenance report:** After automatic maintenance, show a clear in-app report window describing what changed, why it was needed, when it happened, and whether it succeeded. Include any restart requirement or issue needing the user's attention. Keep a maintenance history the user can review.
+- **Still requires approval:** New features, companion/personality changes, conversation or memory behavior changes, model changes, content packs, interface redesigns, and any update that changes or removes existing user-facing behavior must be proposed with **Accept / Deny / Maybe Later**.
+- **Data and settings protection:** Automatic maintenance must not overwrite or delete user projects, memories, preferences, settings, downloaded models, or existing features. If a maintenance operation cannot safely preserve them, pause and request explicit approval instead.
+- **Verification and recovery:** Verify update source and package integrity before activation; use staged updates and backups/rollback where technically practical. If validation fails, retain or restore the last working version and report the failure.
+- **Status:** Approved policy; implementation pending.
 
-- **2026-11-27:** User clarified update consent: each proposal must offer **Accept / Deny / Maybe Later**, and no update may override or replace anything already in the app without a separate, explicit decision. Recorded as D-030.
+- **2026-11-27:** User clarified that essential system/software maintenance may run automatically to keep UnBoundAI working, provided the app presents a report window explaining what it changed. Optional feature, model, content, and companion-experience changes continue to require explicit **Accept / Deny / Maybe Later** approval. Recorded as revised D-030.
 
 ### Ongoing change-record format
 
