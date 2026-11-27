@@ -14,5 +14,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "DavotedCraving"
+rootProject.name = "UnBoundAI"
 include(":app")
