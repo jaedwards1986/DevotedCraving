@@ -2,7 +2,12 @@ package ai.davoted.craving.conversation
 
 import android.content.Context
 import android.net.Uri
+import ai.davoted.craving.ai.ArchiveContext
+import ai.davoted.craving.ai.ArchiveMemoryState
+import ai.davoted.craving.ai.ArchiveTransformResult
 import ai.davoted.craving.ai.ConversationMessage
+import ai.davoted.craving.ai.ExperienceControls
+import ai.davoted.craving.ai.PersonaOrchestrator
 import ai.davoted.craving.ai.ExperiencePresentationMapper
 import ai.davoted.craving.ai.LlamaCppAdapter
 import ai.davoted.craving.ai.LocalModelStatus
@@ -20,6 +25,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import java.io.File
 import java.io.FileInputStream
 
+enum class ConversationMode { FACTUAL, FICTIONAL }
+
 data class ConversationUiState(
     val messages: List<ConversationMessage> = emptyList(),
     val modelName: String = "No model loaded",
@@ -27,7 +34,9 @@ data class ConversationUiState(
     val statusMessage: String = "Choose a GGUF model",
     val isBusy: Boolean = true,
     val lastPresentation: String = "No generated response yet",
-    val selectedModelPath: String? = null
+    val selectedModelPath: String? = null,
+    val mode: ConversationMode = ConversationMode.FICTIONAL,
+    val selectedArchiveItemId: String? = null
 ) {
     val canGenerate: Boolean get() = !isBusy && modelStatus == LocalModelStatus.READY
 }
@@ -43,6 +52,8 @@ class ConversationService(
 ) : AutoCloseable {
     private val appContext = context.applicationContext
     private val mapper = ExperiencePresentationMapper()
+    private val personaOrchestrator = PersonaOrchestrator()
+    @Volatile private var selectedArchiveContext: ArchiveContext? = null
     private val operationMutex = Mutex()
     private val _state = MutableStateFlow(
         ConversationUiState(
@@ -63,6 +74,7 @@ class ConversationService(
             _state.value = _state.value.copy(
                 messages = messages,
                 selectedModelPath = path,
+                mode = runCatching { ConversationMode.valueOf(snapshot.conversationMode) }.getOrDefault(ConversationMode.FICTIONAL),
                 modelName = path?.let { File(it).name } ?: "No model loaded",
                 statusMessage = if (path == null) "Choose a GGUF model" else "Restoring local model…"
             )
@@ -141,6 +153,15 @@ class ConversationService(
         }
     }
 
+    fun setMode(mode: ConversationMode) {
+        _state.value = _state.value.copy(mode = mode)
+    }
+
+    fun selectArchiveContext(context: ArchiveContext?) {
+        selectedArchiveContext = context
+        _state.value = _state.value.copy(selectedArchiveItemId = context?.archiveItemId)
+    }
+
     suspend fun sendPrompt(promptText: String) = operationMutex.withLock {
         val prompt = promptText.trim()
         if (prompt.isEmpty() || !_state.value.canGenerate) return@withLock
@@ -149,10 +170,32 @@ class ConversationService(
         try {
             persist(_state.value.selectedModelPath)
             val snapshot = store.load()
+            val mode = _state.value.mode
+            val archiveExperience = if (mode == ConversationMode.FACTUAL) {
+                val transformed = personaOrchestrator.transformArchiveContext(
+                    context = selectedArchiveContext,
+                    memory = ArchiveMemoryState(
+                        stateId = "continuity-session",
+                        confirmedPreferences = snapshot.confirmedPreferences,
+                        exclusions = snapshot.exclusions
+                    ),
+                    controls = ExperienceControls(),
+                    personaState = adapter.experienceState
+                )
+                when (transformed) {
+                    is ArchiveTransformResult.Success -> transformed.experience
+                    is ArchiveTransformResult.Rejected -> throw IllegalArgumentException(
+                        "Selected archive context rejected: ${transformed.reason}"
+                    )
+                    is ArchiveTransformResult.NoArchiveContext -> null
+                }
+            } else null
+
             val result = adapter.generate(
                 messages = updatedMessages,
                 confirmedPreferences = snapshot.confirmedPreferences,
-                exclusions = snapshot.exclusions
+                exclusions = snapshot.exclusions,
+                archiveExperience = archiveExperience
             )
             result.fold(
                 onSuccess = { turn ->
@@ -188,7 +231,8 @@ class ConversationService(
             messages = _state.value.messages.map {
                 StoredMessage(it.role, it.content, System.currentTimeMillis())
             },
-            selectedModelPath = selectedModel
+            selectedModelPath = selectedModel,
+            conversationMode = _state.value.mode.name
         )
         store.save(snapshot)
     }
