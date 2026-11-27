@@ -143,7 +143,7 @@ class ConversationService(
 
     suspend fun sendPrompt(promptText: String) = operationMutex.withLock {
         val prompt = promptText.trim()
-        if (prompt.isEmpty() || !_state.value.canGenerate) return
+        if (prompt.isEmpty() || !_state.value.canGenerate) return@withLock
         val updatedMessages = _state.value.messages + ConversationMessage("user", prompt)
         publish(_state.value.copy(messages = updatedMessages, isBusy = true, statusMessage = "Generating locally…"))
         try {
