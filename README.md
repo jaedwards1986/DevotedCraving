@@ -40,7 +40,8 @@ This README is the **one and only project blueprint**. Product vision, approved 
 | D-016 | Logo direction: retain the flowing, sculptural U/infinity-style emblem and orbital sweep from the approved mockup; use midnight/navy blue, sapphire, and deep teal with metallic highlights. Remove the silk/fabric background. The overall treatment should feel sensual, provocative, luxurious, and cinematic. | Approved direction; production logo refinement pending |
 | D-017 | App interface visual style: **C — Luxury dark**. Use midnight blue, deep teal, and restrained metallic details throughout the Android interface. | Approved |
 | D-018 | Interface and navigation must be as minimalistic and structured as possible, with low visual clutter and low cognitive load. Simplifying the interface must not remove or hide access to pictures and visual content; organize them clearly and preserve access. Prefer progressive disclosure over showing every control at once. | Approved design principle |
-| D-019 | Use a hybrid navigation model: a simple home screen with a small number of clear destinations and a search entry point for quickly finding tools, projects, and pictures. Keep deeper controls inside their relevant workspaces. | Approved; search and destination integration pending |
+| D-019 | Use a hybrid navigation model: a simple home screen with a small number of clear destinations and a search entry point for quickly finding tools, projects, and pictures. Keep deeper controls inside their relevant workspaces. | Approved; basic tool search added to Compose prototype; broader search pending |
+| D-020 | UnBoundAI should feel like a combination of a personal AI companion and a powerful creative command center: the AI companion is at the center, with the creative and development workstation built around it. | Approved experience direction; detailed interaction design pending |
 
 ## 3. Product experience and navigation
 
@@ -48,7 +49,7 @@ This README is the **one and only project blueprint**. Product vision, approved 
 
 On opening UnBoundAI, show a welcome screen with the UnBoundAI logo and a choice of what to do next. Do not automatically open the home dashboard or a chat as the initial launch destination. The welcome screen offers four main actions—Start Chat, Build an App, Design Something, and Write Code—plus customizable shortcuts that users can choose and rearrange. Fine visual layout remains to be designed.
 
-The interface should feel like a combination of a familiar AI chat assistant and a capable creative/development workstation. It must be as minimalistic and structured as possible, with low visual clutter and low cognitive load. Keep advanced tools out of the way until needed through progressive disclosure. Simplification must not remove pictures or visual content: images and visual assets must remain preserved and easy to find in clearly organized views.
+The overall experience should feel like a personal AI companion at the center of a capable creative command center. Chat, app building, design, coding, and project work are connected capabilities of one intelligent system, not unrelated apps. It must be as minimalistic and structured as possible, with low visual clutter and low cognitive load. Keep advanced tools out of the way until needed through progressive disclosure. Simplification must not remove pictures or visual content: images and visual assets must remain preserved and easy to find in clearly organized views.
 
 Primary navigation:
 1. Home
@@ -140,11 +141,13 @@ Statuses must be updated only when supported by actual work and test evidence.
 - **2026-11-27:** Question 4 — User specified an always-present seductive, sensual, flirty, sexy, and playfully provocative personality.
 - **2026-11-27:** Question 5 — Default personality intensity selected as **C — Extremely**.
 - **2026-11-27:** Question 7 — App interface visual style selected as **C — Luxury dark**: midnight blue, deep teal, and metallic details.
-- **2026-11-27:** Question 8 — User prioritizes an extremely minimalistic, structured interface with low clutter and low cognitive load due to ADHD. Pictures and visual content must remain preserved and accessible; simplifying the UI must not mean losing visual assets. Use progressive disclosure. Exact navigation layout remains open.
+- **2026-11-27:** Question 8 — User prioritizes an extremely minimalistic, structured interface with low clutter and low cognitive load due to ADHD. Pictures and visual content must remain preserved and accessible; simplifying the UI must not mean losing visual assets. Use progressive disclosure.
 - **2026-11-27:** Updated the Compose theme and welcome/workspace surfaces from violet/cyan to a midnight-blue and deep-teal palette. Build and device validation remain pending.
 - **2026-11-27:** User approved the latest logo mockup direction: the original flowing emblem and orbital sweep, shifted to dark blues and teals, without silk, with a more sensual and provocative visual treatment. Production asset refinement remains pending.
 - **2026-11-27:** User requested a single GitHub document as the durable project blueprint and decision record.
-- **2026-11-27:** User asked that approved decisions be implemented in code when repository context permits, with implementation and validation status recorded in this blueprint.\n- **2026-11-27:** Recorded D-019, the approved hybrid navigation model. The current Compose screen is still a prototype; search across projects and pictures requires those data sources and is not yet implemented.
+- **2026-11-27:** User asked that approved decisions be implemented in code when repository context permits, with implementation and validation status recorded in this blueprint.
+- **2026-11-27:** Question 9 — Navigation organization: selected **D, Hybrid**. Keep a simple home screen with a few clear destinations and add search for quickly finding tools, projects, and pictures. Keep deeper controls inside their relevant workspaces.
+- **2026-11-27:** Question 10 — Overall experience: selected **C**. UnBoundAI should be a personal AI companion at the center, with a complete creative workstation built around it.\n- **2026-11-27:** Recorded D-019, the approved hybrid navigation model. The current Compose screen is still a prototype; search across projects and pictures requires those data sources and is not yet implemented.
 
 ### Ongoing change-record format
 
