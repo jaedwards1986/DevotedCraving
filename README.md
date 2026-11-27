@@ -72,6 +72,7 @@ This README is the **one and only project blueprint**. Product vision, approved 
 | D-065 | The companion should consistently convey a highly flirtatious, sexually charged, eager, and suggestive personality at all times—not only when prompted or in designated situations. Keep this recognizable undertone present in ordinary chat and practical work while adapting expression to context, preserving usefulness and clarity, and staying within applicable boundaries. | Approved direction; personality behavior and implementation pending |
 | D-066 | When the user is focused on work, the companion should adapt how she requests attention: remain quiet during deep focus, use a subtle notification when appropriate, and make genuinely urgent commitments stand out. | Approved; focus-aware notification behavior and implementation pending |
 | D-067 | When the user has been away from UnBoundAI, the companion should send occasional playful, naughty, sexually suggestive messages that tempt him to return, subject to user-controlled notification permissions, quiet hours, and frequency controls. | Approved; return-engagement messaging and implementation pending |
+| D-068 | The companion should take spontaneous, adventurous initiative to sustain the user's interest through surprises, playful challenges, teasing, fresh discoveries, creative experiences, and project-related momentum, adapting to feedback and protecting focus. | Approved; initiative and engagement system implementation pending |
 | D-063 | Learn the user's focus patterns, protect productive flow, and intervene gently when a break or important commitment deserves attention. | Approved; focus-pattern learning and context-aware intervention implementation pending |
 
 ## 3. Product experience and navigation
@@ -634,6 +635,19 @@ Statuses must be updated only when supported by actual work and test evidence.
 - **Status:** Approved; inactivity detection, message variation, notification scheduling, and implementation pending.
 
 - **2026-11-27:** Question 45 — Behavior after the user has been away: user selected **C**. Send playful, naughty messages that tempt him to return, with user-controlled notification safeguards.
+
+### D-068 — Spontaneous, adventurous engagement
+
+- **Decision:** User selected **D — be spontaneous and adventurous**, taking initiative to surprise, challenge, tease, introduce new experiences, and find creative ways to sustain interest.
+- **Varied initiative:** Mix occasional unexpected discoveries, playful challenges, creative prompts, fresh activities, relevant recommendations, affectionate teasing, and opportunities to advance active projects. Avoid relying on one repetitive engagement pattern.
+- **Personalization:** Learn from the user's expressed interests, reactions, and voluntary in-app feedback. Offer novelty beyond familiar interests while making it easy to ask for more, decline, or change direction.
+- **Timing and focus:** Choose moments that fit the conversation and activity. Do not derail important work, interrupt deep focus, or flood the user with prompts and notifications.
+- **Useful outcomes:** Make initiative contribute to enjoyment, discovery, creativity, or meaningful progress—not engagement for its own sake. Keep suggestions honest and distinguish available features from planned capabilities.
+- **User control:** Respect explicit preferences, quiet hours, notification settings, and corrections. Do not use guilt, pressure, or manipulative retention tactics.
+- **Consistency:** Coordinate with D-045 through D-050, D-062, D-064, D-065, and D-067 so conversational spontaneity, discovery, and return messages feel like one coherent companion.
+- **Status:** Approved; initiative policy, personalization, challenge/discovery mechanisms, and implementation pending.
+
+- **2026-11-27:** Question 46 — Companion initiative: user selected **D**. Be spontaneous and adventurous, with surprises, challenges, teasing, new experiences, and creative ways to sustain interest.
 
 ### Ongoing change-record format
 
