@@ -25,7 +25,8 @@ data class ConversationMessage(
 data class LocalChatTurn(
     val assistantText: String,
     val experienceState: ExperienceState,
-    val stateWasModelProposed: Boolean
+    val stateWasModelProposed: Boolean,
+    val contextFingerprint: String = ""
 )
 
 data class LocalModelConfiguration(
@@ -88,7 +89,8 @@ class LlamaCppAdapter(
         messages: List<ConversationMessage>,
         confirmedPreferences: List<String> = emptyList(),
         exclusions: List<String> = emptyList(),
-        archiveExperience: AssembledArchiveExperience? = null
+        archiveExperience: AssembledArchiveExperience? = null,
+        relationshipContext: List<String> = emptyList()
     ): Result<LocalChatTurn> =
         withContext(Dispatchers.IO) {
             operationMutex.withLock {
@@ -100,8 +102,18 @@ class LlamaCppAdapter(
                 status = LocalModelStatus.GENERATING
                 try {
                     require(messages.isNotEmpty()) { "At least one conversation message is required." }
+                    val assembled = promptContextAssembler.assemble(
+                        context = ConversationContext(
+                            personaState = experienceState,
+                            confirmedPreferences = confirmedPreferences,
+                            exclusions = exclusions,
+                            relationshipContext = relationshipContext,
+                            archiveExperience = archiveExperience
+                        ),
+                        messages = messages
+                    )
                     val raw = runtime.generate(
-                        prompt = promptContextAssembler.assemble(messages, experienceState, confirmedPreferences, exclusions, archiveExperience),
+                        prompt = assembled.serializedPrompt,
                         maxTokens = configuration.maxTokens,
                         temperature = configuration.temperature
                     )
@@ -112,7 +124,8 @@ class LlamaCppAdapter(
                         LocalChatTurn(
                             assistantText = parsed.assistantText,
                             experienceState = experienceState,
-                            stateWasModelProposed = parsed.stateWasModelProposed
+                            stateWasModelProposed = parsed.stateWasModelProposed,
+                            contextFingerprint = assembled.contextFingerprint
                         )
                     )
                 } catch (cancelled: CancellationException) {
