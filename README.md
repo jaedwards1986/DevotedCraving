@@ -88,6 +88,7 @@ The app interface uses a luxury-dark palette: midnight/navy backgrounds, deep te
 - **Code Studio:** write, edit, explain, and debug code.
 - **Projects:** save and manage work in one place.
 - **Settings:** model management, privacy, appearance, and data management.
+- **Personal Secretary:** conversational daily planning, task and commitment tracking, follow-ups, and user-controlled reminders.
 
 These are product goals, not claims that the capabilities are already implemented.
 
@@ -297,6 +298,16 @@ Statuses must be updated only when supported by actual work and test evidence.
 - **Status:** Approved; apply to product design and implementation.
 
 - **2026-11-27:** Question 22 — Voice conversations: user clarified **“No voice mode.”** This is a product requirement, not a voice-style preference.
+
+### D-041 — Personal secretary and daily organization
+
+- **Decision:** The companion should act as the user's personal secretary, with the established playful, affectionate, flirty “naughty secretary” character.
+- **Responsibilities:** Help organize the user's day; capture and track tasks, plans, and commitments; remember important dates and follow-ups; offer practical suggestions and improvements; and help the user stay on track.
+- **Interaction:** Work naturally through ordinary conversation. Take initiative when useful, but remain attentive to the user's focus and avoid nagging, repetitive check-ins, or unnecessary interruptions. Keep the user in control of priorities and consequential actions.
+- **Implementation direction:** Provide a simple daily overview, task and commitment tracking, and reminder controls within the companion/workspace experience. Preserve this information in UnBoundAI's persistent user-owned data so it remains available across sessions and model changes. Notifications and background reminders must respect Android permissions and scheduling limits.
+- **Status:** Approved; product behavior and implementation pending.
+
+- **2026-11-27:** Question 23 — Daily routine: user selected **C**, clarifying the role as **“my naughty secretary.”** The companion should organize the day, remember commitments, track tasks, suggest improvements, and provide gentle accountability without nagging, while retaining her approved personality.
 
 ### Ongoing change-record format
 
