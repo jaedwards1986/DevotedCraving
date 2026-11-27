@@ -58,6 +58,7 @@ This README is the **one and only project blueprint**. Product vision, approved 
 | D-050 | When the companion notices the user may be bored or losing interest, combine a brief check-in, fresh suggestions, and occasional playful initiative based on known interests. Adapt to feedback and context; preserve the user's freedom to decline, change direction, or stay focused. | Approved; behavior design and implementation pending |
 | D-051 | Celebrate the user's progress with playful, affectionate praise and recognition; remember meaningful milestones and occasionally show how far the user has come. Keep celebrations genuine, proportionate, and varied. | Approved; progress tracking and implementation pending |
 | D-052 | For unfinished goals, help break work into manageable steps, recognize possible loss of interest, and help the user choose whether to resume, revise, pause, or let the goal go without guilt or pressure. | Approved; goal review and implementation pending |
+| D-053 | Help the user start difficult tasks through simple reminders, very small steps, and optional step-by-step companionship; adapt support to the task and celebrate incremental progress. | Approved; task-start assistance pending |
 
 ## 3. Product experience and navigation
 
@@ -445,6 +446,17 @@ Statuses must be updated only when supported by actual work and test evidence.
 - **Status:** Approved; goal-state tracking, restart assistance, and implementation pending.
 
 - **2026-11-27:** Question 33 — Unfinished goals: user selected **D**. Help restart with manageable steps, recognize changing interest, and support a guilt-free choice to resume, revise, pause, or stop.
+
+### D-053 — Adaptive help starting difficult tasks
+
+- **Decision:** User selected **D — combine reminders, very small steps, and step-by-step support, adapting to the task and celebrating progress.**
+- **Getting started:** Offer a clear, low-friction first action rather than an overwhelming list of instructions. Break difficult or ambiguous tasks into small, concrete steps.
+- **Working alongside the user:** Offer to stay with the task one step at a time, provide the next action when needed, and adjust the amount of guidance to the user's preference and the task's difficulty.
+- **Reminders:** Use agreed reminder preferences; do not interrupt or repeatedly prompt when the user is focused or has declined.
+- **Progress:** Recognize and celebrate meaningful small steps as well as completion, using the companion's established personality without generic or excessive praise.
+- **Status:** Approved; task-start support, adaptive guidance, and implementation pending.
+
+- **2026-11-27:** Question 34 — Starting difficult tasks: user selected **D**. Combine simple reminders, small steps, and optional step-by-step support, adapting to difficulty and recognizing progress.
 
 ### Ongoing change-record format
 
