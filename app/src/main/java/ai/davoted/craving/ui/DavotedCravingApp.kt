@@ -1,6 +1,7 @@
 package ai.davoted.craving.ui
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -62,24 +63,19 @@ private fun UnBoundAIWorkspace() {
     var selected by rememberSaveable { mutableStateOf(PrimaryDestination.HOME) }
     var secretarySection by rememberSaveable { mutableStateOf(SecretarySection.CONVERSATION) }
 
-    Scaffold(
-        containerColor = MaterialTheme.colorScheme.background
-    ) { innerPadding ->
+    Scaffold(containerColor = MaterialTheme.colorScheme.background) { innerPadding ->
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .padding(top = 12.dp)
+            modifier = Modifier.fillMaxSize().padding(innerPadding).padding(top = 12.dp)
         ) {
             Column(Modifier.padding(horizontal = 18.dp)) {
                 Text(
-                    text = "UnBoundAI",
+                    "UnBoundAI",
                     style = MaterialTheme.typography.headlineSmall,
                     color = MaterialTheme.colorScheme.onBackground,
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    text = "THINK FREELY. CREATE ANYTHING. BUILD EVERYTHING.",
+                    "THINK FREELY. CREATE ANYTHING. BUILD EVERYTHING.",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.secondary
                 )
@@ -99,61 +95,62 @@ private fun UnBoundAIWorkspace() {
                 }
             }
 
-            when (selected) {
-                PrimaryDestination.HOME -> PleasurePalaceHome(
-                    onSelect = { selected = it }
-                )
-
-                PrimaryDestination.SECRETARY -> {
-                    Column(Modifier.fillMaxSize()) {
-                        LazyRow(
-                            modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            items(SecretarySection.values().toList()) { section ->
-                                FilterChip(
-                                    selected = secretarySection == section,
-                                    onClick = { secretarySection = section },
-                                    label = { Text(section.label) }
-                                )
-                            }
-                        }
-                        when (secretarySection) {
-                            SecretarySection.CONVERSATION -> Unit
-                            SecretarySection.ARCHIVE -> ArchiveScreen(Modifier.fillMaxSize())
-                            SecretarySection.MEMORY -> MemoryScreen(Modifier.fillMaxSize())
-                        }
+            if (selected == PrimaryDestination.SECRETARY) {
+                LazyRow(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(SecretarySection.values().toList()) { section ->
+                        FilterChip(
+                            selected = secretarySection == section,
+                            onClick = { secretarySection = section },
+                            label = { Text(section.label) }
+                        )
                     }
                 }
-
-                PrimaryDestination.APP_BUILDER -> PlannedWorkspace(
-                    title = "DesireForge",
-                    description = "Plan and develop Android applications from natural-language ideas."
-                )
-
-                PrimaryDestination.DESIGN_STUDIO -> PlannedWorkspace(
-                    title = "KinkyCanvas",
-                    description = "Create and refine interface designs, graphics, and visual concepts."
-                )
-
-                PrimaryDestination.CODE_STUDIO -> PlannedWorkspace(
-                    title = "SinSource",
-                    description = "Write, review, explain, and debug code in a dedicated workspace."
-                )
-
-                PrimaryDestination.PROJECTS -> PlannedWorkspace(
-                    title = "PleasurePod",
-                    description = "Your project library for organizing applications, designs, ideas, and ongoing work."
-                )
             }
 
-            // Keep the local chat ViewModel and native runtime alive while moving between destinations.
-            LocalInferenceScreen(
-                modifier = if (
-                    selected == PrimaryDestination.SECRETARY &&
-                    secretarySection == SecretarySection.CONVERSATION
-                ) Modifier.fillMaxSize() else Modifier.size(0.dp)
-            )
+            Box(Modifier.weight(1f).fillMaxWidth()) {
+                // Keep the local chat ViewModel and native runtime alive while moving between destinations.
+                LocalInferenceScreen(
+                    modifier = if (
+                        selected == PrimaryDestination.SECRETARY &&
+                        secretarySection == SecretarySection.CONVERSATION
+                    ) Modifier.fillMaxSize() else Modifier.size(0.dp)
+                )
+
+                when (selected) {
+                    PrimaryDestination.HOME -> PleasurePalaceHome(
+                        onSelect = { selected = it }
+                    )
+
+                    PrimaryDestination.SECRETARY -> when (secretarySection) {
+                        SecretarySection.CONVERSATION -> Unit
+                        SecretarySection.ARCHIVE -> ArchiveScreen(Modifier.fillMaxSize())
+                        SecretarySection.MEMORY -> MemoryScreen(Modifier.fillMaxSize())
+                    }
+
+                    PrimaryDestination.APP_BUILDER -> PlannedWorkspace(
+                        title = "DesireForge",
+                        description = "Plan and develop Android applications from natural-language ideas."
+                    )
+
+                    PrimaryDestination.DESIGN_STUDIO -> PlannedWorkspace(
+                        title = "KinkyCanvas",
+                        description = "Create and refine interface designs, graphics, and visual concepts."
+                    )
+
+                    PrimaryDestination.CODE_STUDIO -> PlannedWorkspace(
+                        title = "SinSource",
+                        description = "Write, review, explain, and debug code in a dedicated workspace."
+                    )
+
+                    PrimaryDestination.PROJECTS -> PlannedWorkspace(
+                        title = "PleasurePod",
+                        description = "Your project library for organizing applications, designs, ideas, and ongoing work."
+                    )
+                }
+            }
         }
     }
 }
