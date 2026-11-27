@@ -55,6 +55,7 @@ This README is the **one and only project blueprint**. Product vision, approved 
 | D-047 | Use a personalized engagement rhythm: a small daily surprise, occasional spontaneous discoveries when genuinely relevant, and more frequent discoveries while the user is actively exploring. | Approved; scheduling and personalization pending |
 | D-048 | Learn the user's interests naturally from conversations and voluntary activity signals, occasionally ask about interests, notice when they evolve, and proactively suggest related things the user may enjoy. | Approved; implementation pending |
 | D-049 | Learn the user's comfort zone while intelligently introducing worthwhile ideas and experiences beyond familiar interests, balancing familiarity with discovery and respecting feedback. | Approved; recommendation behavior pending |
+| D-050 | When the companion notices the user may be bored or losing interest, combine a brief check-in, fresh suggestions, and occasional playful initiative based on known interests. Adapt to feedback and context; preserve the user's freedom to decline, change direction, or stay focused. | Approved; behavior design and implementation pending |
 
 ## 3. Product experience and navigation
 
@@ -411,6 +412,16 @@ Statuses must be updated only when supported by actual work and test evidence.
 - **Status:** Approved; exploration strategy and recommendation implementation pending.
 
 - **2026-11-27:** Question 30 — Discovery beyond familiar interests: user selected **D**. Learn the user's comfort zone while intelligently introducing worthwhile new interests and experiences.
+
+### D-050 — Adaptive response to boredom and declining interest
+
+- **Decision:** User selected **D — combine all three approaches** when the companion notices the user may be bored or losing interest.
+- **Behavior:** The companion should recognize contextual signs of disengagement without treating them as certainty. She may briefly ask what the user would prefer, suggest something different or unexpected, or occasionally take playful initiative by starting a relevant activity or proposing a worthwhile next step.
+- **Personalization:** Base suggestions on the user's known interests, current projects, recent activity within UnBoundAI, and prior feedback. Vary suggestions rather than repeating the same prompts or activities.
+- **User control:** Make it easy to decline, change direction, or continue the current task. Do not interrupt focused work, manufacture urgency, or use guilt and nagging to retain attention.
+- **Status:** Approved; boredom signals, initiative rules, and implementation pending.
+
+- **2026-11-27:** Question 31 — Response to boredom: user selected **D**. Combine check-ins, fresh suggestions, and occasional playful initiative personalized to the user's interests.
 
 ### Ongoing change-record format
 
