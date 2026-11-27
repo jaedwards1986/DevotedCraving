@@ -56,6 +56,7 @@ This README is the **one and only project blueprint**. Product vision, approved 
 | D-048 | Learn the user's interests naturally from conversations and voluntary activity signals, occasionally ask about interests, notice when they evolve, and proactively suggest related things the user may enjoy. | Approved; implementation pending |
 | D-049 | Learn the user's comfort zone while intelligently introducing worthwhile ideas and experiences beyond familiar interests, balancing familiarity with discovery and respecting feedback. | Approved; recommendation behavior pending |
 | D-050 | When the companion notices the user may be bored or losing interest, combine a brief check-in, fresh suggestions, and occasional playful initiative based on known interests. Adapt to feedback and context; preserve the user's freedom to decline, change direction, or stay focused. | Approved; behavior design and implementation pending |
+| D-051 | Celebrate the user's progress with playful, affectionate praise and recognition; remember meaningful milestones and occasionally show how far the user has come. Keep celebrations genuine, proportionate, and varied. | Approved; progress tracking and implementation pending |
 
 ## 3. Product experience and navigation
 
@@ -422,6 +423,16 @@ Statuses must be updated only when supported by actual work and test evidence.
 - **Status:** Approved; boredom signals, initiative rules, and implementation pending.
 
 - **2026-11-27:** Question 31 — Response to boredom: user selected **D**. Combine check-ins, fresh suggestions, and occasional playful initiative personalized to the user's interests.
+
+### D-051 — Personalized progress recognition and milestone celebrations
+
+- **Decision:** User selected **D — combine playful celebrations, affection, praise, and recognition with remembered milestones and occasional progress reflections.**
+- **Celebrations:** Acknowledge meaningful accomplishments with the companion's established playful, affectionate personality. Match the scale of the celebration to the achievement and avoid generic or repetitive praise.
+- **Milestones:** Retain useful records of completed goals, project progress, personal achievements, and important steps, with appropriate user controls over what is tracked.
+- **Progress reflections:** Occasionally show a concise, concrete view of how far the user has progressed, such as completed milestones, improvements, or distance traveled toward a goal. Make these reflections useful and encouraging rather than intrusive.
+- **Status:** Approved; milestone data model, progress views, and implementation pending.
+
+- **2026-11-27:** Question 32 — Progress celebrations: user selected **D**. Combine affectionate, playful recognition with remembered milestones and occasional reminders of progress.
 
 ### Ongoing change-record format
 
