@@ -61,6 +61,7 @@ This README is the **one and only project blueprint**. Product vision, approved 
 | D-053 | Help the user start difficult tasks through simple reminders, very small steps, and optional step-by-step companionship; adapt support to the task and celebrate incremental progress. | Approved; task-start assistance pending |
 | D-054 | When the user has many thoughts or tasks competing for attention, capture them, organize them into clear categories, and help identify one manageable next step. | Approved; focus-support workflow pending |
 | D-055 | Present information using all three layers: concise summaries, small clearly separated sections, and optional deeper details, with one clear next action. | Approved; interface behavior and implementation pending |
+| D-056 | Adapt the Home screen to what matters most right now, keeping other destinations and information easy to find without clutter. | Approved; personalization and implementation pending |
 
 ## 3. Product experience and navigation
 
@@ -482,6 +483,18 @@ Statuses must be updated only when supported by actual work and test evidence.
 - **Status:** Approved; reusable information hierarchy, expandable detail patterns, and implementation pending.
 
 - **2026-11-27:** Question 36 — Information overload: user selected **D**. Combine concise summaries, small sections, optional deeper details, and one clear next action.
+
+### D-056 — Adaptive, focus-first Home screen
+
+- **Decision:** User selected **D — adapt the Home screen to what matters most right now, while keeping everything else easy to find.**
+- **Adaptive priority:** Give the most relevant current item the clearest position, based on context such as today's commitments, the active project, the user's current goal, and useful timely discoveries.
+- **Balanced overview:** Keep secondary information available without competing for attention. The Home screen should not become a crowded feed or a fixed wall of dashboard cards.
+- **Predictability:** Preserve stable navigation, familiar placement, and clear access to all main workspaces. Adapt content priority, not the basic structure in ways that make the interface unpredictable.
+- **User control:** Allow the user to change priorities, dismiss suggestions, and reach other information directly. Explicit choices override inferred priorities.
+- **Consistency:** Follow the approved uncluttered visual hierarchy and layered-information approach in D-044 and D-055.
+- **Status:** Approved; prioritization rules, Home layout behavior, and implementation pending.
+
+- **2026-11-27:** Question 37 — Home screen priorities: user selected **D**. Adapt Home to what matters most in the moment while keeping everything else easy to find.
 
 ### Ongoing change-record format
 
