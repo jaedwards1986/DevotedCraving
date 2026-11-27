@@ -14,7 +14,29 @@ android {
         minSdk = 34
         targetSdk = 35
         versionCode = 1
-        versionName = "0.1.0-foundation"
+        versionName = "0.2.0-local-inference"
+
+        ndk {
+            abiFilters += listOf("arm64-v8a")
+        }
+
+        externalNativeBuild {
+            cmake {
+                arguments += listOf(
+                    "-DCMAKE_BUILD_TYPE=Release",
+                    "-DGGML_NATIVE=OFF"
+                )
+            }
+        }
+    }
+
+    ndkVersion = "27.2.12479018"
+
+    externalNativeBuild {
+        cmake {
+            path = file("src/main/cpp/CMakeLists.txt")
+            version = "3.22.1"
+        }
     }
 
     buildTypes {
@@ -44,6 +66,7 @@ android {
     }
 
     packaging {
+        jniLibs.useLegacyPackaging = false
         resources.excludes += "/META-INF/{AL2.0,LGPL2.1}"
     }
 }

@@ -35,10 +35,21 @@ jobs:
           SDKMANAGER="$SDK_ROOT/cmdline-tools/latest/bin/sdkmanager"
           # Supply a finite buffer of affirmative answers; avoid yes receiving SIGPIPE.
           printf 'y\n%.0s' {1..100} | "$SDKMANAGER" --licenses >/dev/null
-          "$SDKMANAGER" "platform-tools" "platforms;android-35" "build-tools;35.0.0"
+          "$SDKMANAGER" "platform-tools" "platforms;android-35" "build-tools;35.0.0" "ndk;27.2.12479018" "cmake;3.22.1"
 
-      - name: Assemble debug APK
-        run: gradle --no-daemon :app:assembleDebug
+      - name: Run unit tests and assemble ARM64 debug APK
+        run: gradle --no-daemon :app:testDebugUnitTest :app:assembleDebug
+
+      - name: Verify bundled ARM64 llama.cpp JNI library
+        shell: bash
+        run: |
+          set -euo pipefail
+          APK="app/build/outputs/apk/debug/app-debug.apk"
+          LIB="lib/arm64-v8a/libdavoted_llama.so"
+          unzip -l "$APK" | grep -F "$LIB"
+          mkdir -p native-check
+          unzip -p "$APK" "$LIB" > native-check/libdavoted_llama.so
+          "$ANDROID_HOME/ndk/27.2.12479018/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-readelf" -h native-check/libdavoted_llama.so | grep -E "Class:.*ELF64|Machine:.*AArch64"
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
