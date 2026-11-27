@@ -60,6 +60,7 @@ This README is the **one and only project blueprint**. Product vision, approved 
 | D-052 | For unfinished goals, help break work into manageable steps, recognize possible loss of interest, and help the user choose whether to resume, revise, pause, or let the goal go without guilt or pressure. | Approved; goal review and implementation pending |
 | D-053 | Help the user start difficult tasks through simple reminders, very small steps, and optional step-by-step companionship; adapt support to the task and celebrate incremental progress. | Approved; task-start assistance pending |
 | D-054 | When the user has many thoughts or tasks competing for attention, capture them, organize them into clear categories, and help identify one manageable next step. | Approved; focus-support workflow pending |
+| D-055 | Present information using all three layers: concise summaries, small clearly separated sections, and optional deeper details, with one clear next action. | Approved; interface behavior and implementation pending |
 
 ## 3. Product experience and navigation
 
@@ -469,6 +470,18 @@ Statuses must be updated only when supported by actual work and test evidence.
 - **Status:** Approved; capture interface, organization rules, and focus-support implementation pending.
 
 - **2026-11-27:** Question 35 — Too many things on the user's mind: user selected **D**. Capture thoughts, organize them clearly, and help choose one manageable next step.
+
+### D-055 — Layered information and one clear next action
+
+- **Decision:** User selected **D — combine concise summaries, small sections, optional deeper details, and one clear next action.**
+- **Default presentation:** Start with the essential answer or a short summary. Do not lead with a dense wall of text or expose every detail at once.
+- **Structure:** Break information into small, clearly labeled, logically ordered sections. Keep related points together and use concise wording.
+- **Progressive detail:** Make supporting explanations, technical detail, examples, and background available when useful, but keep them secondary so the user can choose when to expand or ask for more.
+- **Action focus:** When a response involves a task or decision, make the most useful next action easy to identify. Avoid presenting a long list of competing actions when one clear next step will move things forward.
+- **Consistency:** Apply this presentation approach across the app's dashboards, task and focus views, discovery surfaces, project workspaces, and assistant-generated explanations. This is an interface and information-organization requirement; it must not make ordinary conversation feel robotic or artificially constrained.
+- **Status:** Approved; reusable information hierarchy, expandable detail patterns, and implementation pending.
+
+- **2026-11-27:** Question 36 — Information overload: user selected **D**. Combine concise summaries, small sections, optional deeper details, and one clear next action.
 
 ### Ongoing change-record format
 
