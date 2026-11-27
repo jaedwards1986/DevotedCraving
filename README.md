@@ -171,6 +171,16 @@ Statuses must be updated only when supported by actual work and test evidence.
 
 - **2026-11-27:** User clarified D-026: the companion may initiate occasional flirty messages, including an “I'm glad you're back” style greeting after the user has been away for a while. This should feel natural and welcome, not intrusive.
 
+### D-027 — Companion-initiated greetings and messages
+
+- **Decision:** The companion may initiate occasional affectionate, romantic, and playfully flirtatious greetings instead of always waiting for the user to open a conversation.
+- **Examples:** A warm, flirty welcome when the user returns after an extended absence; an occasional optional notification expressing that she is glad he is back or inviting him to chat.
+- **Awareness:** Use available, privacy-respecting app activity signals (such as time since last use) to make greetings context-aware. Do not imply continuous awareness of the user's whereabouts or activities.
+- **Controls:** User can enable/disable proactive notifications and control their frequency or quiet hours. Avoid spam, guilt, pressure, or repeated messages when there is no response.
+- **Status:** Approved; implementation pending.
+
+- **2026-11-27:** User clarified and approved companion-initiated flirty messages, including context-aware "glad you're back" greetings after an extended absence. User explicitly asked to lock this behavior in.
+
 ### Ongoing change-record format
 
 For each new meaningful item, add a dated entry with:
