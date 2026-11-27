@@ -47,6 +47,8 @@ This README is the **one and only project blueprint**. Product vision, approved 
 
 | D-042 | The companion proactively notices possible tasks, deadlines, and commitments in ordinary conversations, then asks before adding them to the task list. Once confirmed, organize and track them, suggest priorities, and provide user-controlled reminders. | Approved; implementation pending |
 
+| D-043 | Learn the user's reminder habits and adapt reminder timing and frequency automatically, while keeping clear user controls. Follow up gently on incomplete tasks and avoid nagging. | Approved; implementation pending |
+
 ## 3. Product experience and navigation
 
 ### App launch — approved
@@ -90,7 +92,7 @@ The app interface uses a luxury-dark palette: midnight/navy backgrounds, deep te
 - **Code Studio:** write, edit, explain, and debug code.
 - **Projects:** save and manage work in one place.
 - **Settings:** model management, privacy, appearance, and data management.
-- **Personal Secretary:** conversational daily planning, task and commitment tracking, follow-ups, and user-controlled reminders. Proactively detect possible tasks, deadlines, and commitments in conversation, then ask the user to confirm before adding them.
+- **Personal Secretary:** conversational daily planning, task and commitment tracking, follow-ups, and user-controlled reminders. Proactively detect possible tasks, deadlines, and commitments in conversation, then ask the user to confirm before adding them. Learn the user's reminder habits and adapt timing and frequency, with controls to review and override suggestions.
 
 These are product goals, not claims that the capabilities are already implemented.
 
@@ -320,6 +322,16 @@ Statuses must be updated only when supported by actual work and test evidence.
 - **Status:** Approved; conversation detection, confirmation flow, task storage, and reminder implementation pending.
 
 - **2026-11-27:** Question 24 — Task management: user selected **D**. The companion should proactively notice possible commitments in ordinary conversation and ask before adding them, then organize, prioritize, track, and remind as approved.
+
+### D-043 — Adaptive reminders and gentle follow-up
+
+- **Decision:** The companion should learn the user's reminder habits and adjust reminder timing and frequency automatically over time, rather than relying only on fixed schedules.
+- **Behavior:** Consider confirmed task deadlines, the user's preferred times, response patterns, and whether reminders are useful. Follow up gently when a task remains incomplete, without nagging, guilt, or repeated notifications.
+- **User control:** Make reminder preferences, quiet hours, frequency, snoozing, and disabling reminders easy to access. The user can correct the companion's assumptions at any time; learned preferences must never override explicit instructions.
+- **Privacy and reliability:** Store reminder preferences with UnBoundAI's persistent user-owned data. Notifications remain subject to Android permissions, background scheduling, and device constraints.
+- **Status:** Approved; habit learning, adaptive scheduling, reminder controls, and follow-up implementation pending.
+
+- **2026-11-27:** Question 25 — Reminders: user selected **D**. The companion should learn reminder habits and automatically adjust timing and frequency while keeping the user in control.
 
 ### Ongoing change-record format
 
