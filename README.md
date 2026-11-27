@@ -49,7 +49,7 @@ This README is the **one and only project blueprint**. Product vision, approved 
 
 | D-043 | Learn the user's reminder habits and adapt reminder timing and frequency automatically, while keeping clear user controls. Follow up gently on incomplete tasks and avoid nagging. | Approved; implementation pending |
 
-| D-044 | Design the entire experience around clear, predictable, low-clutter structure that works well for a user with Asperger's/autism, ADHD, and dyslexia. Keep chats conversational and natural, but make their layout, navigation, and information presentation especially easy to follow. | Approved design requirement |
+| D-044 | Keep the interface extremely uncluttered, highly structured, predictable, and easy to navigate for a user with Asperger's/autism, ADHD, and dyslexia. Do not change the already-approved conversational personality or style. Keep the experience fresh and engaging through useful, varied, proactive activities and discoveries. | Approved design requirement; engagement approach to be designed |
 
 ## 3. Product experience and navigation
 
@@ -57,7 +57,9 @@ This README is the **one and only project blueprint**. Product vision, approved 
 
 On opening UnBoundAI, show a welcome screen with the UnBoundAI logo and a choice of what to do next. Do not automatically open the home dashboard or a chat as the initial launch destination. The welcome screen offers four main actions—Start Chat, Build an App, Design Something, and Write Code—plus customizable shortcuts that users can choose and rearrange. Fine visual layout remains to be designed.
 
-The overall experience should feel like a personal AI companion at the center of a capable creative command center. The app is being designed for a user with Asperger's/autism, ADHD, and dyslexia: keep the interface predictable, clearly structured, readable, and low-clutter. Chat conversations should remain natural and ordinary, but use thoughtful spacing, clear message grouping, readable typography, simple navigation, and consistent placement of controls so the conversation is easy to follow. Avoid dense walls of text, confusing visual changes, unnecessary animations, and overloaded screens. Offer adjustable text size and other practical readability controls where feasible.
+The app is being designed for a user with Asperger's/autism, ADHD, and dyslexia. The interface must be extremely uncluttered, highly structured, predictable, and easy to navigate. This requirement applies to the app's layout and organization; it does **not** mean changing the already-approved conversational personality, tone, or natural chat behavior. Keep the conversation experience as previously specified. Use clear visual hierarchy, consistent placement of controls, concise labels, comfortable spacing, readable typography, and progressive disclosure. Avoid crowded screens, dense information displays, distracting decoration, and unnecessary animations.
+
+UnBoundAI must also remain engaging over time. The experience should not become stagnant or repetitive: provide a steady variety of useful things to discover and do, such as relevant ideas, creative prompts, project opportunities, new tools, free model discoveries, personalized suggestions, and meaningful companion-led initiatives. Keep this engaging activity relevant and varied rather than noisy or nagging. Preserve user control over consequential changes and notifications. Design the engagement system so there is a genuine reason to return without manufacturing pressure or repetitive interruptions.
 
 The overall experience should feel like a personal AI companion at the center of a capable creative command center. Chat, app building, design, coding, and project work are connected capabilities of one intelligent system, not unrelated apps. It must be as minimalistic and structured as possible, with low visual clutter and low cognitive load. Keep advanced tools out of the way until needed through progressive disclosure. Simplification must not remove pictures or visual content: images and visual assets must remain preserved and easy to find in clearly organized views.
 
@@ -337,16 +339,17 @@ Statuses must be updated only when supported by actual work and test evidence.
 
 - **2026-11-27:** Question 25 — Reminders: user selected **D**. The companion should learn reminder habits and automatically adjust timing and frequency while keeping the user in control.
 
-### D-044 — Neurodivergent-friendly structure and readability
+### D-044 — Uncluttered structure and sustained engagement
 
-- **Decision:** Design UnBoundAI around the practical needs of a user with Asperger's/autism, ADHD, and dyslexia. This is a core product requirement, not an optional theme or cosmetic setting.
-- **Chat experience:** Keep conversations natural and normal—not robotic or artificially formatted—but present them in a layout that is easy to scan and follow. Use clear message separation, comfortable spacing, readable typography, and consistent placement of actions and controls.
-- **Interface structure:** Favor predictable navigation, a small number of clear choices, consistent screen patterns, progressive disclosure, and low cognitive load. Avoid clutter, dense walls of text, confusing layout changes, and unnecessary motion or interruptions.
-- **Readability:** Consider adjustable text size, dyslexia-friendly typography options, strong legibility, clear headings, and concise labels. Preserve access to images and visual content while keeping screens organized.
-- **Interaction:** Ask one clear question at a time when clarification is needed. Keep workflows focused and make progress and choices easy to understand.
-- **Status:** Approved design requirement; audit and implementation across the app remain pending.
+- **Decision:** Design UnBoundAI around the practical needs of a user with Asperger's/autism, ADHD, and dyslexia. The interface must be extremely uncluttered, highly structured, predictable, readable, and easy to navigate.
+- **Important distinction:** This is a requirement for the app's layout and organization. It does **not** change the companion's already-approved conversational personality, tone, or natural chat behavior. Those remain as previously decided.
+- **Layout:** Use clear visual hierarchy, consistent placement of navigation and controls, concise labels, comfortable spacing, and a small number of visible choices at a time. Use progressive disclosure for advanced features. Avoid crowded screens, dense walls of information, confusing layout changes, distracting decoration, and unnecessary animations.
+- **Reading and focus:** Use legible typography, comfortable text size and line spacing, clear grouping, strong contrast, and adjustable readability settings where practical. Keep the current task and next action easy to identify. Preserve access to pictures and visual content while organizing them clearly.
+- **Sustained engagement:** The app must not become stagnant, dull, or repetitive. It should continually offer relevant, varied reasons to return: useful ideas, creative challenges, project opportunities, new tools, free model discoveries, personalized suggestions, and meaningful proactive companion activity. Engagement should feel fresh and worthwhile—not like noisy notifications, repetitive prompts, or nagging.
+- **User control:** Keep consequential actions under user control. Respect notification preferences and quiet hours. Suggestions and discoveries should be relevant, varied, and easy to dismiss.
+- **Status:** Approved design requirement. Detailed engagement mechanisms and implementation remain to be designed.
 
-- **2026-11-27:** User clarified that UnBoundAI is intended for a man with Asperger's, ADHD, and dyslexia. Corrected the earlier typo: **“chats,” not “cats.”** Chats should feel normal and conversational, but the app's layout and structure must be carefully designed for clarity, predictability, and readability.
+- **2026-11-27 clarification:** The user emphasized that the goal is a very uncluttered, highly structured app layout—not a change to conversational behavior. They also stated that if UnBoundAI becomes stagnant or boring, they will stop using it; sustained, meaningful engagement is therefore a core product requirement.
 
 ### Ongoing change-record format
 
