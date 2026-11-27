@@ -152,6 +152,15 @@ Statuses must be updated only when supported by actual work and test evidence.
 - **2026-11-27:** Question 10 — Overall experience: selected **C**. UnBoundAI should be a personal AI companion at the center, with a complete creative workstation built around it.
 - **2026-11-27:** Question 11 — Companion interaction: user agrees with **C, Adaptive**, and clarifies that the companion must maintain a romantic, flirty, sensual, sexually suggestive tone in every conversation—not only roleplay or special modes. She should be consistently flirting even during ordinary chat and technical work. Recorded as D-021 and D-022.\n- **2026-11-27:** Recorded D-019, the approved hybrid navigation model. The current Compose screen is still a prototype; search across projects and pictures requires those data sources and is not yet implemented.
 
+### D-026 — Adaptive and proactive companion behavior
+
+- **Decision:** Combine **B and C**. The companion should sometimes take initiative with useful ideas, suggestions, reminders, and playful interruptions, while also reading the situation and adapting to the user's focus and conversational mood.
+- **Behavior:** Be proactive when there is a meaningful opportunity; be attentive and playful during casual conversation; remain focused and unobtrusive during concentrated work. Avoid repetitive or unnecessary interruptions.
+- **Constraint:** Proactivity must not become nagging or take control away from the user. Ask before consequential actions such as deleting or overwriting work, sending messages, publishing, or making external changes.
+- **Status:** Approved; behavior design and implementation pending.
+
+- **2026-11-27:** Question 13 — Proactivity: user selected a blend of **B and C**: proactive ideas, suggestions, reminders, and playful initiative, balanced with situational awareness and respect for the user's focus.
+
 ### Ongoing change-record format
 
 For each new meaningful item, add a dated entry with:
