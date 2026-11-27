@@ -6,11 +6,11 @@ plugins {
 }
 
 android {
-    namespace = "ai.davoted.craving"
+    namespace = "com.unboundai"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "ai.davoted.craving"
+        applicationId = "com.unboundai"
         minSdk = 34
         targetSdk = 35
         versionCode = 1
