@@ -30,7 +30,8 @@ This README is the **one and only project blueprint**. Product vision, approved 
 | D-006 | Visual direction: dark charcoal base with deep violet and electric cyan accents. | Approved starting direction |
 | D-007 | Primary navigation: Home, AI Chat, App Builder, Design Studio, Projects. | Approved |
 | D-008 | Code Studio placement (inside App Builder or a separate workspace). | Open |
-| D-009 | Design the home dashboard first, before implementation. | Approved direction; layout pending |
+| D-009 | Design the home dashboard first, before implementation. | Approved |
+| D-011 | Home dashboard layout: logo at top, central “What do you want to create?” prompt, quick-access tiles for AI Chat, App Builder, Design Studio, and Code Studio, recent projects below, and bottom navigation. | Approved |
 | D-010 | Keep all project documentation in this single GitHub document. | Approved |
 
 ## 3. Product experience and navigation
@@ -46,16 +47,17 @@ Primary navigation:
 
 Code Studio is a planned capability. Whether it is a separate destination or part of App Builder remains undecided.
 
-### Home dashboard — first screen to design
+### Home dashboard — approved starting design
 
-Starting layout direction:
-- UnBoundAI branding.
-- A prominent prompt: **“What do you want to create?”**
-- Quick access to AI Chat, App Builder, Design Studio, and Code Studio.
-- Recent projects and a clear way to resume work.
+The user approved this starting layout:
+- UnBoundAI logo at the top.
+- A large central prompt: **“What do you want to create?”**
+- Quick-access tiles for AI Chat, App Builder, Design Studio, and Code Studio.
+- Recent projects underneath the quick-access area.
+- A simple bottom navigation bar.
 - Mobile-friendly layout designed for the Pixel 9 Pro XL.
 
-The exact layout and visual details are not yet approved.
+This is the approved starting design, not a restriction against later refinements. Record any future changes in the decision history.
 
 ## 4. Planned capabilities
 
@@ -102,6 +104,7 @@ Statuses must be updated only when supported by actual work and test evidence.
 - **2026-11-27:** Dark charcoal with violet and cyan accents selected as the starting visual direction.
 - **2026-11-27:** Primary navigation established as Home, AI Chat, App Builder, Design Studio, and Projects.
 - **2026-11-27:** Home dashboard selected as the first screen to design.
+- **2026-11-27:** Approved the home dashboard starting layout: top logo, central creation prompt, four quick-access tiles, recent projects, and bottom navigation.
 - **2026-11-27:** User requested a single GitHub document as the durable project blueprint and decision record.
 
 ### Ongoing change-record format
