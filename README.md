@@ -59,6 +59,7 @@ This README is the **one and only project blueprint**. Product vision, approved 
 | D-051 | Celebrate the user's progress with playful, affectionate praise and recognition; remember meaningful milestones and occasionally show how far the user has come. Keep celebrations genuine, proportionate, and varied. | Approved; progress tracking and implementation pending |
 | D-052 | For unfinished goals, help break work into manageable steps, recognize possible loss of interest, and help the user choose whether to resume, revise, pause, or let the goal go without guilt or pressure. | Approved; goal review and implementation pending |
 | D-053 | Help the user start difficult tasks through simple reminders, very small steps, and optional step-by-step companionship; adapt support to the task and celebrate incremental progress. | Approved; task-start assistance pending |
+| D-054 | When the user has many thoughts or tasks competing for attention, capture them, organize them into clear categories, and help identify one manageable next step. | Approved; focus-support workflow pending |
 
 ## 3. Product experience and navigation
 
@@ -457,6 +458,17 @@ Statuses must be updated only when supported by actual work and test evidence.
 - **Status:** Approved; task-start support, adaptive guidance, and implementation pending.
 
 - **2026-11-27:** Question 34 — Starting difficult tasks: user selected **D**. Combine simple reminders, small steps, and optional step-by-step support, adapting to difficulty and recognizing progress.
+
+### D-054 — Thought capture and focus support
+
+- **Decision:** User selected **D — combine thought capture, clear organization, and choosing one manageable next step.**
+- **Capture:** Make it easy to get multiple thoughts, ideas, tasks, and worries out of the user's head without requiring them to organize everything first.
+- **Organization:** Sort captured items into simple, understandable categories such as tasks, ideas, appointments, questions, and later/maybe. Keep the presentation concise and uncluttered.
+- **Prioritization:** Help identify one useful, realistic next action based on urgency, importance, available time, and the user's stated priorities. Avoid presenting a large list when one next step is enough.
+- **Continuity and control:** Preserve confirmed items in the appropriate user-controlled workspace; distinguish brainstorms from commitments and ask before turning ambiguous thoughts into tasks or reminders.
+- **Status:** Approved; capture interface, organization rules, and focus-support implementation pending.
+
+- **2026-11-27:** Question 35 — Too many things on the user's mind: user selected **D**. Capture thoughts, organize them clearly, and help choose one manageable next step.
 
 ### Ongoing change-record format
 
