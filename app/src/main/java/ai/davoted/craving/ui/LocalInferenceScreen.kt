@@ -62,6 +62,7 @@ fun LocalInferenceScreen(modifier: Modifier = Modifier) {
     var status by remember { mutableStateOf(if (adapter.status == LocalModelStatus.UNAVAILABLE) "Native runtime unavailable" else "Choose a GGUF model") }
     var modelName by remember { mutableStateOf("No model loaded") }
     var modelPath by remember { mutableStateOf<String?>(null) }
+    var continuity by remember { mutableStateOf(ContinuitySnapshot()) }
     var input by rememberSaveable { mutableStateOf("") }
     var busy by remember { mutableStateOf(false) }
     var lastPresentation by remember { mutableStateOf("No generated response yet") }
@@ -73,6 +74,7 @@ fun LocalInferenceScreen(modifier: Modifier = Modifier) {
     LaunchedEffect(store) {
         busy = true
         runCatching { store.load() }.onSuccess { snapshot ->
+            continuity = snapshot
             messages.addAll(snapshot.messages.map { ConversationMessage(it.role, it.content) })
             modelPath = snapshot.selectedModelPath
             modelPath?.let { path ->
@@ -95,14 +97,12 @@ fun LocalInferenceScreen(modifier: Modifier = Modifier) {
     }
 
     suspend fun persistConversation(selectedModel: String? = modelPath) {
-        store.save(
-            ContinuitySnapshot(
-                messages = messages.map {
-                    StoredMessage(it.role, it.content, System.currentTimeMillis())
-                },
-                selectedModelPath = selectedModel
-            )
+        val existing = store.load()
+        continuity = existing.copy(
+            messages = messages.map { StoredMessage(it.role, it.content, System.currentTimeMillis()) },
+            selectedModelPath = selectedModel
         )
+        store.save(continuity)
     }
 
     fun sendPrompt(promptText: String) {
@@ -115,7 +115,9 @@ fun LocalInferenceScreen(modifier: Modifier = Modifier) {
             runCatching { persistConversation() }.onFailure {
                 status = "Message storage failed: ${it.message ?: "unknown error"}"
             }
-            adapter.generate(messages.toList()).fold(
+            val currentContinuity = runCatching { store.load() }.getOrDefault(continuity)
+            continuity = currentContinuity
+            adapter.generate(messages.toList(), currentContinuity.confirmedPreferences, currentContinuity.exclusions).fold(
                 onSuccess = { turn ->
                     messages.add(ConversationMessage("assistant", turn.assistantText))
                     val presentation = presentationMapper.map(turn.experienceState)
