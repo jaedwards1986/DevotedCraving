@@ -148,6 +148,45 @@ class PromptContextAssemblerTest {
     }
 
     @Test
+    fun concurrentAssemblyStressKeepsFingerprintsAndContextsIsolated() {
+        val workers = 16
+        val iterationsPerWorker = 32
+        val executor = java.util.concurrent.Executors.newFixedThreadPool(workers)
+        try {
+            val baselines = (0 until workers).map { worker ->
+                val token = "ISOLATION_TOKEN_WORKER_$worker"
+                val context = ConversationContext(
+                    personaState = ExperienceState(),
+                    confirmedPreferences = listOf("preference-$worker"),
+                    exclusions = listOf("exclusion-$worker"),
+                    relationshipContext = listOf("continuity-$worker")
+                )
+                val messages = listOf(ConversationMessage("user", token))
+                Triple(token, context, assembler.assemble(context, messages))
+            }
+
+            val tasks = baselines.map { (token, context, baseline) ->
+                java.util.concurrent.Callable {
+                    repeat(iterationsPerWorker) {
+                        val result = assembler.assemble(
+                            context,
+                            listOf(ConversationMessage("user", token))
+                        )
+                        assertEquals(baseline.contextFingerprint, result.contextFingerprint)
+                        assertTrue(result.serializedPrompt.contains(token))
+                        assertTrue(result.serializedPrompt.contains("preference-${token.substringAfterLast("_").toInt()}"))
+                        assertEquals(64, result.contextFingerprint.length)
+                    }
+                }
+            }
+
+            executor.invokeAll(tasks).forEach { it.get() }
+        } finally {
+            executor.shutdownNow()
+        }
+    }
+
+    @Test
     fun conversationHistoryIsLastAndRetainsChronologicalOrder() {
         val result = assembler.assemble(
             ConversationContext(personaState = ExperienceState()),
