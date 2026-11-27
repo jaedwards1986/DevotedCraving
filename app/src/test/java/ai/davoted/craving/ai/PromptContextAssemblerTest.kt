@@ -64,7 +64,8 @@ class PromptContextAssemblerTest {
 
         assertTrue(prompt.contains("PRIORITY 1"))
         assertTrue(prompt.contains("no insults"))
-        assertTrue(prompt.contains("PRIORITY 3 — ARCHIVE CONTEXT: none selected"))
+        assertTrue(prompt.contains("PRIORITY 3 — DIRECTIVE"))
+        assertTrue(prompt.contains("PRIORITY 4 — GROUNDING"))
         assertTrue(prompt.contains("ASSISTANT:"))
     }
 
@@ -88,4 +89,78 @@ class PromptContextAssemblerTest {
         assertTrue(prompt.contains("no insults"))
         assertTrue(prompt.contains("no degradation"))
     }
+
+    @Test
+    fun structuredContractSeparatesDirectivesFromVerifiedGrounding() {
+        val archive = AssembledArchiveExperience(
+            archiveItemId = "archive-1",
+            archiveFacts = listOf(VerifiedArchiveFact("Public interview fact.", "transcript:7", emptyList())),
+            provenance = null,
+            userFraming = UserArchiveFraming(ArchiveTheme.PLAYFUL, "Use this as fictional inspiration."),
+            confirmedPreferences = emptyList(),
+            exclusions = emptyList(),
+            presentation = PresentationParameters(5, 4, 5, 5, 5),
+            characterState = ExperienceState(),
+            memoryStateId = "memory-1"
+        )
+        val result = assembler.assemble(
+            ConversationContext(
+                personaState = ExperienceState(ExperienceMood.PLAYFUL, 2, ExperiencePacing.SLOW, ScenarioPhase.BUILD),
+                confirmedPreferences = listOf("cinematic pacing"),
+                exclusions = listOf("no humiliation"),
+                relationshipContext = listOf("Continuity note: user prefers gradual scene progression."),
+                archiveExperience = archive
+            ),
+            listOf(ConversationMessage("user", "Continue."))
+        )
+
+        assertTrue(result.systemPrompt.indexOf("PRIORITY 1") < result.systemPrompt.indexOf("PRIORITY 2"))
+        assertTrue(result.systemPrompt.contains("no humiliation"))
+        assertTrue(result.systemPrompt.contains("cinematic pacing"))
+        assertTrue(result.systemPrompt.contains("Continuity note"))
+        assertTrue(result.instructionBlock.indexOf("PRIORITY 3") < result.instructionBlock.indexOf("PRIORITY 4"))
+        assertTrue(result.instructionBlock.contains("Use this as fictional inspiration"))
+        assertTrue(result.instructionBlock.contains("Public interview fact. [source: transcript:7]"))
+        assertTrue(result.serializedPrompt.contains("ASSISTANT:"))
+        assertEquals(64, result.contextFingerprint.length)
+    }
+
+    @Test
+    fun fingerprintIsStableForEquivalentContextAndChangesWhenPromptInputChanges() {
+        val base = ConversationContext(
+            personaState = ExperienceState(),
+            confirmedPreferences = listOf("warm tone", "short replies"),
+            exclusions = listOf("no insults")
+        )
+        val first = assembler.assemble(base, listOf(ConversationMessage("user", "Hello")))
+        val reordered = assembler.assemble(
+            base.copy(confirmedPreferences = listOf("short replies", "warm tone")),
+            listOf(ConversationMessage("user", "Hello"))
+        )
+        val changed = assembler.assemble(
+            base.copy(exclusions = listOf("no insults", "no shouting")),
+            listOf(ConversationMessage("user", "Hello"))
+        )
+
+        assertEquals(first.serializedPrompt, reordered.serializedPrompt)
+        assertEquals(first.contextFingerprint, reordered.contextFingerprint)
+        assertNotEquals(first.contextFingerprint, changed.contextFingerprint)
+    }
+
+    @Test
+    fun conversationHistoryIsLastAndRetainsChronologicalOrder() {
+        val result = assembler.assemble(
+            ConversationContext(personaState = ExperienceState()),
+            listOf(
+                ConversationMessage("user", "First message"),
+                ConversationMessage("assistant", "Second message")
+            )
+        )
+
+        val first = result.serializedPrompt.indexOf("USER: First message")
+        val second = result.serializedPrompt.indexOf("ASSISTANT: Second message")
+        assertTrue(first >= 0 && first < second)
+        assertTrue(result.instructionBlock.contains("PRIORITY 5 — HISTORY"))
+    }
+
 }
