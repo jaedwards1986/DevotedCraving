@@ -1,6 +1,8 @@
 package ai.davoted.craving.ai
 
 import org.junit.Assert.assertTrue
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotEquals
 import org.junit.Test
 
 class PromptContextAssemblerTest {
