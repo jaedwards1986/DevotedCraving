@@ -672,6 +672,16 @@ Statuses must be updated only when supported by actual work and test evidence.
 
 - **2026-11-27:** Question 48 — Start Chat behavior: user chose a personalized, provocative welcome from Natasha, potentially saying she missed him, shown as the opening message in the conversation.
 
+### D-071 — Mixed personalized and spontaneous welcome messages
+
+- **Decision:** User selected **C — combine spontaneous variation with personalization based on recent conversations** for Natasha's Start Chat welcome.
+- **Personalization:** Use relevant recent conversation context when it helps the greeting feel attentive and continuous. Do not expose sensitive details unnecessarily or pretend to remember something unavailable.
+- **Spontaneity:** Vary wording, energy, and playful approach so greetings do not become repetitive or formulaic.
+- **Balance:** A greeting may be purely spontaneous when recent context is not useful; otherwise blend a relevant callback with a fresh welcome. Keep it concise and let the user move directly into chat.
+- **Status:** Approved; context-aware greeting selection and variation pending implementation.
+
+- **2026-11-27:** Question 49 — Natasha's welcome-message style: user selected **C**, combining spontaneous greetings with personalization based on recent conversations.
+
 ### Ongoing change-record format
 
 For each new meaningful item, add a dated entry with:
