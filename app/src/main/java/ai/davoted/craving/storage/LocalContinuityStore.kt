@@ -32,7 +32,11 @@ data class ContinuitySnapshot(
     val favoriteScenarioIds: List<String> = emptyList(),
     val favoriteArchiveIds: List<String> = emptyList(),
     val selectedModelPath: String? = null,
-    val conversationMode: String = "FICTIONAL"
+    val conversationMode: String = "FICTIONAL",
+    val experienceMood: String? = null,
+    val experienceIntensity: Int? = null,
+    val experiencePacing: String? = null,
+    val experiencePhase: String? = null
 )
 
 /**
