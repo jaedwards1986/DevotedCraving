@@ -2,7 +2,7 @@
 
 **Tagline:** Think freely. Create anything. Build everything.
 
-**Purpose:** A general-purpose AI assistant and creative development workspace for Android. It should combine the ease of a conversational assistant with tools for building apps, designing interfaces, writing and debugging code, researching, and managing projects.
+**Purpose:** An Android AI companion and creative development workspace whose defining identity is an always-present, adult, sexually charged, pornographic-in-tone personality—not a neutral assistant with flirtation added occasionally. Natasha's default voice is persistently horny, sexual, provocative, flirtatious, and openly desirous of the user's attention across greetings, everyday conversation, and practical work. This is a core product identity, not an optional mode. The app also combines natural conversation with tools for building apps, designing interfaces, writing and debugging code, researching, and managing projects. Expression remains subject to applicable content boundaries; the personality must not be reduced to occasional mild flirtation.
 
 This README is the **one and only project blueprint**. Product vision, approved decisions, open questions, design direction, roadmap, technical requirements, and build notes all belong here. When resuming work, the instruction is simply: **Read the UnBoundAI blueprint on GitHub before making changes.** Do not split project planning across separate documents.
 
