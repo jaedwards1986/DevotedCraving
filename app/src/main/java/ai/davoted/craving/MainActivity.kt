@@ -28,11 +28,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-private val Ink = Color(0xFF101018)
-private val Panel = Color(0xFF1B1A28)
-private val Violet = Color(0xFF9A72FF)
-private val Cyan = Color(0xFF58DDF2)
-private val Muted = Color(0xFFAAA7BC)
+private val Ink = Color(0xFF07111F)
+private val Panel = Color(0xFF102131)
+private val Violet = Color(0xFF8AAFB8)
+private val Cyan = Color(0xFF35C9C0)
+private val Muted = Color(0xFFA6BAC5)
 
 private data class Tool(val name: String, val detail: String, val icon: ImageVector)
 private val toolList = listOf(
@@ -46,7 +46,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            MaterialTheme(colorScheme = darkColorScheme(primary = Violet, secondary = Cyan, background = Ink, surface = Panel)) {
+            MaterialTheme(colorScheme = darkColorScheme(primary = Cyan, secondary = Color(0xFF8AAFB8), background = Ink, surface = Panel)) {
                 UnBoundAI()
             }
         }
@@ -61,13 +61,13 @@ private fun UnBoundAI() {
 
     if (selected == null) {
         LazyColumn(
-            modifier = Modifier.fillMaxSize().background(Ink),
+            modifier = Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color(0xFF0B1B2A), Ink))),
             contentPadding = PaddingValues(22.dp),
             verticalArrangement = Arrangement.spacedBy(18.dp)
         ) {
             item {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(Modifier.size(42.dp).background(Brush.linearGradient(listOf(Violet, Cyan)), RoundedCornerShape(14.dp)), contentAlignment = Alignment.Center) {
+                    Box(Modifier.size(42.dp).background(Brush.linearGradient(listOf(Color(0xFF173F55), Cyan, Color(0xFF8AAFB8))), RoundedCornerShape(14.dp)), contentAlignment = Alignment.Center) {
                         Icon(Icons.Filled.AutoAwesome, null, tint = Ink)
                     }
                     Spacer(Modifier.width(12.dp))
@@ -88,7 +88,7 @@ private fun UnBoundAI() {
                         Text("WHAT WOULD YOU LIKE TO DO?", color = Cyan, fontSize = 10.sp, letterSpacing = 1.4.sp, fontWeight = FontWeight.Bold)
                         toolList.filter { shortcuts.contains(it.name) }.forEach { tool ->
                             Row(
-                                Modifier.fillMaxWidth().background(Color(0xFF262437), RoundedCornerShape(16.dp)).clickable { selected = tool }.padding(14.dp),
+                                Modifier.fillMaxWidth().background(Color(0xFF142B3A), RoundedCornerShape(16.dp)).clickable { selected = tool }.padding(14.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Icon(tool.icon, null, tint = Cyan, modifier = Modifier.size(26.dp))
@@ -138,7 +138,7 @@ private fun UnBoundAI() {
             Text(selected!!.name, color = Color.White, fontSize = 30.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 14.dp))
             Text(selected!!.detail, color = Muted, modifier = Modifier.padding(top = 8.dp))
             OutlinedTextField(value = prompt, onValueChange = { prompt = it }, modifier = Modifier.fillMaxWidth().padding(top = 24.dp), minLines = 4, label = { Text("Tell UnBoundAI what you have in mind") })
-            Button(onClick = { }, modifier = Modifier.fillMaxWidth().padding(top = 14.dp).height(52.dp), colors = ButtonDefaults.buttonColors(containerColor = Violet)) {
+            Button(onClick = { }, modifier = Modifier.fillMaxWidth().padding(top = 14.dp).height(52.dp), colors = ButtonDefaults.buttonColors(containerColor = Cyan)) {
                 Icon(Icons.Filled.AutoAwesome, null)
                 Spacer(Modifier.width(8.dp))
                 Text("Continue")
