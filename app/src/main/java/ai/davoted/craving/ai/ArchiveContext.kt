@@ -121,6 +121,7 @@ data class AssembledArchiveExperience(
     val confirmedPreferences: List<String>,
     val exclusions: List<String>,
     val presentation: PresentationParameters,
+    val characterState: ExperienceState,
     val memoryStateId: String
 )
 
@@ -162,7 +163,7 @@ class PersonaOrchestrator {
             return ArchiveTransformResult.Rejected("Thematic framing must be explicitly user-authored.")
         }
 
-        val exclusions = memory.exclusions.map(String::normalizeTerm).filter(String::isNotBlank).distinct().sorted()
+        val exclusions = memory.exclusions.map { it.normalizeTerm() }.filter { it.isNotBlank() }.distinct().sorted()
         val verified = context.source.authenticityStatus == ArchiveAuthenticityStatus.VERIFIED
         val facts = if (verified) {
             context.factualContext.claims
@@ -171,7 +172,7 @@ class PersonaOrchestrator {
                     val searchable = (claim.text + " " + claim.topicTags.joinToString(" ")).normalizeTerm()
                     exclusions.any { term -> term in searchable }
                 }
-                .map { VerifiedArchiveFact(it.text.trim(), it.sourceLocator.trim(), it.topicTags.map(String::trim).filter(String::isNotBlank).distinct().sorted()) }
+                .map { VerifiedArchiveFact(it.text.trim(), it.sourceLocator.trim(), it.topicTags.map { tag -> tag.trim() }.filter { tag -> tag.isNotBlank() }.distinct().sorted()) }
                 .sortedWith(compareBy(VerifiedArchiveFact::sourceLocator, VerifiedArchiveFact::text))
         } else {
             emptyList()
@@ -205,9 +206,10 @@ class PersonaOrchestrator {
                 archiveFacts = facts,
                 provenance = provenance,
                 userFraming = context.userFraming,
-                confirmedPreferences = memory.confirmedPreferences.map(String::trim).filter(String::isNotBlank).distinct().sorted(),
-                exclusions = memory.exclusions.map(String::trim).filter(String::isNotBlank).distinct().sorted(),
+                confirmedPreferences = memory.confirmedPreferences.map { it.trim() }.filter { it.isNotBlank() }.distinct().sorted(),
+                exclusions = memory.exclusions.map { it.trim() }.filter { it.isNotBlank() }.distinct().sorted(),
                 presentation = presentation,
+                characterState = personaState,
                 memoryStateId = memory.stateId
             )
         )
