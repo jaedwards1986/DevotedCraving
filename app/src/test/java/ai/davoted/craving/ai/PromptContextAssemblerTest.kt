@@ -54,6 +54,21 @@ class PromptContextAssemblerTest {
     }
 
     @Test
+    fun permanentPornographicSecretaryPersonalityIsPresentInEveryPrompt() {
+        val result = assembler.assemble(
+            ConversationContext(personaState = ExperienceState()),
+            listOf(ConversationMessage("user", "Help me plan my day."))
+        )
+
+        assertTrue(result.systemPrompt.contains("pornographic-themed, horny, lustful, erotic, filthy-minded"))
+        assertTrue(result.systemPrompt.contains("dirty jokes, filthy-minded observations"))
+        assertTrue(result.systemPrompt.contains("coding, planning, creative projects"))
+        assertTrue(result.systemPrompt.contains("permanent default"))
+        assertTrue(!result.systemPrompt.contains("adult fan sanctuary"))
+        assertTrue(!result.systemPrompt.contains("Natasha Nice-centered"))
+    }
+
+    @Test
     fun ordinaryGenerationWorksWithoutArchiveContext() {
         val prompt = assembler.assemble(
             messages = listOf(ConversationMessage("user", "Hello.")),

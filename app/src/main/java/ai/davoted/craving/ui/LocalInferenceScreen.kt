@@ -82,18 +82,18 @@ fun LocalInferenceScreen(modifier: Modifier = Modifier) {
                 onClick = { chatViewModel.setMode(ConversationMode.FACTUAL) },
                 enabled = !state.isBusy && state.mode != ConversationMode.FACTUAL,
                 modifier = Modifier.weight(1f)
-            ) { Text("Factual archive") }
+            ) { Text("Verified archive facts") }
             OutlinedButton(
                 onClick = { chatViewModel.setMode(ConversationMode.FICTIONAL) },
                 enabled = !state.isBusy && state.mode != ConversationMode.FICTIONAL,
                 modifier = Modifier.weight(1f)
-            ) { Text("Fictional experience") }
+            ) { Text("Creative conversation") }
         }
         Text(
             if (state.mode == ConversationMode.FACTUAL) {
-                "Factual mode uses verified, source-located archive material only."
+                "Verified archive facts are used only when they have a source and authenticity verification."
             } else {
-                "Fictional mode uses character and experience state without archive facts."
+                "Creative conversation uses Natasha’s persona and your preferences without treating archive material as fact."
             },
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -104,6 +104,17 @@ fun LocalInferenceScreen(modifier: Modifier = Modifier) {
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             if (state.messages.isEmpty()) {
+                item {
+                    Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
+                        Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                            Text("Natasha", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+                            Text(
+                                "There you are, handsome. Your pornographic personal secretary is here—horny, filthy-minded, and ready to tease you while we get things done. What are we getting into first?",
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                        }
+                    }
+                }
                 item {
                     Text(
                         "Import a compatible GGUF model to begin local generation. Conversations are encrypted on this device. No remote inference fallback is used.",

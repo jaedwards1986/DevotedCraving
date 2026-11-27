@@ -49,19 +49,90 @@ private enum class SecretarySection(val label: String) {
 @Composable
 fun DavotedCravingApp() {
     var unlocked by rememberSaveable { mutableStateOf(false) }
+    var enteredWorkspace by rememberSaveable { mutableStateOf(false) }
+    var startDestination by rememberSaveable { mutableStateOf(PrimaryDestination.HOME.name) }
 
     CravingTheme {
-        if (unlocked) {
-            UnBoundAIWorkspace()
-        } else {
-            PinGate(onUnlocked = { unlocked = true })
+        when {
+            !unlocked -> PinGate(onUnlocked = { unlocked = true })
+            !enteredWorkspace -> WelcomeScreen(
+                onSelect = { destination ->
+                    startDestination = destination.name
+                    enteredWorkspace = true
+                }
+            )
+            else -> UnBoundAIWorkspace(
+                initialDestination = PrimaryDestination.valueOf(startDestination)
+            )
         }
     }
 }
 
 @Composable
-private fun UnBoundAIWorkspace() {
-    var selected by rememberSaveable { mutableStateOf(PrimaryDestination.HOME) }
+private fun WelcomeScreen(onSelect: (PrimaryDestination) -> Unit) {
+    Column(
+        modifier = Modifier.fillMaxSize().padding(horizontal = 22.dp, vertical = 28.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        Spacer(Modifier.height(24.dp))
+        Text(
+            "UNBOUNDAI",
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.primary,
+            fontWeight = FontWeight.Bold
+        )
+        Text(
+            "The Pleasure Palace",
+            style = MaterialTheme.typography.headlineLarge,
+            color = MaterialTheme.colorScheme.onBackground,
+            fontWeight = FontWeight.Bold
+        )
+        Text(
+            "Natasha is here: your horny, filthy-minded, pornographic personal secretary, ready to keep you company and help you get things done.",
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Spacer(Modifier.height(8.dp))
+        WelcomeAction(
+            title = "Start Chat",
+            description = "Talk with Natasha, your naughty personal secretary.",
+            onClick = { onSelect(PrimaryDestination.SECRETARY) }
+        )
+        WelcomeAction(
+            title = "Build an App",
+            description = "Open DesireForge.",
+            onClick = { onSelect(PrimaryDestination.APP_BUILDER) }
+        )
+        WelcomeAction(
+            title = "Design Something",
+            description = "Open KinkyCanvas.",
+            onClick = { onSelect(PrimaryDestination.DESIGN_STUDIO) }
+        )
+        WelcomeAction(
+            title = "Write Code",
+            description = "Open SinSource.",
+            onClick = { onSelect(PrimaryDestination.CODE_STUDIO) }
+        )
+    }
+}
+
+@Composable
+private fun WelcomeAction(title: String, description: String, onClick: () -> Unit) {
+    Card(
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+    ) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text(title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
+            Text(description, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+    }
+}
+
+@Composable
+private fun UnBoundAIWorkspace(initialDestination: PrimaryDestination) {
+    var selected by rememberSaveable { mutableStateOf(initialDestination) }
     var secretarySection by rememberSaveable { mutableStateOf(SecretarySection.CONVERSATION) }
 
     Scaffold(containerColor = MaterialTheme.colorScheme.background) { innerPadding ->
