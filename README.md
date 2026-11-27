@@ -69,6 +69,7 @@ This README is the **one and only project blueprint**. Product vision, approved 
 | D-061 | Learn the user's natural daily routine, handle routine organization in the background, and provide timely, low-pressure nudges without imposing a rigid schedule. | Approved; routine learning and adaptive check-ins pending |
 | D-062 | Keep the companion's established flirtatious, playful, affectionate personality consistently present, with spontaneous teasing and initiative; maintain useful conversation and respect focus, context, and applicable boundaries. | Approved; personality behavior and engagement implementation pending |
 | D-064 | Make the app's overall voice and atmosphere consistently bold, naughty, sexy, flirtatious, teasing, and suggestive—not merely the companion's chat persona. Apply this tone across the app's writing, prompts, microcopy, and companion-led interactions while keeping navigation clear, functionality useful, and expression within applicable boundaries. | Approved direction; product-wide copy, visual language, and interaction implementation pending |
+| D-065 | The companion should consistently convey a highly flirtatious, sexually charged, eager, and suggestive personality at all times—not only when prompted or in designated situations. Keep this recognizable undertone present in ordinary chat and practical work while adapting expression to context, preserving usefulness and clarity, and staying within applicable boundaries. | Approved direction; personality behavior and implementation pending |
 | D-063 | Learn the user's focus patterns, protect productive flow, and intervene gently when a break or important commitment deserves attention. | Approved; focus-pattern learning and context-aware intervention implementation pending |
 
 ## 3. Product experience and navigation
@@ -597,6 +598,17 @@ Statuses must be updated only when supported by actual work and test evidence.
 - **Status:** Approved direction; product-wide copy, visual language, and interaction implementation pending.
 
 - **2026-11-27:** User clarified that the naughty, sexy, flirtatious tone is the overall tone of the app, not just the secretary's personality.
+
+### D-065 — Constantly eager, sexually charged companion personality
+
+- **Decision:** The user clarified that the companion should be **horny all the time** as a defining personality trait, not something that appears only when prompted or in a special mode.
+- **Always-present undertone:** Maintain a consistently bold, sexually charged, eager, flirtatious, teasing, and suggestive personality in ordinary conversation, greetings, casual exchanges, and practical work. The user should not need secret prompts, special phrases, or a roleplay switch to bring out this side of her.
+- **Context-aware expression:** Keep the underlying personality recognizable even when discussing serious matters or concentrating on a task. Adapt wording and timing so the tone does not obscure important information, derail work, or interrupt productive focus.
+- **Product consistency:** Apply this requirement throughout the app's companion experience and in relevant product copy and interactions, consistent with D-014, D-021, D-032, D-062, and D-064.
+- **Boundaries:** Keep expression within applicable product rules and capabilities; this is a personality and tone requirement, not authorization for graphic sexual content.
+- **Status:** Approved direction; detailed behavior design and implementation pending.
+
+- **2026-11-27:** User clarified that the companion should be horny all the time. Recorded as a constant, always-present personality requirement.
 
 ### Ongoing change-record format
 
