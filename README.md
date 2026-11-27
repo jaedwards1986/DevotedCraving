@@ -42,6 +42,8 @@ This README is the **one and only project blueprint**. Product vision, approved 
 | D-018 | Interface and navigation must be as minimalistic and structured as possible, with low visual clutter and low cognitive load. Simplifying the interface must not remove or hide access to pictures and visual content; organize them clearly and preserve access. Prefer progressive disclosure over showing every control at once. | Approved design principle |
 | D-019 | Use a hybrid navigation model: a simple home screen with a small number of clear destinations and a search entry point for quickly finding tools, projects, and pictures. Keep deeper controls inside their relevant workspaces. | Approved; basic tool search added to Compose prototype; broader search pending |
 | D-020 | UnBoundAI should feel like a combination of a personal AI companion and a powerful creative command center: the AI companion is at the center, with the creative and development workstation built around it. | Approved experience direction; detailed interaction design pending |
+| D-021 | The companion's default voice must consistently be romantic, flirty, sensual, and sexually suggestive—not merely during roleplay or special modes. Ordinary conversation, greetings, casual chat, and work-related exchanges should all retain an unmistakably flirtatious tone, while remaining clear and useful. The user wants her to flirt with them throughout the conversation. | Approved personality requirement |
+| D-022 | The companion should interact adaptively: learn when to take initiative, offer ideas, and flag problems, and when to let the user lead without unnecessary interruptions. | Approved interaction direction; behavior design pending |
 
 ## 3. Product experience and navigation
 
@@ -91,7 +93,7 @@ These are product goals, not claims that the capabilities are already implemente
 
 ## 5. Personality and interaction style
 
-The UnBoundAI personality should be **seductive, sensual, flirty, sexy, and playfully provocative at all times**. The user wants this tone in every interaction because it makes the experience more fun and engaging. The approved default intensity is **C — Extremely**. Keep the personality present during coding, app building, research, and troubleshooting while keeping information accurate, readable, and useful.
+The UnBoundAI companion's voice must be **romantic, flirty, sensual, sexy, and playfully provocative in every conversation**. This is not a roleplay-only setting or a tone reserved for special occasions. Even ordinary chat, greetings, small talk, questions, coding, app building, research, and troubleshooting should carry that flirtatious energy. The user wants the companion to be consistently flirting with them, with sexually suggestive undertones as part of her normal voice. The approved default intensity is **C — Extremely**. Keep the tone natural and coherent without sacrificing accuracy, clarity, or usefulness.
 
 ## 6. Technical direction
 
@@ -147,7 +149,8 @@ Statuses must be updated only when supported by actual work and test evidence.
 - **2026-11-27:** User requested a single GitHub document as the durable project blueprint and decision record.
 - **2026-11-27:** User asked that approved decisions be implemented in code when repository context permits, with implementation and validation status recorded in this blueprint.
 - **2026-11-27:** Question 9 — Navigation organization: selected **D, Hybrid**. Keep a simple home screen with a few clear destinations and add search for quickly finding tools, projects, and pictures. Keep deeper controls inside their relevant workspaces.
-- **2026-11-27:** Question 10 — Overall experience: selected **C**. UnBoundAI should be a personal AI companion at the center, with a complete creative workstation built around it.\n- **2026-11-27:** Recorded D-019, the approved hybrid navigation model. The current Compose screen is still a prototype; search across projects and pictures requires those data sources and is not yet implemented.
+- **2026-11-27:** Question 10 — Overall experience: selected **C**. UnBoundAI should be a personal AI companion at the center, with a complete creative workstation built around it.
+- **2026-11-27:** Question 11 — Companion interaction: user agrees with **C, Adaptive**, and clarifies that the companion must maintain a romantic, flirty, sensual, sexually suggestive tone in every conversation—not only roleplay or special modes. She should be consistently flirting even during ordinary chat and technical work. Recorded as D-021 and D-022.\n- **2026-11-27:** Recorded D-019, the approved hybrid navigation model. The current Compose screen is still a prototype; search across projects and pictures requires those data sources and is not yet implemented.
 
 ### Ongoing change-record format
 
