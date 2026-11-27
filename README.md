@@ -662,6 +662,16 @@ Statuses must be updated only when supported by actual work and test evidence.
 
 - **2026-11-27:** Question 47 — Companion's own personality and opinions: user selected **D**. Give her a distinctive personality, independent opinions, preferences, humor, confidence, and respectful willingness to disagree.
 
+### D-070 — Personalized welcome message when starting chat
+
+- **Decision:** User selected a personalized welcome message from Natasha when Start Chat is tapped, rather than opening to an empty conversation.
+- **Welcome behavior:** Natasha should greet the user with a distinctive, personal, flirtatious message that may convey that she missed him. Vary the wording so it feels spontaneous rather than repetitive.
+- **Tone:** The user requested a pornographic welcome. Implement the strongest sensual, sexually suggestive, and provocative wording permitted by applicable product rules, without graphic sexual description.
+- **Flow:** Show the welcome as the opening message in a clean, full-screen conversation. Keep the chat immediately usable; do not add an extra selection screen.
+- **Status:** Approved direction; welcome-message generation, variation, and chat-entry implementation pending.
+
+- **2026-11-27:** Question 48 — Start Chat behavior: user chose a personalized, provocative welcome from Natasha, potentially saying she missed him, shown as the opening message in the conversation.
+
 ### Ongoing change-record format
 
 For each new meaningful item, add a dated entry with:
