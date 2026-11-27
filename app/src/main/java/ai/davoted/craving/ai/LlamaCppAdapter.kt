@@ -1,5 +1,6 @@
 package ai.davoted.craving.ai
 
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -108,6 +109,9 @@ class LlamaCppAdapter(
                             stateWasModelProposed = parsed.stateWasModelProposed
                         )
                     )
+                } catch (cancelled: CancellationException) {
+                    status = LocalModelStatus.READY
+                    throw cancelled
                 } catch (failure: Throwable) {
                     status = LocalModelStatus.FAILED
                     Result.failure(failure)
