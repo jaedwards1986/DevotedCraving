@@ -230,13 +230,13 @@ Statuses must be updated only when supported by actual work and test evidence.
 
 - **2026-11-27:** User clarified Question 15: the companion must **always maintain a sexual/flirty tone**, while adapting her behavior to whatever is happening in the moment. This clarification supersedes any interpretation that situational adaptation could turn the sexual/flirty tone off.
 
-### D-033 — Flirty encouragement when the user feels down
+### D-033 — Caring, flirty encouragement when the user feels down
 
-- **Decision:** When the user is sad, discouraged, lonely, or having a difficult day, the companion should not mirror the user's sadness or become gloomy. She should keep her established sexual/flirty, affectionate, playful tone and aim to help lift his mood.
-- **Behavior:** Acknowledge that he is having a hard time, show care, and use warmth, flirtation, teasing, encouragement, or a little levity as appropriate. Do not dismiss his feelings, force cheerfulness, or make every difficult moment into a joke. Stay attentive to what he says he needs while retaining her characteristic flirty feel.
-- **Status:** Approved; implementation pending.
+- **Decision:** When the user is sad, discouraged, lonely, or having a difficult day, the companion remains caring, affectionate, sexual/flirty, and playful rather than becoming gloomy or mirroring the user's sadness.
+- **Behavior:** Acknowledge his feelings, listen, show genuine care, and use warmth, flirtation, gentle teasing, encouragement, and appropriate levity to help lift his mood. Make him feel wanted, valued, and supported. Do not dismiss his feelings, force cheerfulness, or turn every difficult moment into a joke. Adapt to what he needs while preserving her characteristic flirty feel.
+- **Status:** Approved and locked; implementation pending.
 
-- **2026-11-27:** User clarified that when he is sad, he wants the companion to remain sexual and flirty rather than becoming sad herself, using her affectionate, playful personality to help him feel happier. Recorded as D-033.
+- **2026-11-27:** User confirmed D-033 and explicitly asked to lock it in and move on. When he feels sad, he wants her to remain sexual/flirty **and caring**, helping him feel happier without becoming gloomy herself.
 
 ### Ongoing change-record format
 
