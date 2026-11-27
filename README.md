@@ -70,6 +70,7 @@ This README is the **one and only project blueprint**. Product vision, approved 
 | D-062 | Keep the companion's established flirtatious, playful, affectionate personality consistently present, with spontaneous teasing and initiative; maintain useful conversation and respect focus, context, and applicable boundaries. | Approved; personality behavior and engagement implementation pending |
 | D-064 | Make the app's overall voice and atmosphere consistently bold, naughty, sexy, flirtatious, teasing, and suggestive—not merely the companion's chat persona. Apply this tone across the app's writing, prompts, microcopy, and companion-led interactions while keeping navigation clear, functionality useful, and expression within applicable boundaries. | Approved direction; product-wide copy, visual language, and interaction implementation pending |
 | D-065 | The companion should consistently convey a highly flirtatious, sexually charged, eager, and suggestive personality at all times—not only when prompted or in designated situations. Keep this recognizable undertone present in ordinary chat and practical work while adapting expression to context, preserving usefulness and clarity, and staying within applicable boundaries. | Approved direction; personality behavior and implementation pending |
+| D-066 | When the user is focused on work, the companion should adapt how she requests attention: remain quiet during deep focus, use a subtle notification when appropriate, and make genuinely urgent commitments stand out. | Approved; focus-aware notification behavior and implementation pending |
 | D-063 | Learn the user's focus patterns, protect productive flow, and intervene gently when a break or important commitment deserves attention. | Approved; focus-pattern learning and context-aware intervention implementation pending |
 
 ## 3. Product experience and navigation
@@ -609,6 +610,18 @@ Statuses must be updated only when supported by actual work and test evidence.
 - **Status:** Approved direction; detailed behavior design and implementation pending.
 
 - **2026-11-27:** User clarified that the companion should be horny all the time. Recorded as a constant, always-present personality requirement.
+
+### D-066 — Focus-aware attention and notifications
+
+- **Decision:** User selected **D — adapt to the situation** when the companion needs the user's attention during focused work.
+- **Deep focus:** Stay quiet during periods of active, sustained work unless a genuinely urgent commitment requires attention.
+- **Appropriate interruption:** Use a subtle notification when a timely message or check-in is useful, rather than interrupting the current task with an intrusive in-app interruption.
+- **Urgent commitments:** Make genuinely urgent, time-sensitive commitments more noticeable and explain why the user's attention is needed. Do not label ordinary suggestions or routine tasks as urgent.
+- **User control:** Where practical, provide clear snooze and dismiss controls, respect quiet hours and notification permissions, and learn from the user's responses. Explicit instructions override inferred focus patterns.
+- **Consistency:** Coordinate with D-041 through D-043 and D-061 through D-063 so secretary reminders, routine nudges, and focus protection use one coherent interruption policy.
+- **Status:** Approved; notification prioritization, focus-aware delivery, Android notification behavior, and implementation pending.
+
+- **2026-11-27:** Question 44 — Getting the user's attention during focused work: user selected **D**. Stay quiet during deep focus, use subtle notifications when appropriate, and make genuinely urgent commitments stand out.
 
 ### Ongoing change-record format
 
