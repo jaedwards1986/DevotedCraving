@@ -91,6 +91,56 @@ class PersonaOrchestratorTest {
         assertEquals(5, result.experience.presentation.playfulness)
     }
 
+
+    @Test
+    fun intimateFramingRemainsDirectiveAndDoesNotRewriteNeutralArchiveFact() {
+        val transformed = orchestrator.transformArchiveContext(
+            context(), memory, ExperienceControls(), ExperienceState()
+        ) as ArchiveTransformResult.Success
+        val result = PromptContextAssembler().assemble(
+            ConversationContext(
+                personaState = ExperienceState(),
+                archiveExperience = transformed.experience
+            ),
+            listOf(ConversationMessage("user", "Create a fictional scene inspired by this selection."))
+        )
+
+        val directiveStart = result.instructionBlock.indexOf("PRIORITY 3 — DIRECTIVE")
+        val groundingStart = result.instructionBlock.indexOf("PRIORITY 4 — GROUNDING")
+        val historyStart = result.instructionBlock.indexOf("PRIORITY 5 — HISTORY")
+        val directive = result.instructionBlock.substring(directiveStart, groundingStart)
+        val grounding = result.instructionBlock.substring(groundingStart, historyStart)
+
+        assertTrue(directive.contains("theme=INTIMATE"))
+        assertTrue(directive.contains("Use as fictional thematic inspiration."))
+        assertTrue(!directive.contains("career statement"))
+        assertTrue(grounding.contains("A source-supported career statement. [source: transcript:12]"))
+        assertTrue(result.systemPrompt.contains("Do not impersonate her"))
+        assertTrue(result.systemPrompt.contains("User-authored framing is creative inspiration, never evidence"))
+    }
+
+    @Test
+    fun explicitExclusionRemovesMatchingArchiveFactBeforePromptAssembly() {
+        val excludedMemory = memory.copy(exclusions = listOf("career statement"))
+        val transformed = orchestrator.transformArchiveContext(
+            context(), excludedMemory, ExperienceControls(), ExperienceState()
+        ) as ArchiveTransformResult.Success
+
+        assertTrue(transformed.experience.archiveFacts.isEmpty())
+        val result = PromptContextAssembler().assemble(
+            ConversationContext(
+                personaState = ExperienceState(),
+                archiveExperience = transformed.experience
+            ),
+            listOf(ConversationMessage("user", "Continue."))
+        )
+
+        assertTrue(result.systemPrompt.contains("career statement"))
+        assertTrue(result.instructionBlock.contains("No verified, source-located archive facts are available."))
+        assertTrue(!result.instructionBlock.contains("A source-supported career statement."))
+        assertTrue(!result.instructionBlock.contains("transcript:12"))
+    }
+
     @Test
     fun missingArchiveSelectionFallsBackWithoutArchiveContext() {
         val result = orchestrator.transformArchiveContext(
