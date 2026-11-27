@@ -86,7 +86,7 @@ private fun UnBoundAI() {
                 Card(colors = CardDefaults.cardColors(containerColor = Panel), shape = RoundedCornerShape(24.dp)) {
                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         Text("WHAT WOULD YOU LIKE TO DO?", color = Cyan, fontSize = 10.sp, letterSpacing = 1.4.sp, fontWeight = FontWeight.Bold)
-                        toolList.filter { shortcuts.contains(it.name) }.forEach { tool ->
+                        val visibleTools = toolList.filter { tool ->\n                            shortcuts.contains(tool.name) &&\n                                (searchQuery.isBlank() || tool.name.contains(searchQuery, ignoreCase = true) || tool.detail.contains(searchQuery, ignoreCase = true))\n                        }\n                        if (visibleTools.isEmpty()) {\n                            Text("No matching tools. Try another search.", color = Muted, fontSize = 12.sp)\n                        }\n                        visibleTools.forEach { tool ->
                             Row(
                                 Modifier.fillMaxWidth().background(Color(0xFF142B3A), RoundedCornerShape(16.dp)).clickable { selected = tool }.padding(14.dp),
                                 verticalAlignment = Alignment.CenterVertically
