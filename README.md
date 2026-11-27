@@ -64,6 +64,7 @@ This README is the **one and only project blueprint**. Product vision, approved 
 | D-056 | Adapt the Home screen to what matters most right now, keeping other destinations and information easy to find without clutter. | Approved; personalization and implementation pending |
 | D-057 | Support quick capture from Home, a persistent app-wide capture control, and natural conversational capture, all feeding one organized inbox. | Approved; capture UI and integration pending |
 | D-058 | Automatically organize captured thoughts, provide a concise review, and let the user correct categories and approve suggested tasks or reminders. | Approved; review workflow pending |
+| D-059 | Recommend one next task using deadlines, importance, available time, goals, energy, and current focus; let the user override the recommendation. | Approved; prioritization logic pending |
 
 ## 3. Product experience and navigation
 
@@ -521,6 +522,17 @@ Statuses must be updated only when supported by actual work and test evidence.
 - **Status:** Approved; categorization, review interface, correction learning, and task/reminder approval workflow pending.
 
 - **2026-11-27:** Question 39 — Captured-thought review: user selected **D**. Automatically organize items, provide a concise review, and allow corrections and approval of proposed commitments.
+
+### D-059 — Adaptive task prioritization
+
+- **Decision:** User selected **D — combine deadlines, importance, available time, personal goals, energy, and current focus; recommend one best next task while allowing the user to override it.**
+- **Prioritization factors:** Consider due dates and urgency alongside importance, dependencies, estimated effort, available time, the user's current goals, and their stated or voluntarily provided energy and focus.
+- **One next action:** Lead with one practical recommended task or first step rather than an intimidating ranked wall of tasks. Make the reasoning briefly understandable.
+- **Flexible recommendations:** Reassess when deadlines, priorities, available time, or the user's direction changes. Do not treat inferred energy or focus as certain; ask when it materially affects the recommendation.
+- **User authority:** The user can choose another task, change priorities, or ignore the recommendation. Explicit instructions always override automated ranking.
+- **Status:** Approved; prioritization model, task dependencies, and interface implementation pending.
+
+- **2026-11-27:** Question 40 — Competing priorities: user selected **D**. Recommend one next task using urgency, importance, time, goals, energy, and current focus, while preserving user control.
 
 ### Ongoing change-record format
 
