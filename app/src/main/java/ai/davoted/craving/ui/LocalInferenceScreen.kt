@@ -25,6 +25,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -41,8 +42,11 @@ import ai.davoted.craving.ai.ConversationMessage
 import ai.davoted.craving.ai.ExperiencePresentationMapper
 import ai.davoted.craving.ai.LlamaCppAdapter
 import ai.davoted.craving.ai.LocalModelStatus
-import kotlinx.coroutines.Dispatchers
+import ai.davoted.craving.storage.ContinuitySnapshot
+import ai.davoted.craving.storage.LocalContinuityStore
+import ai.davoted.craving.storage.StoredMessage
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileInputStream
@@ -52,16 +56,79 @@ fun LocalInferenceScreen(modifier: Modifier = Modifier) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val adapter = remember { LlamaCppAdapter() }
+    val store = remember { LocalContinuityStore(context) }
     val messages = remember { mutableStateListOf<ConversationMessage>() }
     val presentationMapper = remember { ExperiencePresentationMapper() }
     var status by remember { mutableStateOf(if (adapter.status == LocalModelStatus.UNAVAILABLE) "Native runtime unavailable" else "Choose a GGUF model") }
     var modelName by remember { mutableStateOf("No model loaded") }
+    var modelPath by remember { mutableStateOf<String?>(null) }
     var input by rememberSaveable { mutableStateOf("") }
     var busy by remember { mutableStateOf(false) }
     var lastPresentation by remember { mutableStateOf("No generated response yet") }
 
     DisposableEffect(adapter) {
         onDispose { adapter.close() }
+    }
+
+    LaunchedEffect(store) {
+        busy = true
+        runCatching { store.load() }.onSuccess { snapshot ->
+            messages.addAll(snapshot.messages.map { ConversationMessage(it.role, it.content) })
+            modelPath = snapshot.selectedModelPath
+            modelPath?.let { path ->
+                val modelFile = File(path)
+                if (modelFile.isFile) {
+                    modelName = modelFile.name
+                    status = "Restoring local model…"
+                    adapter.loadModel(path).fold(
+                        onSuccess = { status = "Model ready — local inference enabled" },
+                        onFailure = { status = "Saved model could not be loaded: ${it.message ?: "unknown error"}" }
+                    )
+                } else {
+                    status = "Saved model file is missing. Import it again."
+                }
+            }
+        }.onFailure {
+            status = "Local memory could not be opened: ${it.message ?: "unknown error"}"
+        }
+        busy = false
+    }
+
+    suspend fun persistConversation(selectedModel: String? = modelPath) {
+        store.save(
+            ContinuitySnapshot(
+                messages = messages.map {
+                    StoredMessage(it.role, it.content, System.currentTimeMillis())
+                },
+                selectedModelPath = selectedModel
+            )
+        )
+    }
+
+    fun sendPrompt(promptText: String) {
+        val prompt = promptText.trim()
+        if (prompt.isEmpty() || busy || adapter.status != LocalModelStatus.READY) return
+        input = ""
+        scope.launch {
+            busy = true
+            messages.add(ConversationMessage("user", prompt))
+            runCatching { persistConversation() }.onFailure {
+                status = "Message storage failed: ${it.message ?: "unknown error"}"
+            }
+            adapter.generate(messages.toList()).fold(
+                onSuccess = { turn ->
+                    messages.add(ConversationMessage("assistant", turn.assistantText))
+                    val presentation = presentationMapper.map(turn.experienceState)
+                    lastPresentation = "Validated state: ${turn.experienceState.mood} · intensity ${turn.experienceState.intensity} · ${turn.experienceState.phase} | Visual: ${presentation.visual} · Audio cue: ${presentation.audio} · Haptic cue: ${presentation.haptics}"
+                    status = "Model ready — local inference enabled"
+                    runCatching { persistConversation() }.onFailure {
+                        status = "Reply generated, but memory save failed: ${it.message ?: "unknown error"}"
+                    }
+                },
+                onFailure = { status = "Generation failed: ${it.message ?: "unknown error"}" }
+            )
+            busy = false
+        }
     }
 
     val modelPicker = rememberLauncherForActivityResult(
@@ -76,9 +143,14 @@ fun LocalInferenceScreen(modifier: Modifier = Modifier) {
                     onSuccess = { file ->
                         modelName = file.name
                         status = "Loading GGUF on device…"
-                        val loaded = adapter.loadModel(file.absolutePath)
-                        loaded.fold(
-                            onSuccess = { status = "Model ready — local inference enabled" },
+                        adapter.loadModel(file.absolutePath).fold(
+                            onSuccess = {
+                                modelPath = file.absolutePath
+                                status = "Model ready — local inference enabled"
+                                runCatching { persistConversation(file.absolutePath) }.onFailure {
+                                    status = "Model loaded, but model selection could not be saved."
+                                }
+                            },
                             onFailure = { status = "Model load failed: ${it.message ?: "unknown error"}" }
                         )
                     },
@@ -93,8 +165,8 @@ fun LocalInferenceScreen(modifier: Modifier = Modifier) {
         modifier = modifier.fillMaxSize().padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Text("LOCAL EXPERIENCE", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
-        Text("On-device model", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.SemiBold)
+        Text("DAVOTEDCRAVING", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+        Text("The private experience", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.SemiBold)
         Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
             Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Text(modelName, style = MaterialTheme.typography.titleMedium)
@@ -113,7 +185,7 @@ fun LocalInferenceScreen(modifier: Modifier = Modifier) {
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             if (messages.isEmpty()) {
-                item { Text("Import a compatible GGUF model to begin local generation. No remote inference fallback is used.", color = MaterialTheme.colorScheme.onSurfaceVariant) }
+                item { Text("Import a compatible GGUF model to begin local generation. Conversations are encrypted on this device. No remote inference fallback is used.", color = MaterialTheme.colorScheme.onSurfaceVariant) }
             }
             items(messages) { message ->
                 Card(colors = CardDefaults.cardColors(containerColor = if (message.role == "assistant") MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.surfaceVariant)) {
@@ -134,50 +206,11 @@ fun LocalInferenceScreen(modifier: Modifier = Modifier) {
             enabled = !busy && adapter.status == LocalModelStatus.READY,
             placeholder = { Text("Write a message…") },
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
-            keyboardActions = KeyboardActions(onSend = {
-                if (input.isNotBlank() && !busy) {
-                    val prompt = input.trim()
-                    input = ""
-                    scope.launch {
-                        busy = true
-                        messages.add(ConversationMessage("user", prompt))
-                        val result = adapter.generate(messages.toList())
-                        result.fold(
-                            onSuccess = { turn ->
-                                messages.add(ConversationMessage("assistant", turn.assistantText))
-                                val presentation = presentationMapper.map(turn.experienceState)
-                                lastPresentation = "Validated state: ${turn.experienceState.mood} · intensity ${turn.experienceState.intensity} · ${turn.experienceState.phase} | Visual: ${presentation.visual} · Audio cue: ${presentation.audio} · Haptic cue: ${presentation.haptics}"
-                                status = "Model ready — local inference enabled"
-                            },
-                            onFailure = { status = "Generation failed: ${it.message ?: "unknown error"}" }
-                        )
-                        busy = false
-                    }
-                }
-            })
+            keyboardActions = KeyboardActions(onSend = { sendPrompt(input) })
         )
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
             Button(
-                onClick = {
-                    val prompt = input.trim()
-                    if (prompt.isNotEmpty() && !busy && adapter.status == LocalModelStatus.READY) {
-                        input = ""
-                        scope.launch {
-                            busy = true
-                            messages.add(ConversationMessage("user", prompt))
-                            adapter.generate(messages.toList()).fold(
-                                onSuccess = { turn ->
-                                    messages.add(ConversationMessage("assistant", turn.assistantText))
-                                    val presentation = presentationMapper.map(turn.experienceState)
-                                    lastPresentation = "Validated state: ${turn.experienceState.mood} · intensity ${turn.experienceState.intensity} · ${turn.experienceState.phase} | Visual: ${presentation.visual} · Audio cue: ${presentation.audio} · Haptic cue: ${presentation.haptics}"
-                                    status = "Model ready — local inference enabled"
-                                },
-                                onFailure = { status = "Generation failed: ${it.message ?: "unknown error"}" }
-                            )
-                            busy = false
-                        }
-                    }
-                },
+                onClick = { sendPrompt(input) },
                 enabled = !busy && adapter.status == LocalModelStatus.READY && input.isNotBlank()
             ) { Text(if (busy) "Working…" else "Generate locally") }
         }
