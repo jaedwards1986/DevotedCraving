@@ -9,7 +9,10 @@ import ai.davoted.craving.ai.LocalModelStatus
 import ai.davoted.craving.storage.ContinuitySnapshot
 import ai.davoted.craving.storage.LocalContinuityStore
 import ai.davoted.craving.storage.StoredMessage
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -40,6 +43,7 @@ class ConversationService(
 ) : AutoCloseable {
     private val appContext = context.applicationContext
     private val mapper = ExperiencePresentationMapper()
+    private val operationMutex = Mutex()
     private val _state = MutableStateFlow(
         ConversationUiState(
             modelStatus = adapter.status,
@@ -50,7 +54,7 @@ class ConversationService(
     )
     val state: StateFlow<ConversationUiState> = _state.asStateFlow()
 
-    suspend fun initialize() {
+    suspend fun initialize() = operationMutex.withLock {
         publish(_state.value.copy(isBusy = true, statusMessage = "Restoring local conversation…"))
         try {
             val snapshot = store.load()
@@ -89,6 +93,8 @@ class ConversationService(
             } else {
                 publish(_state.value.copy(modelStatus = adapter.status))
             }
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (failure: Exception) {
             publish(_state.value.copy(statusMessage = "Local memory could not be opened: ${failure.message ?: "unknown error"}"))
         } finally {
@@ -96,7 +102,7 @@ class ConversationService(
         }
     }
 
-    suspend fun importAndLoad(uri: Uri) {
+    suspend fun importAndLoad(uri: Uri) = operationMutex.withLock {
         publish(_state.value.copy(isBusy = true, statusMessage = "Importing model into private app storage…"))
         try {
             val file = importGguf(uri)
@@ -113,12 +119,15 @@ class ConversationService(
                     persist(file.absolutePath)
                 },
                 onFailure = {
+                    file.delete()
                     publish(_state.value.copy(
                         modelStatus = adapter.status,
                         statusMessage = "Model load failed: ${it.message ?: "unknown error"}"
                     ))
                 }
             )
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (failure: Exception) {
             publish(_state.value.copy(statusMessage = "Model import failed: ${failure.message ?: "unknown error"}"))
         } finally {
@@ -126,7 +135,7 @@ class ConversationService(
         }
     }
 
-    suspend fun sendPrompt(promptText: String) {
+    suspend fun sendPrompt(promptText: String) = operationMutex.withLock {
         val prompt = promptText.trim()
         if (prompt.isEmpty() || !_state.value.canGenerate) return
         val updatedMessages = _state.value.messages + ConversationMessage("user", prompt)
@@ -158,6 +167,8 @@ class ConversationService(
                     ))
                 }
             )
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (failure: Exception) {
             publish(_state.value.copy(statusMessage = "Conversation failed: ${failure.message ?: "unknown error"}"))
         } finally {
