@@ -43,7 +43,7 @@ fun PinGate(onUnlocked: () -> Unit) {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = "DAVOTEDCRAVING",
+            text = "UNBOUNDAI",
             style = MaterialTheme.typography.labelLarge,
             color = MaterialTheme.colorScheme.primary
         )
@@ -58,7 +58,7 @@ fun PinGate(onUnlocked: () -> Unit) {
         )
         Spacer(Modifier.height(12.dp))
         Text(
-            text = if (hasPin) "Your private sanctuary is locked." else "Set a PIN to protect access to the app.",
+            text = if (hasPin) "Your private workspace is locked." else "Set a PIN to protect access to the app.",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
