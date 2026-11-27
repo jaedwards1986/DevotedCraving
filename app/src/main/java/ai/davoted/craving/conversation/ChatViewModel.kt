@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import ai.davoted.craving.ai.ArchiveContext
 
 class ChatViewModel(
     private val service: ConversationService
@@ -20,6 +21,10 @@ class ChatViewModel(
     fun importModel(uri: Uri) {
         viewModelScope.launch { service.importAndLoad(uri) }
     }
+
+    fun setMode(mode: ConversationMode) = service.setMode(mode)
+
+    fun selectArchiveContext(context: ArchiveContext?) = service.selectArchiveContext(context)
 
     fun sendPrompt(prompt: String) {
         viewModelScope.launch { service.sendPrompt(prompt) }
