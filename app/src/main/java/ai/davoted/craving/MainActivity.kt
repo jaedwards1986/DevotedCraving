@@ -24,7 +24,6 @@ class MainActivity : ComponentActivity() {
             WindowManager.LayoutParams.FLAG_SECURE,
             WindowManager.LayoutParams.FLAG_SECURE
         )
-        isUnlocked = savedInstanceState?.getBoolean(STATE_UNLOCKED) ?: false
 
         setContent {
             CravingTheme {
@@ -42,17 +41,8 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    override fun onSaveInstanceState(outState: Bundle) {
-        outState.putBoolean(STATE_UNLOCKED, isUnlocked)
-        super.onSaveInstanceState(outState)
-    }
-
     override fun onStop() {
         super.onStop()
         if (!isChangingConfigurations) isUnlocked = false
-    }
-
-    private companion object {
-        const val STATE_UNLOCKED = "davotedcraving.unlocked"
     }
 }
