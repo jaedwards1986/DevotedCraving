@@ -22,7 +22,9 @@ class ChatViewModel(
         viewModelScope.launch { service.importAndLoad(uri) }
     }
 
-    fun setMode(mode: ConversationMode) = service.setMode(mode)
+    fun setMode(mode: ConversationMode) {
+        viewModelScope.launch { service.setMode(mode) }
+    }
 
     fun selectArchiveContext(context: ArchiveContext?) = service.selectArchiveContext(context)
 
