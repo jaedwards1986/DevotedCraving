@@ -65,6 +65,7 @@ This README is the **one and only project blueprint**. Product vision, approved 
 | D-057 | Support quick capture from Home, a persistent app-wide capture control, and natural conversational capture, all feeding one organized inbox. | Approved; capture UI and integration pending |
 | D-058 | Automatically organize captured thoughts, provide a concise review, and let the user correct categories and approve suggested tasks or reminders. | Approved; review workflow pending |
 | D-059 | Recommend one next task using deadlines, importance, available time, goals, energy, and current focus; let the user override the recommendation. | Approved; prioritization logic pending |
+| D-060 | Recognize important dates and events naturally in conversation, learn which dates matter to the user, and ask for confirmation only when needed before saving or scheduling them. | Approved; date recognition and calendar/reminder integration pending |
 
 ## 3. Product experience and navigation
 
@@ -533,6 +534,18 @@ Statuses must be updated only when supported by actual work and test evidence.
 - **Status:** Approved; prioritization model, task dependencies, and interface implementation pending.
 
 - **2026-11-27:** Question 40 — Competing priorities: user selected **D**. Recommend one next task using urgency, importance, time, goals, energy, and current focus, while preserving user control.
+
+### D-060 — Conversational recognition of important dates
+
+- **Decision:** User selected **D — learn what matters to the user, recognize important dates naturally in conversation, and interrupt only when confirmation is genuinely needed.**
+- **Natural recognition:** Notice dates and date-related commitments the user mentions in ordinary conversation, including birthdays, appointments, deadlines, anniversaries, and other events they identify as important. Do not require the user to maintain a calendar or fill out forms.
+- **Learn relevance:** Use explicit statements and user corrections to learn which dates and events matter. Do not assume every date mentioned is an event to save; distinguish examples, hypothetical dates, and passing references from real commitments.
+- **Confirmation:** Ask briefly before creating or changing a calendar entry or reminder when the meaning, date, time, or intent is uncertain. Avoid unnecessary interruptions when the user has already clearly authorized the action under their settings.
+- **Secretary-led organization:** Maintain the underlying date and reminder organization for the user, present only useful timely summaries, and make review or correction straightforward. The user should not have to build or maintain calendars, lists, or plans manually.
+- **Continuity and control:** Preserve confirmed dates across sessions and model changes. Respect edits, cancellations, notification preferences, quiet hours, and explicit instructions.
+- **Status:** Approved; date recognition, calendar data model, confirmation rules, and reminder integration pending.
+
+- **2026-11-27:** Question 41 — Important dates: user selected **D**. Learn what matters, recognize dates naturally in conversation, and request confirmation only when genuinely needed.
 
 ### Ongoing change-record format
 
