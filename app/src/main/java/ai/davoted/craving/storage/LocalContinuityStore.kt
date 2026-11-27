@@ -31,7 +31,8 @@ data class ContinuitySnapshot(
     val exclusions: List<String> = emptyList(),
     val favoriteScenarioIds: List<String> = emptyList(),
     val favoriteArchiveIds: List<String> = emptyList(),
-    val selectedModelPath: String? = null
+    val selectedModelPath: String? = null,
+    val conversationMode: String = "FICTIONAL"
 )
 
 /**
