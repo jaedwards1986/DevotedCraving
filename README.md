@@ -51,6 +51,7 @@ This README is the **one and only project blueprint**. Product vision, approved 
 
 | D-044 | Keep the interface extremely uncluttered, highly structured, predictable, and easy to navigate for a user with Asperger's/autism, ADHD, and dyslexia. Do not change the already-approved conversational personality or style. Keep the experience fresh and engaging through useful, varied, proactive activities and discoveries. | Approved design requirement; engagement approach to be designed |
 | D-045 | Keep UnBoundAI consistently engaging by learning what interests the user and adapting a mix of project support, fresh ideas, discoveries, activities, and playful interactions over time. | Approved; engagement system design and implementation pending |
+| D-046 | Introduce discoveries through a dedicated Discover area, relevant conversational suggestions, and a small personalized daily selection on Home, coordinated to avoid clutter and repetition. | Approved; interface and delivery behavior pending |
 
 ## 3. Product experience and navigation
 
@@ -362,6 +363,17 @@ Statuses must be updated only when supported by actual work and test evidence.
 - **Status:** Approved; engagement strategy, personalization signals, discovery surfaces, and implementation remain to be designed.
 
 - **2026-11-27:** Question 26 — Sustained engagement: user selected **D**. UnBoundAI should combine project involvement, fresh ideas, discoveries, activities, and playful interactions, while learning and adapting to what keeps the user interested.
+
+### D-046 — Three coordinated discovery channels
+
+- **Decision:** User selected **D — use all three discovery approaches together**, with personalization and a deliberately uncluttered interface.
+- **Discover area:** Provide a dedicated place to browse new ideas, tools, free AI models, creative activities, and other relevant discoveries on demand.
+- **Conversation:** The companion may bring relevant discoveries and suggestions naturally into chats when they fit the discussion, without derailing the user's current goal.
+- **Home screen:** Show a small, curated daily selection of worthwhile items. Keep it compact, easy to scan, and dismissible; do not turn Home into a crowded feed.
+- **Coordination:** Personalize all three channels using the user's interests and feedback. Avoid showing the same item repeatedly across Discover, chat, and Home. Let the user control notifications and how much proactive content appears.
+- **Status:** Approved; detailed UX, discovery curation, personalization, and implementation pending.
+
+- **2026-11-27:** Question 27 — Discovery delivery: user selected **D**. Use a dedicated Discover area, relevant suggestions within conversations, and a small personalized daily selection on Home, coordinated to avoid clutter and repetition.
 
 ### Ongoing change-record format
 
