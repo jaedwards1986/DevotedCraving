@@ -201,6 +201,9 @@ class PromptContextAssembler {
                 context.relationshipContext.forEach { add(JsonPrimitive(it)) }
             })
             put("archiveItemId", archive?.archiveItemId?.let(::JsonPrimitive) ?: JsonNull)
+            put("archiveTitle", archive?.archiveTitle?.let(::JsonPrimitive) ?: JsonNull)
+            put("archiveCategory", archive?.archiveCategory?.name?.let(::JsonPrimitive) ?: JsonNull)
+            put("authenticityStatus", archive?.authenticityStatus?.name?.let(::JsonPrimitive) ?: JsonNull)
             put("isArchiveContextAvailable", JsonPrimitive(archive?.isArchiveContextAvailable ?: false))
             put("framingVetoApplied", JsonPrimitive(archive?.framingVetoApplied ?: false))
             put("userFraming", archive?.userFraming?.let { framing ->
