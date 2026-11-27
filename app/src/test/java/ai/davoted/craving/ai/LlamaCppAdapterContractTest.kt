@@ -104,7 +104,15 @@ class LlamaCppAdapterContractTest {
     @Test
     fun forwardsVerifiedArchiveFactsAndProvenanceIntoNativePrompt() = runBlocking {
         val runtime = RecordingRuntime()
-        val adapter = LlamaCppAdapter(runtime = runtime)
+        val adapter = LlamaCppAdapter(
+            runtime = runtime,
+            configuration = LocalModelConfiguration(
+                contextSize = 2048,
+                threadCount = 2,
+                maxTokens = 37,
+                temperature = 0.25f
+            )
+        )
         val archive = ArchiveContext(
             archiveItemId = "archive-test-1",
             title = "Public interview",
