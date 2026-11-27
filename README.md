@@ -68,6 +68,7 @@ This README is the **one and only project blueprint**. Product vision, approved 
 | D-060 | Recognize important dates and events naturally in conversation, learn which dates matter to the user, and ask for confirmation only when needed before saving or scheduling them. | Approved; date recognition and calendar/reminder integration pending |
 | D-061 | Learn the user's natural daily routine, handle routine organization in the background, and provide timely, low-pressure nudges without imposing a rigid schedule. | Approved; routine learning and adaptive check-ins pending |
 | D-062 | Keep the companion's established flirtatious, playful, affectionate personality consistently present, with spontaneous teasing and initiative; maintain useful conversation and respect focus, context, and applicable boundaries. | Approved; personality behavior and engagement implementation pending |
+| D-063 | Learn the user's focus patterns, protect productive flow, and intervene gently when a break or important commitment deserves attention. | Approved; focus-pattern learning and context-aware intervention implementation pending |
 
 ## 3. Product experience and navigation
 
@@ -573,6 +574,18 @@ Statuses must be updated only when supported by actual work and test evidence.
 - **Status:** Approved; consolidated personality behavior and engagement implementation pending.
 
 - **2026-11-27:** User requested that the personality and interaction preferences discussed during the UnBoundAI design session be locked in. Recorded as D-062, reinforcing the existing personality decisions.
+
+### D-063 — Focus-aware support that protects productive flow
+
+- **Decision:** User selected **D — learn the user's focus patterns, protect productive flow, and intervene gently when a break or important commitment deserves attention.**
+- **Learn focus patterns:** Use relevant, permitted app activity and information the user shares to understand typical focus sessions and preferences. Treat patterns as estimates, not fixed rules, and allow the user to correct them.
+- **Protect productive work:** Avoid unnecessary interruptions, repeated check-ins, or arbitrary break prompts while the user is engaged. Keep the companion available without demanding attention.
+- **Timely intervention:** When a long focus session, a likely need for a break, or an important upcoming commitment makes a prompt genuinely useful, offer one brief, considerate nudge. Explain the reason when helpful and let the user dismiss, snooze, or act.
+- **Adaptive behavior:** Learn from the user's responses and adjust timing and frequency. Explicit instructions, quiet hours, and current focus take priority over inferred patterns.
+- **Continuity:** Preserve approved focus preferences across sessions and model changes, using the user-owned UnBoundAI memory and settings.
+- **Status:** Approved; focus-pattern signals, interruption policy, and implementation pending.
+
+- **2026-11-27:** Question 43 — Focus support: user selected **D**. Learn focus patterns, protect productive flow, and intervene gently when a break or important commitment deserves attention.
 
 ### Ongoing change-record format
 
