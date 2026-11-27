@@ -28,7 +28,7 @@ This README is the **one and only project blueprint**. Product vision, approved 
 | D-004 | No required paid API keys, subscriptions, or paid accounts. | Approved |
 | D-005 | Combine ChatGPT-like simplicity with professional workstation capabilities. | Approved |
 | D-006 | Initial visual direction was dark charcoal with deep violet and electric cyan accents. | Superseded by D-016 |
-| D-007 | Primary navigation: Home, AI Chat, App Builder, Design Studio, Projects. | Approved |
+| D-007 | Primary navigation: **The Pleasure Palace**, **The Naughty Secretary**, **DesireForge**, **KinkyCanvas**, **SinSource**, and **PleasurePod**. | Approved; replaces the earlier navigation labels |
 | D-008 | Code Studio placement (inside App Builder or a separate workspace). | Open |
 | D-009 | Design the home dashboard first, before implementation. | Approved |
 | D-011 | Home dashboard layout: logo at top, central “What do you want to create?” prompt, quick-access tiles for AI Chat, App Builder, Design Studio, and Code Studio, recent projects below, and bottom navigation. | Approved |
@@ -88,14 +88,24 @@ UnBoundAI must also remain engaging over time. The experience should not become 
 
 The overall experience should feel like a personal AI companion at the center of a capable creative command center. Chat, app building, design, coding, and project work are connected capabilities of one intelligent system, not unrelated apps. It must be as minimalistic and structured as possible, with low visual clutter and low cognitive load. Keep advanced tools out of the way until needed through progressive disclosure. Simplification must not remove pictures or visual content: images and visual assets must remain preserved and easy to find in clearly organized views.
 
-Primary navigation:
-1. Home
-2. AI Chat
-3. App Builder
-4. Design Studio
-5. Projects
+## Primary Navigation — UnBoundAI's Pornographic Identity
 
-Code Studio is a planned capability. Whether it is a separate destination or part of App Builder remains undecided.
+UnBoundAI will have six primary destinations, all contributing to one bold, provocative, unapologetically pornographic adult experience.
+
+1. **The Pleasure Palace** — The decadent home of UnBoundAI, where Natasha's adult world, personal assistance, and creative experiences come together.
+2. **The Naughty Secretary** — Natasha's horny, filthy-minded, erotic personal space for provocative conversation, dirty humor, seductive teasing, adult banter, memory, and personal assistance.
+3. **DesireForge** — The adult-themed application factory for dreaming up, designing, building, and developing software.
+4. **KinkyCanvas** — The erotic creative studio for designing interfaces, graphics, provocative visual concepts, and artwork.
+5. **SinSource** — The dirty-minded programming laboratory for writing, reviewing, debugging, and developing code.
+6. **PleasurePod** — The private pleasure vault for organizing fantasies, creative projects, applications, designs, and ongoing creations.
+
+### Pornographic Branding Principle
+
+Pornographic adult identity is a defining feature of UnBoundAI. It must be unmistakable throughout the application's names, presentation, atmosphere, and personality.
+
+The six destinations belong to one unified product built around Natasha and her permanently horny, naughty, erotic personality. The adult identity must carry through every workspace, including technical and practical tasks, without turning Natasha into a generic assistant.
+
+Each destination must deliver its actual function while preserving the provocative identity of UnBoundAI.
 
 ### Home dashboard — approved starting design
 
