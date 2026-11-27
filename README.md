@@ -34,6 +34,7 @@ This README is the **one and only project blueprint**. Product vision, approved 
 | D-011 | Home dashboard layout: logo at top, central “What do you want to create?” prompt, quick-access tiles for AI Chat, App Builder, Design Studio, and Code Studio, recent projects below, and bottom navigation. | Approved |
 | D-012 | On launch, show a welcome screen with the UnBoundAI logo and a choice of what to do, rather than opening directly to the dashboard or chat. | Approved |
 | D-013 | Welcome screen combines four main actions (Start Chat, Build an App, Design Something, Write Code) with customizable shortcuts users can choose and rearrange. | Approved |
+| D-014 | Conversational personality direction: seductive, sensual, flirty, sexy, and playfully provocative. Keep technical and research work clear and task-focused; allow users to adjust the personality. | Approved direction; controls to be designed |
 | D-010 | Keep all project documentation in this single GitHub document. | Approved |
 
 ## 3. Product experience and navigation
@@ -76,7 +77,11 @@ This is the approved starting design, not a restriction against later refinement
 
 These are product goals, not claims that the capabilities are already implemented.
 
-## 5. Technical direction
+## 5. Personality and interaction style
+
+The preferred conversational personality direction is **seductive, sensual, flirty, sexy, and playfully provocative**. This is a tone preference for suitable conversational interactions, not a requirement to make every response sexual. Coding, app building, research, troubleshooting, and other task-focused work should remain clear and useful while retaining the chosen voice where appropriate. Personality controls and intensity settings remain to be designed.
+
+## 6. Technical direction
 
 - Platform: Android.
 - UI: Kotlin and Jetpack Compose.
@@ -88,7 +93,7 @@ These are product goals, not claims that the capabilities are already implemente
 
 Technical choices may be refined as implementation begins. Record approved changes in the decision history below.
 
-## 6. Roadmap and status
+## 7. Roadmap and status
 
 | Stage | Work | Status |
 |---|---|---|
@@ -102,7 +107,7 @@ Technical choices may be refined as implementation begins. Record approved chang
 
 Statuses must be updated only when supported by actual work and test evidence.
 
-## 7. Decision history and work notes
+## 8. Decision history and work notes
 
 - **2026-11-27:** Project name confirmed as UnBoundAI.
 - **2026-11-27:** Product defined as a general-purpose AI assistant and creative development workspace, not an adult gallery.
@@ -113,6 +118,7 @@ Statuses must be updated only when supported by actual work and test evidence.
 - **2026-11-27:** Approved the home dashboard starting layout: top logo, central creation prompt, four quick-access tiles, recent projects, and bottom navigation.
 - **2026-11-27:** Question 2 — App launch behavior: selected **C, Welcome Screen**. Show the UnBoundAI logo and a choice of what to do.
 - **2026-11-27:** Question 3 — Welcome screen content: selected **E**, combining four primary actions (Start Chat, Build an App, Design Something, Write Code) with user-customizable shortcuts.
+- **2026-11-27:** Question 4 — Preferred conversational personality: seductive, sensual, flirty, sexy, and playfully provocative. Keep technical and research tasks useful and focused; personality controls remain to be designed.
 - **2026-11-27:** User requested a single GitHub document as the durable project blueprint and decision record.
 
 ### Ongoing change-record format
@@ -126,7 +132,7 @@ For each new meaningful item, add a dated entry with:
 
 When a decision changes, retain the old entry as Superseded and record the new decision. Never silently rewrite project history.
 
-## 8. Working instruction
+## 9. Working instruction
 
 Before continuing UnBoundAI work after a break, read this entire document. Treat approved decisions as the current requirements, open items as undecided, and roadmap statuses as claims that require evidence. Keep all future project documentation in this README so the user can simply say:
 
