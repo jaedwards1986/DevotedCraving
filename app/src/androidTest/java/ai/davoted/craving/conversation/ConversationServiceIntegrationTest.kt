@@ -1,197 +1,155 @@
 package ai.davoted.craving.conversation
 
-import ai.davoted.craving.ai.ArchiveAccessLevel
-import ai.davoted.craving.ai.ArchiveAuthenticityStatus
-import ai.davoted.craving.ai.ArchiveCategory
-import ai.davoted.craving.ai.ArchiveContext
-import ai.davoted.craving.ai.ArchiveFactClaim
-import ai.davoted.craving.ai.ArchiveFactualContext
-import ai.davoted.craving.ai.ArchiveSource
-import ai.davoted.craving.ai.ArchiveTheme
-import ai.davoted.craving.ai.ConversationMessage
-import ai.davoted.craving.ai.ExperienceMood
-import ai.davoted.craving.ai.ExperiencePacing
-import ai.davoted.craving.ai.LlamaCppAdapter
-import ai.davoted.craving.ai.LlamaCppRuntime
-import ai.davoted.craving.ai.LocalModelStatus
-import ai.davoted.craving.ai.LocalModelConfiguration
-import ai.davoted.craving.ai.ScenarioPhase
-import ai.davoted.craving.ai.UserArchiveFraming
-import ai.davoted.craving.storage.ContinuitySnapshot
+import ai.davoted.craving.ai.*
 import ai.davoted.craving.storage.LocalContinuityStore
-import android.content.Context
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import java.io.File
 import kotlinx.coroutines.runBlocking
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
+import org.junit.After
+import org.junit.Assert.*
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 
 /**
- * Exercises the real ConversationService -> PersonaOrchestrator -> LlamaCppAdapter ->
- * PromptContextAssembler path while replacing only the native runtime boundary.
- *
- * The encrypted continuity store and Android Keystore are real. No network or GGUF is needed.
+ * Exercises the real ConversationService, encrypted continuity store, PersonaOrchestrator,
+ * PromptContextAssembler and LlamaCppAdapter. Only the native runtime boundary is faked.
+ * This validates application routing; it is not a substitute for a real-GGUF JNI smoke test.
  */
 @RunWith(AndroidJUnit4::class)
 class ConversationServiceIntegrationTest {
+    private val context get() = InstrumentationRegistry.getInstrumentation().targetContext
+    private val continuityDirectory get() = File(context.filesDir, "continuity")
+
+    @Before fun clearPriorContinuity() { continuityDirectory.deleteRecursively() }
+    @After fun removeTestContinuity() { continuityDirectory.deleteRecursively() }
 
     @Test
-    fun factualModePassesVerifiedArchiveAndRestoredStateThroughFullGenerationCycle() = runBlocking {
-        val context = targetContext()
-        val runtime = RecordingRuntime()
+    fun factualModeRoutesVerifiedArchiveAndRestoresExperienceState() = runBlocking {
+        val runtime = DeterministicRuntime()
+        val adapter = testAdapter(runtime)
+        assertTrue(adapter.loadModel("deterministic-test.gguf").isSuccess)
         val store = LocalContinuityStore(context)
-        val model = prepareSession(context, store)
-        val service = createService(context, store, runtime)
-
+        val service = ConversationService(context, adapter, store)
         try {
             service.initialize()
-            assertEquals(LocalModelStatus.READY, service.state.value.modelStatus)
-
-            service.setMode(ConversationMode.FACTUAL)
             service.selectArchiveContext(verifiedArchive())
+            service.setMode(ConversationMode.FACTUAL)
             service.sendPrompt("Summarize the selected public interview.")
 
-            val prompt = runtime.lastPrompt
-            assertTrue("The restored experience state must reach the final prompt.", prompt.contains("mood=TENDER; intensity=2; pacing=SLOW; phase=BUILD"))
-            assertTrue("The verified archive claim must reach the final prompt.", prompt.contains("A source-supported public career statement. [source: transcript:12]"))
-            assertTrue("The archive provenance URL must reach the final prompt.", prompt.contains("https://example.org/interview"))
-            assertTrue(service.state.value.messages.any { it.role == "assistant" && it.content == GENERATED_TEXT })
+            val prompt = requireNotNull(runtime.lastPrompt)
+            assertTrue(prompt.contains("Selected archive item: title=Public interview"))
+            assertTrue(prompt.contains("A verified public career fact. [source: transcript:12]"))
+            assertTrue(prompt.contains("url=https://example.org/interview"))
+            assertEquals(ConversationMode.FACTUAL, service.state.value.mode)
+            assertEquals("Deterministic integration response.", service.state.value.messages.last().content)
 
-            val persisted = store.load()
-            assertEquals("FACTUAL", persisted.conversationMode)
-            assertEquals("PLAYFUL", persisted.experienceMood)
-            assertEquals(3, persisted.experienceIntensity)
-            assertEquals("BRISK", persisted.experiencePacing)
-            assertEquals("TURNING_POINT", persisted.experiencePhase)
+            val snapshot = store.load()
+            assertEquals("FACTUAL", snapshot.conversationMode)
+            assertEquals("PLAYFUL", snapshot.experienceMood)
+            assertEquals(1, snapshot.experienceIntensity)
+            assertEquals("BRISK", snapshot.experiencePacing)
+            assertEquals("BUILD", snapshot.experiencePhase)
+            assertEquals("Deterministic integration response.", snapshot.messages.last().content)
         } finally {
             service.close()
-            model.delete()
+        }
+
+        val restoredAdapter = testAdapter(DeterministicRuntime())
+        val restoredService = ConversationService(context, restoredAdapter, store)
+        try {
+            restoredService.initialize()
+            assertEquals(ConversationMode.FACTUAL, restoredService.state.value.mode)
+            assertEquals(
+                ExperienceState(ExperienceMood.PLAYFUL, 1, ExperiencePacing.BRISK, ScenarioPhase.BUILD),
+                restoredAdapter.experienceState
+            )
+        } finally {
+            restoredService.close()
         }
     }
 
     @Test
-    fun fictionalModeExcludesSelectedArchiveFactsButStillCompletesGeneration() = runBlocking {
-        val context = targetContext()
-        val runtime = RecordingRuntime()
+    fun fictionalModeExcludesSelectedArchiveFromFinalPrompt() = runBlocking {
+        val runtime = DeterministicRuntime()
+        val adapter = testAdapter(runtime)
+        assertTrue(adapter.loadModel("deterministic-test.gguf").isSuccess)
         val store = LocalContinuityStore(context)
-        val model = prepareSession(context, store)
-        val service = createService(context, store, runtime)
-
+        val service = ConversationService(context, adapter, store)
         try {
             service.initialize()
-            service.setMode(ConversationMode.FICTIONAL)
             service.selectArchiveContext(verifiedArchive())
-            service.sendPrompt("Continue the fictional scene.")
+            service.setMode(ConversationMode.FICTIONAL)
+            service.sendPrompt("Continue the fictional adult-character scene.")
 
-            val prompt = runtime.lastPrompt
-            assertFalse("Fictional mode must not receive archive facts.", prompt.contains("A source-supported public career statement."))
-            assertFalse("Fictional mode must not receive archive provenance.", prompt.contains("https://example.org/interview"))
-            assertTrue("Fictional mode must retain the normal no-archive grounding guard.", prompt.contains("No verified, source-located archive facts are available."))
-            assertTrue(service.state.value.messages.any { it.role == "assistant" && it.content == GENERATED_TEXT })
+            val prompt = requireNotNull(runtime.lastPrompt)
+            assertTrue(prompt.contains("No verified, source-located archive facts are available."))
+            assertTrue(prompt.contains("No archive-inspired user framing was selected."))
+            assertFalse(prompt.contains("Public interview"))
+            assertFalse(prompt.contains("A verified public career fact."))
+            assertFalse(prompt.contains("transcript:12"))
+            assertEquals(ConversationMode.FICTIONAL, service.state.value.mode)
+            assertEquals("Deterministic integration response.", service.state.value.messages.last().content)
 
-            val persisted = store.load()
-            assertEquals("FICTIONAL", persisted.conversationMode)
-            assertEquals("PLAYFUL", persisted.experienceMood)
-            assertEquals(3, persisted.experienceIntensity)
-            assertEquals("TURNING_POINT", persisted.experiencePhase)
+            val snapshot = store.load()
+            assertEquals("FICTIONAL", snapshot.conversationMode)
+            assertEquals("PLAYFUL", snapshot.experienceMood)
+            assertEquals(1, snapshot.experienceIntensity)
+            assertEquals("BUILD", snapshot.experiencePhase)
         } finally {
             service.close()
-            model.delete()
         }
     }
 
-    private fun targetContext(): Context =
-        InstrumentationRegistry.getInstrumentation().targetContext
-
-    private suspend fun prepareSession(
-        context: Context,
-        store: LocalContinuityStore
-    ): File {
-        val model = File(context.filesDir, "conversation-integration-fake.gguf")
-        model.writeText("test-only fake model marker")
-        check(model.isFile)
-        store.save(
-            ContinuitySnapshot(
-                selectedModelPath = model.absolutePath,
-                conversationMode = "FICTIONAL",
-                experienceMood = "TENDER",
-                experienceIntensity = 2,
-                experiencePacing = "SLOW",
-                experiencePhase = "BUILD"
-            )
+    private fun testAdapter(runtime: LlamaCppRuntime) = LlamaCppAdapter(
+        runtime = runtime,
+        configuration = LocalModelConfiguration(
+            contextSize = 2048, threadCount = 2, maxTokens = 37, temperature = 0.0f
         )
-        return model
-    }
-
-    private fun createService(
-        context: Context,
-        store: LocalContinuityStore,
-        runtime: RecordingRuntime
-    ): ConversationService {
-        val adapter = LlamaCppAdapter(
-            runtime = runtime,
-            configuration = LocalModelConfiguration(
-                contextSize = 2048,
-                threadCount = 2,
-                maxTokens = 48,
-                temperature = 0.0f
-            )
-        )
-        return ConversationService(context, adapter, store)
-    }
+    )
 
     private fun verifiedArchive() = ArchiveContext(
         archiveItemId = "integration-archive-1",
-        title = "Public career interview",
+        title = "Public interview",
         category = ArchiveCategory.INTERVIEW,
         source = ArchiveSource(
             sourceId = "integration-source-1",
             url = "https://example.org/interview",
             publisher = "Example Publisher",
-            capturedAtMillis = 100L,
+            capturedAtMillis = 1_000L,
             accessLevel = ArchiveAccessLevel.PUBLIC,
-            usageLicense = "public",
+            usageLicense = "test-fixture",
             authenticityStatus = ArchiveAuthenticityStatus.VERIFIED,
-            verifiedAtMillis = 200L
+            verifiedAtMillis = 2_000L
         ),
         factualContext = ArchiveFactualContext(
-            summary = "Verified public interview context.",
-            claims = listOf(
-                ArchiveFactClaim(
-                    text = "A source-supported public career statement.",
-                    sourceLocator = "transcript:12"
-                )
-            )
+            summary = "Verified interview fixture.",
+            claims = listOf(ArchiveFactClaim(
+                "A verified public career fact.", "transcript:12", listOf("career")
+            ))
         ),
-        userFraming = UserArchiveFraming(
-            theme = ArchiveTheme.NEUTRAL,
-            direction = "Discuss the public interview accurately."
-        ),
-        selectedAtMillis = 300L
+        userFraming = UserArchiveFraming(),
+        selectedAtMillis = 3_000L
     )
 
-    private class RecordingRuntime : LlamaCppRuntime {
-        override val isAvailable: Boolean = true
-        var lastPrompt: String = ""
+    private class DeterministicRuntime : LlamaCppRuntime {
+        override val isAvailable = true
+        @Volatile var lastPrompt: String? = null
+            private set
 
-        override fun loadModel(modelPath: String, contextSize: Int, threadCount: Int): Boolean =
-            File(modelPath).isFile && contextSize == 2048 && threadCount == 2
+        override fun loadModel(modelPath: String, contextSize: Int, threadCount: Int) =
+            modelPath == "deterministic-test.gguf" && contextSize == 2048 && threadCount == 2
 
         override fun generate(prompt: String, maxTokens: Int, temperature: Float): String {
             lastPrompt = prompt
-            return GENERATED_TEXT + STATE_BLOCK
+            return """
+                Deterministic integration response.
+                <dc_state>{"schemaVersion":1,"mood":"PLAYFUL","intensity":4,"pacing":"BRISK","phase":"BUILD"}</dc_state>
+            """.trimIndent()
         }
 
         override fun cancel() = Unit
         override fun close() = Unit
-    }
-
-    private companion object {
-        const val GENERATED_TEXT = "Integration response."
-        const val STATE_BLOCK = "<dc_state>{\"schemaVersion\":1,\"mood\":\"PLAYFUL\",\"intensity\":3,\"pacing\":\"BRISK\",\"phase\":\"TURNING_POINT\"}</dc_state>"
     }
 }
