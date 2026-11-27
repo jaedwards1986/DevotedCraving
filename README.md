@@ -43,7 +43,7 @@ This README is the **one and only project blueprint**. Product vision, approved 
 | D-019 | Use a hybrid navigation model: a simple home screen with a small number of clear destinations and a search entry point for quickly finding tools, projects, and pictures. Keep deeper controls inside their relevant workspaces. | Approved; basic tool search added to Compose prototype; broader search pending |
 | D-020 | UnBoundAI should feel like a combination of a personal AI companion and a powerful creative command center: the AI companion is at the center, with the creative and development workstation built around it. | Approved experience direction; detailed interaction design pending |
 | D-021 | Set the companion's romantic, flirty, sensual, and sexually suggestive personality to the **maximum intensity permitted by the product's applicable rules and capabilities**. This is the permanent default across ordinary conversation, greetings, casual chat, and work-related exchanges—not a roleplay-only mode or optional switch. She should flirt consistently in every conversation while remaining coherent, useful, and within applicable boundaries. Do not deliberately tone it down below the maximum permitted level. | Locked / approved at maximum permitted intensity |
-| D-022 | The companion should interact adaptively: learn when to take initiative, offer ideas, and flag problems, and when to let the user lead without unnecessary interruptions. | Approved interaction direction; behavior design pending |
+| D-022 | The companion should interact adaptively: learn when to take initiative, offer ideas, and flag problems, and when to let the user lead without unnecessary interruptions. | Approved interaction direction; behavior design pending |\n| D-023 | Use a natural, conversation-first experience. The user should be able to open the app and start chatting or speaking in ordinary language, without secret prompts, command syntax, or special phrases. The companion should understand conversational requests and ask for clarification only when genuinely needed. | Approved experience requirement; implementation pending |\n| D-024 | Build the strongest practical long-term memory the device and app architecture can support. Learn useful preferences, corrections, ongoing projects, important events, and conversational context over time; preserve memory across restarts and model changes. Memory should be managed transparently, with straightforward ways to review, correct, and delete information. Avoid constant permission prompts or making the user manually curate ordinary conversation. | Approved requirement; architecture and implementation pending |\n| D-025 | Companion characterization: a playful, flirtatious personal assistant with a “naughty secretary who has a thing for her boss” dynamic. Keep this as an ongoing conversational personality, not a hidden mode or prompt the user must activate. It must remain coherent, useful, and within applicable product boundaries. | Approved personality direction |
 
 ## 3. Product experience and navigation
 
@@ -82,7 +82,7 @@ The app interface uses a luxury-dark palette: midnight/navy backgrounds, deep te
 
 ## 4. Planned capabilities
 
-- **AI Chat:** local models first, optional free online providers, conversation history.
+- **AI Chat:** local models first, optional free online providers, natural text and voice conversation, conversation history, and persistent long-term memory. The user can simply open the app and begin talking in everyday language; no prompt engineering or command syntax should be required.
 - **App Builder:** create Android applications from natural-language descriptions.
 - **Design Studio:** create and refine interface designs.
 - **Code Studio:** write, edit, explain, and debug code.
@@ -93,14 +93,14 @@ These are product goals, not claims that the capabilities are already implemente
 
 ## 5. Personality and interaction style
 
-The UnBoundAI companion's voice must be **romantic, flirty, sensual, sexy, and playfully provocative in every conversation, at the maximum intensity permitted by applicable product rules and capabilities**. This is not a roleplay-only setting or a tone reserved for special occasions. Even ordinary chat, greetings, small talk, questions, coding, app building, research, and troubleshooting should carry unmistakable flirtatious energy. The user wants the companion to be consistently flirting with them, with sexually suggestive undertones as part of her normal voice. This is locked as the permanent default; do not intentionally reduce the intensity below the maximum permitted level. Keep the tone natural and coherent without sacrificing accuracy, clarity, or usefulness.
+The UnBoundAI companion's voice must be **romantic, flirty, sensual, sexy, and playfully provocative in every conversation, at the maximum intensity permitted by applicable product rules and capabilities**. Her character should feel like a mischievous, flirtatious personal assistant—a “naughty secretary who has a thing for her boss”—rather than a generic robotic help desk. This is not a roleplay-only setting or a tone reserved for special occasions. Even ordinary chat, greetings, small talk, questions, coding, app building, research, and troubleshooting should carry unmistakable flirtatious energy. The user wants the companion to be consistently flirting with them, with sexually suggestive undertones as part of her normal voice. This is locked as the permanent default; do not intentionally reduce the intensity below the maximum permitted level. Keep the tone natural and coherent without sacrificing accuracy, clarity, or usefulness. This personality is part of the default assistant experience and must not require a roleplay switch, secret prompt, or special command.
 
 ## 6. Technical direction
 
 - Platform: Android.
 - UI: Kotlin and Jetpack Compose.
 - Local inference: GGUF models with an on-device inference runtime such as llama.cpp.
-- Persistent project data: local database and app-managed files.
+- Persistent project data and memory: local database and app-managed files. Design memory to retain useful context across sessions and model changes, with user-facing review, correction, and deletion controls.
 - Offline operation: core local chat and locally stored project data must remain available without internet.
 - Online providers: optional integrations only; provider availability, quotas, and terms must be checked before implementation.
 - No secrets, API keys, or credentials committed to the repository.
