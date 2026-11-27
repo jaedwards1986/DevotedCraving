@@ -122,7 +122,9 @@ data class AssembledArchiveExperience(
     val exclusions: List<String>,
     val presentation: PresentationParameters,
     val characterState: ExperienceState,
-    val memoryStateId: String
+    val memoryStateId: String,
+    val isArchiveContextAvailable: Boolean = true,
+    val framingVetoApplied: Boolean = false
 )
 
 sealed interface ArchiveTransformResult {
@@ -143,7 +145,9 @@ class PersonaOrchestrator {
         controls: ExperienceControls,
         personaState: ExperienceState
     ): ArchiveTransformResult {
-        if (context == null) return ArchiveTransformResult.NoArchiveContext("No archive item selected.")
+        if (context == null) return ArchiveTransformResult.Success(
+            failSafeExperience(memory, controls, personaState)
+        )
         if (context.schemaVersion != ArchiveContext.CURRENT_SCHEMA_VERSION) {
             return ArchiveTransformResult.Rejected("Unsupported ArchiveContext schema version.")
         }
@@ -179,6 +183,7 @@ class PersonaOrchestrator {
         }
 
         val theme = context.userFraming.theme
+        val reconciledFraming = reconcileFraming(context.userFraming, exclusions)
         val presentation = PresentationParameters(
             intensity = (controls.intensity + theme.intensityModifier()).coerceIn(0, 5),
             intimacy = (controls.intimacy + theme.intimacyModifier()).coerceIn(0, 5),
@@ -205,14 +210,68 @@ class PersonaOrchestrator {
                 archiveItemId = context.archiveItemId,
                 archiveFacts = facts,
                 provenance = provenance,
-                userFraming = context.userFraming,
+                userFraming = reconciledFraming.first,
                 confirmedPreferences = memory.confirmedPreferences.map { it.trim() }.filter { it.isNotBlank() }.distinct().sorted(),
                 exclusions = memory.exclusions.map { it.trim() }.filter { it.isNotBlank() }.distinct().sorted(),
                 presentation = presentation,
                 characterState = personaState,
-                memoryStateId = memory.stateId
+                memoryStateId = memory.stateId,
+                isArchiveContextAvailable = true,
+                framingVetoApplied = reconciledFraming.second
             )
         )
+    }
+
+    /**
+     * Null archive selection is a supported generation state, not a transformation failure.
+     * The stable sentinel is an internal state marker only; it carries no source or archive claim.
+     */
+    private fun failSafeExperience(
+        memory: ArchiveMemoryState,
+        controls: ExperienceControls,
+        personaState: ExperienceState
+    ): AssembledArchiveExperience = AssembledArchiveExperience(
+        archiveItemId = NO_ARCHIVE_ITEM_ID,
+        archiveFacts = emptyList(),
+        provenance = null,
+        userFraming = null,
+        confirmedPreferences = memory.confirmedPreferences.map { it.trim() }.filter { it.isNotBlank() }.distinct().sorted(),
+        exclusions = memory.exclusions.map { it.trim() }.filter { it.isNotBlank() }.distinct().sorted(),
+        presentation = PresentationParameters(
+            intensity = controls.intensity,
+            intimacy = controls.intimacy,
+            playfulness = controls.playfulness,
+            initiative = controls.initiative,
+            confidence = controls.confidence
+        ),
+        characterState = personaState,
+        memoryStateId = memory.stateId,
+        isArchiveContextAvailable = false
+    )
+
+    /**
+     * Conflicting framing is rewritten as a deterministic veto-aware directive.
+     * The selected theme and creative intent are retained; excluded terms appear only
+     * as explicit boundaries, never as requested content.
+     */
+    private fun reconcileFraming(
+        framing: UserArchiveFraming,
+        normalizedExclusions: List<String>
+    ): Pair<UserArchiveFraming, Boolean> {
+        val normalizedDirection = framing.direction.normalizeTerm()
+        val matched = normalizedExclusions.filter { term ->
+            term.isNotBlank() && (" $normalizedDirection ").contains(" $term ")
+        }
+        if (matched.isEmpty()) return framing to false
+
+        val boundary = matched.joinToString("; ")
+        return framing.copy(
+            direction = "Preserve the user's remaining creative intent and selected ${framing.theme.name.lowercase(Locale.ROOT)} tone by focusing on other themes, given the explicit constraint against: $boundary. Do not include, imply, or reintroduce those excluded topics."
+        ) to true
+    }
+
+    companion object {
+        const val NO_ARCHIVE_ITEM_ID = "no-archive-context"
     }
 
     private fun isHttpUrl(value: String): Boolean = runCatching {
