@@ -21,7 +21,7 @@ class JniLlamaCppSmokeTest {
     fun loadsRealGgufAndReturnsTextFromNativeRuntime() {
         val instrumentation = InstrumentationRegistry.getInstrumentation()
         val targetContext = instrumentation.targetContext
-        val assetName = instrumentation.arguments.getString("ggufAsset")
+        val assetName = InstrumentationRegistry.getArguments().getString("ggufAsset")
             ?: "gguf/smoke.gguf"
         val modelFile = File(targetContext.filesDir, "jni-validation/smoke.gguf")
         modelFile.parentFile?.mkdirs()
@@ -32,7 +32,10 @@ class JniLlamaCppSmokeTest {
             }
         }
 
-        assertTrue("Copied GGUF model is missing or empty: ${modelFile.absolutePath}", modelFile.isFile && modelFile.length() > 0L)
+        assertTrue(
+            "Copied GGUF model is missing or empty: ${modelFile.absolutePath}",
+            modelFile.isFile && modelFile.length() > 0L
+        )
 
         val runtime = JniLlamaCppRuntime()
         assertTrue(
