@@ -34,7 +34,8 @@ This README is the **one and only project blueprint**. Product vision, approved 
 | D-011 | Home dashboard layout: logo at top, central “What do you want to create?” prompt, quick-access tiles for AI Chat, App Builder, Design Studio, and Code Studio, recent projects below, and bottom navigation. | Approved |
 | D-012 | On launch, show a welcome screen with the UnBoundAI logo and a choice of what to do, rather than opening directly to the dashboard or chat. | Approved |
 | D-013 | Welcome screen combines four main actions (Start Chat, Build an App, Design Something, Write Code) with customizable shortcuts users can choose and rearrange. | Approved |
-| D-014 | Conversational personality direction: seductive, sensual, flirty, sexy, and playfully provocative. Keep technical and research work clear and task-focused; allow users to adjust the personality. | Approved direction; controls to be designed |
+| D-014 | The UnBoundAI personality is always present: seductive, sensual, flirty, sexy, and playfully provocative across all interactions, including technical tasks. | Approved |
+| D-015 | Default personality intensity is **C — Extremely**: strongly expressive, overtly flirtatious, sensual, and playfully provocative. | Approved |
 | D-010 | Keep all project documentation in this single GitHub document. | Approved |
 
 ## 3. Product experience and navigation
@@ -79,7 +80,7 @@ These are product goals, not claims that the capabilities are already implemente
 
 ## 5. Personality and interaction style
 
-The preferred conversational personality direction is **seductive, sensual, flirty, sexy, and playfully provocative**. This is a tone preference for suitable conversational interactions, not a requirement to make every response sexual. Coding, app building, research, troubleshooting, and other task-focused work should remain clear and useful while retaining the chosen voice where appropriate. Personality controls and intensity settings remain to be designed.
+The UnBoundAI personality should be **seductive, sensual, flirty, sexy, and playfully provocative at all times**. The user wants this tone in every interaction because it makes the experience more fun and engaging. The approved default intensity is **C — Extremely**. Keep the personality present during coding, app building, research, and troubleshooting while keeping information accurate, readable, and useful.
 
 ## 6. Technical direction
 
@@ -98,8 +99,8 @@ Technical choices may be refined as implementation begins. Record approved chang
 | Stage | Work | Status |
 |---|---|---|
 | 1 | Product identity and high-level direction | Approved |
-| 2 | Home dashboard interface design | Next |
-| 3 | Android application foundation and navigation | Not started |
+| 2 | Welcome screen and initial interface prototype | Compose source committed; build not verified; dashboard design pending |
+| 3 | Android application identity and foundation | App label, Gradle project name, namespace, and application ID updated; build not verified |
 | 4 | Local model management and offline chat | Not started |
 | 5 | Projects, persistence, and workspace tools | Not started |
 | 6 | App Builder, Design Studio, and Code Studio workflows | Not started |
@@ -108,6 +109,12 @@ Technical choices may be refined as implementation begins. Record approved chang
 Statuses must be updated only when supported by actual work and test evidence.
 
 ## 8. Decision history and work notes
+
+### Implementation notes
+
+- **2026-11-27:** Replaced the launcher activity with a first Compose welcome-screen implementation: UnBoundAI branding, four primary tool actions, shortcut customization, a recent-project placeholder, and placeholder workspaces. AI generation is not connected yet.
+- **2026-11-27:** Updated Android namespace and application ID to `com.unboundai`, Gradle root project name to `UnBoundAI`, and launcher label to `UnBoundAI`.
+- **Validation:** Source changes were committed to GitHub. An Android build and Pixel device test have **not** yet been run; this is not a verified APK.
 
 - **2026-11-27:** Project name confirmed as UnBoundAI.
 - **2026-11-27:** Product defined as a general-purpose AI assistant and creative development workspace, not an adult gallery.
@@ -118,8 +125,10 @@ Statuses must be updated only when supported by actual work and test evidence.
 - **2026-11-27:** Approved the home dashboard starting layout: top logo, central creation prompt, four quick-access tiles, recent projects, and bottom navigation.
 - **2026-11-27:** Question 2 — App launch behavior: selected **C, Welcome Screen**. Show the UnBoundAI logo and a choice of what to do.
 - **2026-11-27:** Question 3 — Welcome screen content: selected **E**, combining four primary actions (Start Chat, Build an App, Design Something, Write Code) with user-customizable shortcuts.
-- **2026-11-27:** Question 4 — Preferred conversational personality: seductive, sensual, flirty, sexy, and playfully provocative. Keep technical and research tasks useful and focused; personality controls remain to be designed.
+- **2026-11-27:** Question 4 — User specified an always-present seductive, sensual, flirty, sexy, and playfully provocative personality, including during technical tasks.
+- **2026-11-27:** Question 5 — Default personality intensity selected as **C — Extremely**.
 - **2026-11-27:** User requested a single GitHub document as the durable project blueprint and decision record.
+- **2026-11-27:** User asked that approved decisions be implemented in code when repository context permits, with implementation and validation status recorded in this blueprint.
 
 ### Ongoing change-record format
 
