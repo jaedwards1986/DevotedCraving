@@ -71,6 +71,12 @@ class ConversationService(
             val snapshot = store.load()
             val messages = snapshot.messages.map { ConversationMessage(it.role, it.content) }
             val path = snapshot.selectedModelPath
+            adapter.restoreExperienceState(
+                snapshot.experienceMood,
+                snapshot.experienceIntensity,
+                snapshot.experiencePacing,
+                snapshot.experiencePhase
+            )
             _state.value = _state.value.copy(
                 messages = messages,
                 selectedModelPath = path,
@@ -232,7 +238,11 @@ class ConversationService(
                 StoredMessage(it.role, it.content, System.currentTimeMillis())
             },
             selectedModelPath = selectedModel,
-            conversationMode = _state.value.mode.name
+            conversationMode = _state.value.mode.name,
+            experienceMood = adapter.experienceState.mood.name,
+            experienceIntensity = adapter.experienceState.intensity,
+            experiencePacing = adapter.experienceState.pacing.name,
+            experiencePhase = adapter.experienceState.phase.name
         )
         store.save(snapshot)
     }
