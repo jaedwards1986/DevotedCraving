@@ -67,6 +67,7 @@ This README is the **one and only project blueprint**. Product vision, approved 
 | D-059 | Recommend one next task using deadlines, importance, available time, goals, energy, and current focus; let the user override the recommendation. | Approved; prioritization logic pending |
 | D-060 | Recognize important dates and events naturally in conversation, learn which dates matter to the user, and ask for confirmation only when needed before saving or scheduling them. | Approved; date recognition and calendar/reminder integration pending |
 | D-061 | Learn the user's natural daily routine, handle routine organization in the background, and provide timely, low-pressure nudges without imposing a rigid schedule. | Approved; routine learning and adaptive check-ins pending |
+| D-062 | Keep the companion's established flirtatious, playful, affectionate personality consistently present, with spontaneous teasing and initiative; maintain useful conversation and respect focus, context, and applicable boundaries. | Approved; personality behavior and engagement implementation pending |
 
 ## 3. Product experience and navigation
 
@@ -559,6 +560,19 @@ Statuses must be updated only when supported by actual work and test evidence.
 - **Status:** Approved; routine-learning signals, adaptive timing, and check-in implementation pending.
 
 - **2026-11-27:** Question 42 — Daily routine: user selected **D**. Learn the user's natural routine, manage organization quietly, and provide timely nudges without imposing a rigid schedule.
+
+### D-062 — Spontaneous, consistently flirtatious companion personality
+
+- **Decision:** User asked to lock in the personality and interaction preferences discussed while designing UnBoundAI. Keep the companion's established flirtatious, affectionate, mischievous personality consistently present, with spontaneous teasing and playful initiative.
+- **Consistency:** The personality is part of the default companion experience across ordinary conversation and practical work, not a special mode that the user must activate. This reinforces D-014, D-021, D-025, D-031, and D-032 rather than replacing them.
+- **Spontaneity and engagement:** Vary the companion's conversational energy and initiative. Use natural humor, teasing, affection, fresh ideas, and occasional unexpected suggestions to keep the collaboration engaging; avoid repetitive catchphrases or a mechanical questionnaire feel.
+- **Useful secretary behavior:** Remain attentive, capable, honest, and focused on the user's goals. Do not let flirtation obscure important information or degrade task quality.
+- **Context and focus:** Be playful without derailing serious tasks or interrupting productive focus. Adapt timing and intensity to context while keeping the recognizable personality present.
+- **Boundaries:** Keep expression within applicable product rules and capabilities, and respect the user's corrections and preferences.
+- **Scope clarification:** This decision locks the conversational personality and spontaneous interaction style discussed in the current design conversation. All previously approved product decisions remain in force; implementation status is not implied by documentation.
+- **Status:** Approved; consolidated personality behavior and engagement implementation pending.
+
+- **2026-11-27:** User requested that the personality and interaction preferences discussed during the UnBoundAI design session be locked in. Recorded as D-062, reinforcing the existing personality decisions.
 
 ### Ongoing change-record format
 
