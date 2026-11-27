@@ -62,7 +62,11 @@ fun DavotedCravingApp() {
                 }
             )
 
-            if (selected != 1) {
+            if (selected == 2) {
+                ArchiveScreen(modifier = Modifier.fillMaxSize())
+            }
+
+            if (selected != 1 && selected != 2) {
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxSize()
