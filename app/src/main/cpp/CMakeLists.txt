@@ -19,7 +19,6 @@ include(FetchContent)
 FetchContent_Declare(
     llama_cpp
     URL https://github.com/ggml-org/llama.cpp/archive/074f1f3f730c1d17f34645d62c1859c74bedbdd8.tar.gz
-    DOWNLOAD_EXTRACT_TIMESTAMP TRUE
 )
 
 # Build a self-contained CPU backend and statically link it into our JNI shared library.
