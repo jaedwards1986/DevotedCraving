@@ -27,7 +27,7 @@ This README is the **one and only project blueprint**. Product vision, approved 
 | D-003 | Local AI is the default; optional free online providers are allowed. | Approved |
 | D-004 | No required paid API keys, subscriptions, or paid accounts. | Approved |
 | D-005 | Combine ChatGPT-like simplicity with professional workstation capabilities. | Approved |
-| D-006 | Visual direction: dark charcoal base with deep violet and electric cyan accents. | Approved starting direction |
+| D-006 | Initial visual direction was dark charcoal with deep violet and electric cyan accents. | Superseded by D-016 |
 | D-007 | Primary navigation: Home, AI Chat, App Builder, Design Studio, Projects. | Approved |
 | D-008 | Code Studio placement (inside App Builder or a separate workspace). | Open |
 | D-009 | Design the home dashboard first, before implementation. | Approved |
@@ -37,6 +37,7 @@ This README is the **one and only project blueprint**. Product vision, approved 
 | D-014 | The UnBoundAI personality is always present: seductive, sensual, flirty, sexy, and playfully provocative across all interactions, including technical tasks. | Approved |
 | D-015 | Default personality intensity is **C — Extremely**: strongly expressive, overtly flirtatious, sensual, and playfully provocative. | Approved |
 | D-010 | Keep all project documentation in this single GitHub document. | Approved |
+| D-016 | Logo direction: retain the flowing, sculptural U/infinity-style emblem and orbital sweep from the approved mockup; use midnight/navy blue, sapphire, and deep teal with metallic highlights. Remove the silk/fabric background. The overall treatment should feel sensual, provocative, luxurious, and cinematic. | Approved direction; production logo refinement pending |
 
 ## 3. Product experience and navigation
 
@@ -66,6 +67,12 @@ The user approved this starting layout:
 - Mobile-friendly layout designed for the Pixel 9 Pro XL.
 
 This is the approved starting design, not a restriction against later refinements. Record any future changes in the decision history.
+
+### Brand identity — approved direction
+
+The user approved the latest UnBoundAI logo mockup as the visual direction. Preserve its distinctive flowing, sculptural U/infinity-style emblem and orbital sweep. The chosen palette is midnight/navy blue, sapphire, and deep teal with metallic highlights. Do not use a silk or fabric background. The intended mood is sensual, provocative, luxurious, and cinematic.
+
+The logo artwork is a concept reference, not yet a production-ready vector or app-icon asset. Refinement should preserve the emblem's recognizable silhouette and ensure it remains legible at small sizes. The user has approved this direction; do not reopen the basic concept unless they ask.
 
 ## 4. Planned capabilities
 
@@ -101,10 +108,11 @@ Technical choices may be refined as implementation begins. Record approved chang
 | 1 | Product identity and high-level direction | Approved |
 | 2 | Welcome screen and initial interface prototype | Compose source committed; build not verified; dashboard design pending |
 | 3 | Android application identity and foundation | App label, Gradle project name, namespace, and application ID updated; build not verified |
-| 4 | Local model management and offline chat | Not started |
-| 5 | Projects, persistence, and workspace tools | Not started |
-| 6 | App Builder, Design Studio, and Code Studio workflows | Not started |
-| 7 | Pixel 9 Pro XL testing and installable APK validation | Not started |
+| 4 | Logo refinement and production assets | Approved visual direction; vector and app-icon assets pending |
+| 5 | Local model management and offline chat | Not started |
+| 6 | Projects, persistence, and workspace tools | Not started |
+| 7 | App Builder, Design Studio, and Code Studio workflows | Not started |
+| 8 | Pixel 9 Pro XL testing and installable APK validation | Not started |
 
 Statuses must be updated only when supported by actual work and test evidence.
 
@@ -119,14 +127,15 @@ Statuses must be updated only when supported by actual work and test evidence.
 - **2026-11-27:** Project name confirmed as UnBoundAI.
 - **2026-11-27:** Product defined as a general-purpose AI assistant and creative development workspace, not an adult gallery.
 - **2026-11-27:** User selected the combination of ChatGPT-like simplicity and professional workstation capabilities.
-- **2026-11-27:** Dark charcoal with violet and cyan accents selected as the starting visual direction.
+- **2026-11-27:** Initial dark charcoal/violet/cyan visual direction was later superseded by the approved midnight-blue/sapphire/deep-teal logo direction.
 - **2026-11-27:** Primary navigation established as Home, AI Chat, App Builder, Design Studio, and Projects.
 - **2026-11-27:** Home dashboard selected as the first screen to design.
 - **2026-11-27:** Approved the home dashboard starting layout: top logo, central creation prompt, four quick-access tiles, recent projects, and bottom navigation.
 - **2026-11-27:** Question 2 — App launch behavior: selected **C, Welcome Screen**. Show the UnBoundAI logo and a choice of what to do.
 - **2026-11-27:** Question 3 — Welcome screen content: selected **E**, combining four primary actions (Start Chat, Build an App, Design Something, Write Code) with user-customizable shortcuts.
-- **2026-11-27:** Question 4 — User specified an always-present seductive, sensual, flirty, sexy, and playfully provocative personality, including during technical tasks.
+- **2026-11-27:** Question 4 — User specified an always-present seductive, sensual, flirty, sexy, and playfully provocative personality.
 - **2026-11-27:** Question 5 — Default personality intensity selected as **C — Extremely**.
+- **2026-11-27:** User approved the latest logo mockup direction: the original flowing emblem and orbital sweep, shifted to dark blues and teals, without silk, with a more sensual and provocative visual treatment. Production asset refinement remains pending.
 - **2026-11-27:** User requested a single GitHub document as the durable project blueprint and decision record.
 - **2026-11-27:** User asked that approved decisions be implemented in code when repository context permits, with implementation and validation status recorded in this blueprint.
 
