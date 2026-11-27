@@ -28,14 +28,13 @@ jobs:
       - name: Configure Android SDK
         shell: bash
         run: |
-          set -eu
+          set -euo pipefail
           SDK_ROOT="${ANDROID_HOME:-/usr/local/lib/android/sdk}"
           echo "ANDROID_HOME=$SDK_ROOT" >> "$GITHUB_ENV"
           echo "$SDK_ROOT/platform-tools" >> "$GITHUB_PATH"
           SDKMANAGER="$SDK_ROOT/cmdline-tools/latest/bin/sdkmanager"
-          # sdkmanager exits after accepting the available licenses; with pipefail,
-          # the expected SIGPIPE from yes is incorrectly treated as a setup failure.
-          yes | "$SDKMANAGER" --licenses >/dev/null
+          # Supply a finite buffer of affirmative answers; avoid yes receiving SIGPIPE.
+          printf 'y\\n%.0s' {1..100} | "$SDKMANAGER" --licenses >/dev/null
           "$SDKMANAGER" "platform-tools" "platforms;android-35" "build-tools;35.0.0"
 
       - name: Assemble debug APK
