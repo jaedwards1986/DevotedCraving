@@ -36,6 +36,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import ai.davoted.craving.conversation.ChatViewModel
+import ai.davoted.craving.conversation.ConversationMode
 import ai.davoted.craving.conversation.ChatViewModelFactory
 
 @Composable
@@ -75,6 +76,28 @@ fun LocalInferenceScreen(modifier: Modifier = Modifier) {
             }
         }
 
+        Text("Conversation mode", style = MaterialTheme.typography.titleMedium)
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            OutlinedButton(
+                onClick = { chatViewModel.setMode(ConversationMode.FACTUAL) },
+                enabled = !state.isBusy && state.mode != ConversationMode.FACTUAL,
+                modifier = Modifier.weight(1f)
+            ) { Text("Factual archive") }
+            OutlinedButton(
+                onClick = { chatViewModel.setMode(ConversationMode.FICTIONAL) },
+                enabled = !state.isBusy && state.mode != ConversationMode.FICTIONAL,
+                modifier = Modifier.weight(1f)
+            ) { Text("Fictional experience") }
+        }
+        Text(
+            if (state.mode == ConversationMode.FACTUAL) {
+                "Factual mode uses verified, source-located archive material only."
+            } else {
+                "Fictional mode uses character and experience state without archive facts."
+            },
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
         Text("Conversation", style = MaterialTheme.typography.titleLarge)
         LazyColumn(
             modifier = Modifier.weight(1f).fillMaxWidth(),
