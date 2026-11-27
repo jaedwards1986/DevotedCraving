@@ -152,7 +152,7 @@ class PromptContextAssembler {
     }
 
     private fun List<String>.normalizedEntries(): List<String> =
-        map(String::trim).filter(String::isNotBlank).distinct().sorted()
+        map { it.trim() }.filter { it.isNotBlank() }.distinct().sorted()
 
     private fun List<String>.renderOrNone(): String =
         if (isEmpty()) "None recorded." else joinToString(separator = "\n") { "- $it" }
