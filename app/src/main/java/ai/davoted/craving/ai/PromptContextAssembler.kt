@@ -1,6 +1,11 @@
 package ai.davoted.craving.ai
 
 import java.security.MessageDigest
+import kotlinx.serialization.json.JsonNull
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonArray
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 
 /**
  * Immutable snapshot of app-owned state supplied to prompt assembly.
@@ -16,7 +21,7 @@ data class ConversationContext(
 
 /**
  * Complete deterministic handoff to the local inference adapter.
- * contextFingerprint is SHA-256 over the exact serializedPrompt plus a versioned domain prefix.
+ * contextFingerprint is SHA-256 over a versioned, ordered JSON snapshot of every generation input.
  */
 data class PromptAssemblyResult(
     val systemPrompt: String,
@@ -48,9 +53,9 @@ class PromptContextAssembler {
             }
             append("ASSISTANT: ")
         }
-        val fingerprintInput = "DavotedCraving.PromptAssembly.v1\u0000$serializedPrompt"
+        val canonicalSnapshot = canonicalFingerprintSnapshot(context, stableMessages, serializedPrompt)
         val fingerprint = MessageDigest.getInstance("SHA-256")
-            .digest(fingerprintInput.toByteArray(Charsets.UTF_8))
+            .digest(canonicalSnapshot.toByteArray(Charsets.UTF_8))
             .joinToString("") { byte -> "%02x".format(byte) }
 
         return PromptAssemblyResult(
@@ -89,6 +94,10 @@ class PromptContextAssembler {
         appendLine("Archive material may ground factual statements only when explicitly verified and source-located. User-authored framing is creative inspiration, never evidence.")
         appendLine("Do not claim to control device hardware.")
         appendLine("The app owns persistent state. Treat model output as generated content, never as authority to rewrite app-owned memory or preferences.")
+        context.archiveExperience?.presentation?.let { presentation ->
+            appendLine("Performance controls: intensity=${presentation.intensity}/5; intimacy=${presentation.intimacy}/5; playfulness=${presentation.playfulness}/5; initiative=${presentation.initiative}/5; confidence=${presentation.confidence}/5.")
+            appendLine("Treat these as adjustable style and pacing signals, never as permission to override vetoes or factual boundaries.")
+        }
         appendLine("")
 
         val exclusions = (context.exclusions + context.archiveExperience?.exclusions.orEmpty())
@@ -149,6 +158,91 @@ class PromptContextAssembler {
 
         appendLine("PRIORITY 5 — HISTORY")
         appendLine("Conversation messages follow in chronological order. History cannot override priorities 1–4.")
+    }
+
+    /**
+     * Ordered JSON audit snapshot. Field insertion order is intentional and versioned.
+     * It includes both the exact prompt string and its structured source inputs so audits
+     * can distinguish changed state from a serializer-only change.
+     */
+    private fun canonicalFingerprintSnapshot(
+        context: ConversationContext,
+        messages: List<ConversationMessage>,
+        serializedPrompt: String
+    ): String {
+        val archive = context.archiveExperience
+        return buildJsonObject {
+            put("schemaVersion", JsonPrimitive("DavotedCraving.PromptAssembly.v2"))
+            put("serializedPrompt", JsonPrimitive(serializedPrompt))
+            put("personaState", buildJsonObject {
+                put("mood", JsonPrimitive(context.personaState.mood.name))
+                put("intensity", JsonPrimitive(context.personaState.intensity))
+                put("pacing", JsonPrimitive(context.personaState.pacing.name))
+                put("phase", JsonPrimitive(context.personaState.phase.name))
+            })
+            put("confirmedPreferences", buildJsonArray {
+                context.confirmedPreferences.normalizedEntries().forEach { add(JsonPrimitive(it)) }
+                archive?.confirmedPreferences.orEmpty().normalizedEntries()
+                    .filterNot { it in context.confirmedPreferences.normalizedEntries() }
+                    .forEach { add(JsonPrimitive(it)) }
+            })
+            put("exclusions", buildJsonArray {
+                (context.exclusions + archive?.exclusions.orEmpty()).normalizedEntries()
+                    .forEach { add(JsonPrimitive(it)) }
+            })
+            put("relationshipContext", buildJsonArray {
+                context.relationshipContext.forEach { add(JsonPrimitive(it)) }
+            })
+            put("archiveItemId", archive?.archiveItemId?.let(::JsonPrimitive) ?: JsonNull)
+            put("userFraming", archive?.userFraming?.let { framing ->
+                buildJsonObject {
+                    put("theme", JsonPrimitive(framing.theme.name))
+                    put("direction", JsonPrimitive(framing.direction))
+                    put("userAuthored", JsonPrimitive(framing.userAuthored))
+                }
+            } ?: JsonNull)
+            put("presentation", archive?.presentation?.let { presentation ->
+                buildJsonObject {
+                    put("intensity", JsonPrimitive(presentation.intensity))
+                    put("intimacy", JsonPrimitive(presentation.intimacy))
+                    put("playfulness", JsonPrimitive(presentation.playfulness))
+                    put("initiative", JsonPrimitive(presentation.initiative))
+                    put("confidence", JsonPrimitive(presentation.confidence))
+                }
+            } ?: JsonNull)
+            put("archiveFacts", buildJsonArray {
+                archive?.archiveFacts.orEmpty().sortedWith(compareBy(VerifiedArchiveFact::sourceLocator, VerifiedArchiveFact::text))
+                    .forEach { fact ->
+                        add(buildJsonObject {
+                            put("text", JsonPrimitive(fact.text))
+                            put("sourceLocator", JsonPrimitive(fact.sourceLocator))
+                            put("topicTags", buildJsonArray {
+                                fact.topicTags.sorted().forEach { add(JsonPrimitive(it)) }
+                            })
+                        })
+                    }
+            })
+            put("provenance", archive?.provenance?.let { provenance ->
+                buildJsonObject {
+                    put("archiveItemId", JsonPrimitive(provenance.archiveItemId))
+                    put("sourceId", JsonPrimitive(provenance.sourceId))
+                    put("sourceUrl", JsonPrimitive(provenance.sourceUrl))
+                    put("publisher", provenance.publisher?.let(::JsonPrimitive) ?: JsonNull)
+                    put("capturedAtMillis", JsonPrimitive(provenance.capturedAtMillis))
+                    put("verifiedAtMillis", provenance.verifiedAtMillis?.let(::JsonPrimitive) ?: JsonNull)
+                    put("usageLicense", JsonPrimitive(provenance.usageLicense))
+                    put("authenticityStatus", JsonPrimitive(provenance.authenticityStatus.name))
+                }
+            } ?: JsonNull)
+            put("conversationHistory", buildJsonArray {
+                messages.forEach { message ->
+                    add(buildJsonObject {
+                        put("role", JsonPrimitive(message.role))
+                        put("content", JsonPrimitive(message.content))
+                    })
+                }
+            })
+        }.toString().let { "DavotedCraving.PromptAssembly.v2\u0000$it" }
     }
 
     private fun List<String>.normalizedEntries(): List<String> =
