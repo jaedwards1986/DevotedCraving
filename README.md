@@ -50,6 +50,7 @@ This README is the **one and only project blueprint**. Product vision, approved 
 | D-043 | Learn the user's reminder habits and adapt reminder timing and frequency automatically, while keeping clear user controls. Follow up gently on incomplete tasks and avoid nagging. | Approved; implementation pending |
 
 | D-044 | Keep the interface extremely uncluttered, highly structured, predictable, and easy to navigate for a user with Asperger's/autism, ADHD, and dyslexia. Do not change the already-approved conversational personality or style. Keep the experience fresh and engaging through useful, varied, proactive activities and discoveries. | Approved design requirement; engagement approach to be designed |
+| D-045 | Keep UnBoundAI consistently engaging by learning what interests the user and adapting a mix of project support, fresh ideas, discoveries, activities, and playful interactions over time. | Approved; engagement system design and implementation pending |
 
 ## 3. Product experience and navigation
 
@@ -350,6 +351,17 @@ Statuses must be updated only when supported by actual work and test evidence.
 - **Status:** Approved design requirement. Detailed engagement mechanisms and implementation remain to be designed.
 
 - **2026-11-27 clarification:** The user emphasized that the goal is a very uncluttered, highly structured app layout—not a change to conversational behavior. They also stated that if UnBoundAI becomes stagnant or boring, they will stop using it; sustained, meaningful engagement is therefore a core product requirement.
+
+### D-045 — Adaptive, ongoing engagement
+
+- **Decision:** User selected **D — all of the proposed engagement approaches, with the companion learning what keeps the user interested and adapting over time.**
+- **Variety:** Combine proactive help with the user's projects, fresh and relevant ideas, creative activities or challenges, useful tools and free-model discoveries, occasional unexpected finds, and playful interactions.
+- **Personalization:** Learn from the user's expressed interests, choices, feedback, completed activities, and what they choose to return to. Adapt the type, timing, and frequency of suggestions so they remain relevant rather than repetitive.
+- **Initiative:** The companion should sometimes bring something worthwhile to the user's attention without waiting for a command, while recognizing when the user is focused or wants quiet.
+- **Boundaries:** Do not manufacture urgency, overwhelm the interface, or rely on nagging and repetitive notifications to drive engagement. Keep the app uncluttered and structured. Respect quiet hours, notification preferences, and user control over consequential actions and changes.
+- **Status:** Approved; engagement strategy, personalization signals, discovery surfaces, and implementation remain to be designed.
+
+- **2026-11-27:** Question 26 — Sustained engagement: user selected **D**. UnBoundAI should combine project involvement, fresh ideas, discoveries, activities, and playful interactions, while learning and adapting to what keeps the user interested.
 
 ### Ongoing change-record format
 
