@@ -138,6 +138,23 @@ class LlamaCppAdapter(
             }
         }
 
+    fun restoreExperienceState(
+        mood: String?,
+        intensity: Int?,
+        pacing: String?,
+        phase: String?
+    ) {
+        if (mood == null || intensity == null || pacing == null || phase == null) return
+        runCatching {
+            experienceState = ExperienceState(
+                mood = ExperienceMood.valueOf(mood),
+                intensity = intensity.coerceIn(0, 5),
+                pacing = ExperiencePacing.valueOf(pacing),
+                phase = ScenarioPhase.valueOf(phase)
+            )
+        }
+    }
+
     fun cancelGeneration() {
         runtime.cancel()
     }
