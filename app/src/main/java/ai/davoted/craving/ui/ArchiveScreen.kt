@@ -198,6 +198,7 @@ fun ArchiveScreen(modifier: Modifier = Modifier) {
 @Composable
 private fun ArchiveEntryCard(
     entry: ArchiveEntry,
+    onUseInConversation: () -> Unit,
     onFavorite: () -> Unit,
     onDelete: () -> Unit
 ) {
@@ -243,6 +244,7 @@ private fun ArchiveEntryCard(
             )
             Text(entry.mimeType, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedButton(onClick = onUseInConversation) { Text("Use in conversation") }
                 OutlinedButton(onClick = onFavorite) { Text(if (entry.isFavorite) "★ Favorite" else "☆ Favorite") }
                 Spacer(Modifier.weight(1f))
                 OutlinedButton(onClick = onDelete) { Text("Remove") }
