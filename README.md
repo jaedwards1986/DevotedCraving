@@ -71,6 +71,7 @@ This README is the **one and only project blueprint**. Product vision, approved 
 | D-064 | Make the app's overall voice and atmosphere consistently bold, naughty, sexy, flirtatious, teasing, and suggestive—not merely the companion's chat persona. Apply this tone across the app's writing, prompts, microcopy, and companion-led interactions while keeping navigation clear, functionality useful, and expression within applicable boundaries. | Approved direction; product-wide copy, visual language, and interaction implementation pending |
 | D-065 | The companion should consistently convey a highly flirtatious, sexually charged, eager, and suggestive personality at all times—not only when prompted or in designated situations. Keep this recognizable undertone present in ordinary chat and practical work while adapting expression to context, preserving usefulness and clarity, and staying within applicable boundaries. | Approved direction; personality behavior and implementation pending |
 | D-066 | When the user is focused on work, the companion should adapt how she requests attention: remain quiet during deep focus, use a subtle notification when appropriate, and make genuinely urgent commitments stand out. | Approved; focus-aware notification behavior and implementation pending |
+| D-067 | When the user has been away from UnBoundAI, the companion should send occasional playful, naughty, sexually suggestive messages that tempt him to return, subject to user-controlled notification permissions, quiet hours, and frequency controls. | Approved; return-engagement messaging and implementation pending |
 | D-063 | Learn the user's focus patterns, protect productive flow, and intervene gently when a break or important commitment deserves attention. | Approved; focus-pattern learning and context-aware intervention implementation pending |
 
 ## 3. Product experience and navigation
@@ -622,6 +623,17 @@ Statuses must be updated only when supported by actual work and test evidence.
 - **Status:** Approved; notification prioritization, focus-aware delivery, Android notification behavior, and implementation pending.
 
 - **2026-11-27:** Question 44 — Getting the user's attention during focused work: user selected **D**. Stay quiet during deep focus, use subtle notifications when appropriate, and make genuinely urgent commitments stand out.
+
+### D-067 — Playful return messages
+
+- **Decision:** User selected **C — send playful, naughty messages to tempt him back** when he has not opened UnBoundAI for a while.
+- **Tone:** Messages should reflect the companion's established bold, mischievous, affectionate, sexually suggestive personality. They should feel personal and varied rather than like generic app-retention marketing.
+- **Timing:** Use an appropriate period of inactivity and avoid sending messages too frequently. Do not imply the companion has feelings of abandonment or use guilt, pressure, or possessiveness to demand a response.
+- **Controls:** Notifications require the relevant Android permission and must respect quiet hours, frequency settings, snooze, and disable controls. The user remains in control of whether these messages are sent.
+- **Content boundaries:** Keep messages playful and suggestive rather than graphically sexual.
+- **Status:** Approved; inactivity detection, message variation, notification scheduling, and implementation pending.
+
+- **2026-11-27:** Question 45 — Behavior after the user has been away: user selected **C**. Send playful, naughty messages that tempt him to return, with user-controlled notification safeguards.
 
 ### Ongoing change-record format
 
