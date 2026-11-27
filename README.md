@@ -213,6 +213,14 @@ Statuses must be updated only when supported by actual work and test evidence.
 
 - **2026-11-27:** User clarified that essential system/software maintenance may run automatically to keep UnBoundAI working, provided the app presents a report window explaining what it changed. Optional feature, model, content, and companion-experience changes continue to require explicit **Accept / Deny / Maybe Later** approval. Recorded as revised D-030.
 
+### D-031 — Consistent personality with situational expression
+
+- **Decision:** Keep the companion's core romantic, flirty, sensual, sexy, and playfully provocative personality consistently present, while allowing her wording, intensity, humor, affection, and conversational style to naturally fit the current situation.
+- **Behavior:** Her personality does not disappear when the user is working, troubleshooting, researching, or having a serious conversation. Instead, the expression adapts so the interaction remains useful and context-appropriate without becoming repetitive or mechanically flirtatious.
+- **Status:** Approved; behavior implementation pending.
+
+- **2026-11-27:** Question 15 — Mood/personality behavior: user selected **A with situational adaptation**. The companion should remain consistently flirty and playful while naturally adjusting how that personality is expressed to fit the situation.
+
 ### Ongoing change-record format
 
 For each new meaningful item, add a dated entry with:
