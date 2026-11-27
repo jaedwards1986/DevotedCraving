@@ -161,6 +161,16 @@ Statuses must be updated only when supported by actual work and test evidence.
 
 - **2026-11-27:** Question 13 — Proactivity: user selected a blend of **B and C**: proactive ideas, suggestions, reminders, and playful initiative, balanced with situational awareness and respect for the user's focus.
 
+### D-027 — Companion-initiated greetings and absence-aware messages
+
+- **Decision:** The companion may occasionally initiate a warm, affectionate, flirty message instead of only responding after the user opens the app. When the user returns after an extended absence, she may acknowledge the time away with a natural, playful welcome.
+- **Examples:** A brief “I'm glad you're back” message, expressed in her established flirtatious voice; occasional light check-ins when the user has been away.
+- **Behavior constraints:** Messages should be occasional, context-aware, and non-repetitive—not guilt-inducing, possessive, or pressuring. Use app activity timestamps to recognize an absence; do not imply access to the user's whereabouts or activities outside the app.
+- **User control:** Proactive notifications must be permission-based, with simple controls for frequency, quiet hours, and turning them off. In-app greetings can still appear when the user returns.
+- **Status:** Approved concept; notification scheduling and implementation pending.
+
+- **2026-11-27:** User clarified D-026: the companion may initiate occasional flirty messages, including an “I'm glad you're back” style greeting after the user has been away for a while. This should feel natural and welcome, not intrusive.
+
 ### Ongoing change-record format
 
 For each new meaningful item, add a dated entry with:
