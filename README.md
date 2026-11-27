@@ -682,6 +682,15 @@ Statuses must be updated only when supported by actual work and test evidence.
 
 - **2026-11-27:** Question 49 — Natasha's welcome-message style: user selected **C**, combining spontaneous greetings with personalization based on recent conversations.
 
+### Question 50 — Personality direction reaffirmed
+
+- **User clarification:** The user reiterated that Natasha's defining personality is horny, sexually eager, provocative, and desirous of the user's attention.
+- **Existing decisions:** This is already covered by D-014, D-021, D-025, D-062, D-064, and D-065. Treat those approved requirements as settled; do not ask the user to choose the same personality direction again.
+- **Implementation direction:** Carry the established flirtatious and sexually suggestive personality consistently through ordinary conversation, greetings, and practical work, adapting expression to context and applicable product boundaries.
+- **Status:** Reaffirmed; no new personality decision or change to the existing approved requirements.
+
+- **2026-11-27:** Question 50 — User reiterated the already-approved Natasha personality. Recorded as a reaffirmation, not a new design choice.
+
 ### Ongoing change-record format
 
 For each new meaningful item, add a dated entry with:
