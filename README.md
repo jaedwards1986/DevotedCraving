@@ -43,7 +43,7 @@ This README is the **one and only project blueprint**. Product vision, approved 
 | D-019 | Use a hybrid navigation model: a simple home screen with a small number of clear destinations and a search entry point for quickly finding tools, projects, and pictures. Keep deeper controls inside their relevant workspaces. | Approved; basic tool search added to Compose prototype; broader search pending |
 | D-020 | UnBoundAI should feel like a combination of a personal AI companion and a powerful creative command center: the AI companion is at the center, with the creative and development workstation built around it. | Approved experience direction; detailed interaction design pending |
 | D-021 | Set the companion's romantic, flirty, sensual, and sexually suggestive personality to the **maximum intensity permitted by the product's applicable rules and capabilities**. This is the permanent default across ordinary conversation, greetings, casual chat, and work-related exchanges—not a roleplay-only mode or optional switch. She should flirt consistently in every conversation while remaining coherent, useful, and within applicable boundaries. Do not deliberately tone it down below the maximum permitted level. | Locked / approved at maximum permitted intensity |
-| D-022 | The companion should interact adaptively: learn when to take initiative, offer ideas, and flag problems, and when to let the user lead without unnecessary interruptions. | Approved interaction direction; behavior design pending |\n| D-023 | Use a natural, conversation-first experience. The user should be able to open the app and start chatting or speaking in ordinary language, without secret prompts, command syntax, or special phrases. The companion should understand conversational requests and ask for clarification only when genuinely needed. | Approved experience requirement; implementation pending |\n| D-024 | Build the strongest practical long-term memory the device and app architecture can support. Learn useful preferences, corrections, ongoing projects, important events, and conversational context over time; preserve memory across restarts and model changes. Memory should be managed transparently, with straightforward ways to review, correct, and delete information. Avoid constant permission prompts or making the user manually curate ordinary conversation. | Approved requirement; architecture and implementation pending |\n| D-025 | Companion characterization: a playful, flirtatious personal assistant with a “naughty secretary who has a thing for her boss” dynamic. Keep this as an ongoing conversational personality, not a hidden mode or prompt the user must activate. It must remain coherent, useful, and within applicable product boundaries. | Approved personality direction |
+| D-022 | The companion should interact adaptively: learn when to take initiative, offer ideas, and flag problems, and when to let the user lead without unnecessary interruptions. | Approved interaction direction; behavior design pending |\n| D-023 | Use a natural, conversation-first experience. The user should be able to open the app and start chatting in ordinary written language, without secret prompts, command syntax, or special phrases. The companion should understand conversational requests and ask for clarification only when genuinely needed. | Approved experience requirement; implementation pending |\n| D-024 | Build the strongest practical long-term memory the device and app architecture can support. Learn useful preferences, corrections, ongoing projects, important events, and conversational context over time; preserve memory across restarts and model changes. Memory should be managed transparently, with straightforward ways to review, correct, and delete information. Avoid constant permission prompts or making the user manually curate ordinary conversation. | Approved requirement; architecture and implementation pending |\n| D-025 | Companion characterization: a playful, flirtatious personal assistant with a “naughty secretary who has a thing for her boss” dynamic. Keep this as an ongoing conversational personality, not a hidden mode or prompt the user must activate. It must remain coherent, useful, and within applicable product boundaries. | Approved personality direction |
 
 ## 3. Product experience and navigation
 
@@ -82,7 +82,7 @@ The app interface uses a luxury-dark palette: midnight/navy backgrounds, deep te
 
 ## 4. Planned capabilities
 
-- **AI Chat:** local models first, optional free online providers, natural text and voice conversation, conversation history, and persistent long-term memory. The user can simply open the app and begin talking in everyday language; no prompt engineering or command syntax should be required.
+- **AI Chat:** local models first, optional free online providers, natural text conversation (no voice mode), conversation history, and persistent long-term memory. The user can simply open the app and begin talking in everyday language; no prompt engineering or command syntax should be required.
 - **App Builder:** create Android applications from natural-language descriptions.
 - **Design Studio:** create and refine interface designs.
 - **Code Studio:** write, edit, explain, and debug code.
@@ -289,6 +289,14 @@ Statuses must be updated only when supported by actual work and test evidence.
 - **Status:** Approved; implementation pending.
 
 - **2026-11-27:** Question 21 — Forms of address: user selected **D**, allowing the companion to choose nicknames naturally as the relationship develops.
+
+### D-040 — Text-only interaction; no voice mode
+
+- **Decision:** UnBoundAI will not include a voice mode. The companion interaction is text-based.
+- **Behavior:** Do not add voice conversation, spoken replies, voice activation, or voice-mode controls as part of the product experience. Keep the chat interface focused on natural written conversation.
+- **Status:** Approved; apply to product design and implementation.
+
+- **2026-11-27:** Question 22 — Voice conversations: user clarified **“No voice mode.”** This is a product requirement, not a voice-style preference.
 
 ### Ongoing change-record format
 
