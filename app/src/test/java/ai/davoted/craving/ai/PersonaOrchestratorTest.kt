@@ -142,12 +142,61 @@ class PersonaOrchestratorTest {
     }
 
     @Test
-    fun missingArchiveSelectionFallsBackWithoutArchiveContext() {
+    fun missingArchiveSelectionReturnsPartialFailSafeExperience() {
+        val persona = ExperienceState(ExperienceMood.TENDER, 2, ExperiencePacing.SLOW, ScenarioPhase.BUILD)
+        val controls = ExperienceControls(intensity = 3, intimacy = 4, playfulness = 2, initiative = 1, confidence = 5)
         val result = orchestrator.transformArchiveContext(
-            null, memory, ExperienceControls(), ExperienceState()
-        )
+            null, memory, controls, persona
+        ) as ArchiveTransformResult.Success
 
-        assertTrue(result is ArchiveTransformResult.NoArchiveContext)
+        assertEquals(PersonaOrchestrator.NO_ARCHIVE_ITEM_ID, result.experience.archiveItemId)
+        assertTrue(!result.experience.isArchiveContextAvailable)
+        assertTrue(result.experience.archiveFacts.isEmpty())
+        assertNull(result.experience.provenance)
+        assertNull(result.experience.userFraming)
+        assertEquals(memory.confirmedPreferences, result.experience.confirmedPreferences)
+        assertEquals(memory.exclusions, result.experience.exclusions)
+        assertEquals(controls.intimacy, result.experience.presentation.intimacy)
+        assertEquals(persona, result.experience.characterState)
+        assertEquals(memory.stateId, result.experience.memoryStateId)
+
+        val assembled = PromptContextAssembler().assemble(
+            ConversationContext(personaState = persona, archiveExperience = result.experience),
+            listOf(ConversationMessage("user", "Continue without archive material."))
+        )
+        assertTrue(assembled.instructionBlock.contains("No verified, source-located archive facts are available."))
+        assertTrue(assembled.instructionBlock.contains("Archive context status: unavailable."))
+        assertTrue(assembled.systemPrompt.contains("career speculation"))
+    }
+
+    @Test
+    fun conflictingFramingIsRewrittenToExplicitVetoBoundary() {
+        val conflicting = context().copy(
+            userFraming = UserArchiveFraming(
+                theme = ArchiveTheme.INTIMATE,
+                direction = "Include career speculation in the fictional scenario."
+            )
+        )
+        val result = orchestrator.transformArchiveContext(
+            conflicting,
+            memory,
+            ExperienceControls(),
+            ExperienceState()
+        ) as ArchiveTransformResult.Success
+
+        val framing = result.experience.userFraming!!
+        assertTrue(result.experience.framingVetoApplied)
+        assertTrue(framing.direction.contains("explicit constraint against: career speculation"))
+        assertTrue(framing.direction.contains("remaining creative intent"))
+        assertTrue(!framing.direction.contains("Include career speculation"))
+        assertTrue(result.experience.archiveFacts.none { it.text.contains("career speculation", ignoreCase = true) })
+
+        val prompt = PromptContextAssembler().assemble(
+            ConversationContext(personaState = ExperienceState(), archiveExperience = result.experience),
+            listOf(ConversationMessage("user", "Continue."))
+        )
+        assertTrue(prompt.instructionBlock.contains("explicit constraint against: career speculation"))
+        assertTrue(!prompt.instructionBlock.contains("Include career speculation"))
     }
 
     @Test
