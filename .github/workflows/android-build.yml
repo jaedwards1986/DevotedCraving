@@ -34,7 +34,7 @@ jobs:
           echo "$SDK_ROOT/platform-tools" >> "$GITHUB_PATH"
           SDKMANAGER="$SDK_ROOT/cmdline-tools/latest/bin/sdkmanager"
           # Supply a finite buffer of affirmative answers; avoid yes receiving SIGPIPE.
-          printf 'y\\n%.0s' {1..100} | "$SDKMANAGER" --licenses >/dev/null
+          printf 'y\n%.0s' {1..100} | "$SDKMANAGER" --licenses >/dev/null
           "$SDKMANAGER" "platform-tools" "platforms;android-35" "build-tools;35.0.0"
 
       - name: Assemble debug APK
