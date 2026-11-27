@@ -45,7 +45,8 @@ class LlamaCppAdapter(
     private val configuration: LocalModelConfiguration = LocalModelConfiguration()
 ) : AutoCloseable {
     private val operationMutex = Mutex()
-    private val promptContextAssembler = PromptContextAssembler()\n    private val json = Json {
+    private val promptContextAssembler = PromptContextAssembler()
+    private val json = Json {
         ignoreUnknownKeys = true
         isLenient = false
     }
@@ -86,7 +87,8 @@ class LlamaCppAdapter(
     suspend fun generate(
         messages: List<ConversationMessage>,
         confirmedPreferences: List<String> = emptyList(),
-        exclusions: List<String> = emptyList()
+        exclusions: List<String> = emptyList(),
+        archiveExperience: AssembledArchiveExperience? = null
     ): Result<LocalChatTurn> =
         withContext(Dispatchers.IO) {
             operationMutex.withLock {
