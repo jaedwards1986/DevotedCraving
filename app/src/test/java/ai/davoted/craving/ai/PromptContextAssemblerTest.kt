@@ -219,4 +219,36 @@ class PromptContextAssemblerTest {
         assertTrue(result.serializedPrompt.contains("cinematic pacing"))
     }
 
+    @Test
+    fun selectedArchiveMetadataChangesPromptAndFingerprint() {
+        val base = AssembledArchiveExperience(
+            archiveItemId = "local-item-a",
+            archiveFacts = emptyList(),
+            provenance = null,
+            userFraming = null,
+            confirmedPreferences = emptyList(),
+            exclusions = emptyList(),
+            presentation = PresentationParameters(5, 5, 5, 5, 5),
+            characterState = ExperienceState(),
+            memoryStateId = "memory",
+            archiveTitle = "Imported image A",
+            archiveCategory = ArchiveCategory.PHOTOGRAPH,
+            authenticityStatus = ArchiveAuthenticityStatus.UNVERIFIED
+        )
+        val first = assembler.assemble(
+            ConversationContext(personaState = ExperienceState(), archiveExperience = base),
+            listOf(ConversationMessage("user", "Discuss this item."))
+        )
+        val second = assembler.assemble(
+            ConversationContext(
+                personaState = ExperienceState(),
+                archiveExperience = base.copy(archiveTitle = "Imported image B")
+            ),
+            listOf(ConversationMessage("user", "Discuss this item."))
+        )
+
+        assertTrue(first.instructionBlock.contains("Imported image A"))
+        assertTrue(first.contextFingerprint != second.contextFingerprint)
+    }
+
 }
