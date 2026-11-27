@@ -58,12 +58,12 @@ fun LocalInferenceScreen(modifier: Modifier = Modifier) {
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Text(
-            "DAVOTEDCRAVING",
+            "UNBOUNDAI",
             style = MaterialTheme.typography.labelLarge,
             color = MaterialTheme.colorScheme.primary,
             fontWeight = FontWeight.Bold
         )
-        Text("The private experience", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.SemiBold)
+        Text("The Naughty Secretary", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.SemiBold)
         Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
             Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Text(state.modelName, style = MaterialTheme.typography.titleMedium)
