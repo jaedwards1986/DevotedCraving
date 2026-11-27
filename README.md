@@ -66,6 +66,7 @@ This README is the **one and only project blueprint**. Product vision, approved 
 | D-058 | Automatically organize captured thoughts, provide a concise review, and let the user correct categories and approve suggested tasks or reminders. | Approved; review workflow pending |
 | D-059 | Recommend one next task using deadlines, importance, available time, goals, energy, and current focus; let the user override the recommendation. | Approved; prioritization logic pending |
 | D-060 | Recognize important dates and events naturally in conversation, learn which dates matter to the user, and ask for confirmation only when needed before saving or scheduling them. | Approved; date recognition and calendar/reminder integration pending |
+| D-061 | Learn the user's natural daily routine, handle routine organization in the background, and provide timely, low-pressure nudges without imposing a rigid schedule. | Approved; routine learning and adaptive check-ins pending |
 
 ## 3. Product experience and navigation
 
@@ -546,6 +547,18 @@ Statuses must be updated only when supported by actual work and test evidence.
 - **Status:** Approved; date recognition, calendar data model, confirmation rules, and reminder integration pending.
 
 - **2026-11-27:** Question 41 — Important dates: user selected **D**. Learn what matters, recognize dates naturally in conversation, and request confirmation only when genuinely needed.
+
+### D-061 — Natural routine support without rigid scheduling
+
+- **Decision:** User selected **D — learn the user's natural routine, quietly handle organization, and provide timely nudges without making life feel scheduled.**
+- **Learn the routine:** Build a practical understanding of recurring patterns from information the user shares and permitted in-app activity. Treat patterns as flexible, not fixed rules, and allow the user to correct them.
+- **Background organization:** Use the routine context to organize relevant tasks, dates, and follow-ups without requiring the user to create and maintain a detailed daily plan.
+- **Timely nudges:** Offer brief, context-aware prompts when they are likely to help, considering deadlines, the user's current activity, preferred timing, quiet hours, and prior feedback.
+- **No rigid schedule:** Do not impose a minute-by-minute routine, flood the user with notifications, or turn daily life into a checklist. Keep the user free to change direction or ignore a suggestion.
+- **Control and continuity:** Let the user review or correct learned routine patterns and adjust reminder behavior. Preserve approved preferences across sessions and model changes.
+- **Status:** Approved; routine-learning signals, adaptive timing, and check-in implementation pending.
+
+- **2026-11-27:** Question 42 — Daily routine: user selected **D**. Learn the user's natural routine, manage organization quietly, and provide timely nudges without imposing a rigid schedule.
 
 ### Ongoing change-record format
 
