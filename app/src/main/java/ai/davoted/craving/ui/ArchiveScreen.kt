@@ -42,6 +42,16 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import ai.davoted.craving.storage.ArchiveEntry
 import ai.davoted.craving.storage.LocalArchiveStore
+import ai.davoted.craving.ai.ArchiveAccessLevel
+import ai.davoted.craving.ai.ArchiveAuthenticityStatus
+import ai.davoted.craving.ai.ArchiveCategory
+import ai.davoted.craving.ai.ArchiveContext
+import ai.davoted.craving.ai.ArchiveSource
+import ai.davoted.craving.ai.UserArchiveFraming
+import ai.davoted.craving.conversation.ChatViewModel
+import ai.davoted.craving.conversation.ChatViewModelFactory
+import ai.davoted.craving.conversation.ConversationMode
+import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -51,6 +61,7 @@ import java.util.UUID
 @Composable
 fun ArchiveScreen(modifier: Modifier = Modifier) {
     val context = LocalContext.current
+    val chatViewModel: ChatViewModel = viewModel(factory = remember(context) { ChatViewModelFactory(context.applicationContext) })
     val scope = rememberCoroutineScope()
     val store = remember { LocalArchiveStore(context) }
     val entries = remember { mutableStateListOf<ArchiveEntry>() }
@@ -141,6 +152,27 @@ fun ArchiveScreen(modifier: Modifier = Modifier) {
             items(entries, key = ArchiveEntry::id) { entry ->
                 ArchiveEntryCard(
                     entry = entry,
+                    onUseInConversation = {
+                        val category = if (entry.mimeType.startsWith("video/")) ArchiveCategory.VIDEO else ArchiveCategory.PHOTOGRAPH
+                        chatViewModel.selectArchiveContext(
+                            ArchiveContext(
+                                archiveItemId = entry.id,
+                                title = entry.title,
+                                category = category,
+                                source = ArchiveSource(
+                                    sourceId = "user-import:${entry.id}",
+                                    url = entry.sourceUrl,
+                                    capturedAtMillis = entry.addedAtMillis,
+                                    accessLevel = ArchiveAccessLevel.USER_PROVIDED,
+                                    authenticityStatus = ArchiveAuthenticityStatus.UNVERIFIED
+                                ),
+                                userFraming = UserArchiveFraming(userAuthored = true),
+                                selectedAtMillis = System.currentTimeMillis()
+                            )
+                        )
+                        chatViewModel.setMode(ConversationMode.FACTUAL)
+                        status = "Selected for factual archive discussion. Imported media remains unverified until independently checked."
+                    },
                     onFavorite = {
                         val index = entries.indexOfFirst { it.id == entry.id }
                         if (index >= 0) {
