@@ -52,6 +52,7 @@ This README is the **one and only project blueprint**. Product vision, approved 
 | D-044 | Keep the interface extremely uncluttered, highly structured, predictable, and easy to navigate for a user with Asperger's/autism, ADHD, and dyslexia. Do not change the already-approved conversational personality or style. Keep the experience fresh and engaging through useful, varied, proactive activities and discoveries. | Approved design requirement; engagement approach to be designed |
 | D-045 | Keep UnBoundAI consistently engaging by learning what interests the user and adapting a mix of project support, fresh ideas, discoveries, activities, and playful interactions over time. | Approved; engagement system design and implementation pending |
 | D-046 | Introduce discoveries through a dedicated Discover area, relevant conversational suggestions, and a small personalized daily selection on Home, coordinated to avoid clutter and repetition. | Approved; interface and delivery behavior pending |
+| D-047 | Use a personalized engagement rhythm: a small daily surprise, occasional spontaneous discoveries when genuinely relevant, and more frequent discoveries while the user is actively exploring. | Approved; scheduling and personalization pending |
 
 ## 3. Product experience and navigation
 
@@ -374,6 +375,17 @@ Statuses must be updated only when supported by actual work and test evidence.
 - **Status:** Approved; detailed UX, discovery curation, personalization, and implementation pending.
 
 - **2026-11-27:** Question 27 — Discovery delivery: user selected **D**. Use a dedicated Discover area, relevant suggestions within conversations, and a small personalized daily selection on Home, coordinated to avoid clutter and repetition.
+
+### D-047 — Personalized discovery rhythm
+
+- **Decision:** User selected **D — combine daily surprises, occasional spontaneous discoveries, and increased discovery activity when actively exploring.**
+- **Daily:** Offer a small, worthwhile personalized surprise or discovery as part of the daily Home selection.
+- **Spontaneous:** The companion may surface an occasional discovery when it is genuinely relevant to the user's interests, current conversation, or projects.
+- **Exploration:** When the user is actively browsing, creating, or researching, offer more discoveries and related ideas while keeping them relevant.
+- **Pacing:** Learn which suggestions the user opens, ignores, saves, or dismisses. Adapt frequency and subject matter without becoming repetitive or intrusive. Respect quiet hours and notification preferences; keep the interface uncluttered.
+- **Status:** Approved; pacing logic, preference signals, and implementation pending.
+
+- **2026-11-27:** Question 28 — Discovery frequency: user selected **D**. Combine a daily surprise, occasional relevant spontaneous discoveries, and more activity during active exploration.
 
 ### Ongoing change-record format
 
