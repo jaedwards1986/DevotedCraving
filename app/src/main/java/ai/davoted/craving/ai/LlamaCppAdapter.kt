@@ -45,7 +45,7 @@ class LlamaCppAdapter(
     private val configuration: LocalModelConfiguration = LocalModelConfiguration()
 ) : AutoCloseable {
     private val operationMutex = Mutex()
-    private val json = Json {
+    private val promptContextAssembler = PromptContextAssembler()\n    private val json = Json {
         ignoreUnknownKeys = true
         isLenient = false
     }
@@ -99,7 +99,7 @@ class LlamaCppAdapter(
                 try {
                     require(messages.isNotEmpty()) { "At least one conversation message is required." }
                     val raw = runtime.generate(
-                        prompt = buildPrompt(messages, experienceState, confirmedPreferences, exclusions),
+                        prompt = promptContextAssembler.assemble(messages, experienceState, confirmedPreferences, exclusions, archiveExperience),
                         maxTokens = configuration.maxTokens,
                         temperature = configuration.temperature
                     )
@@ -130,34 +130,6 @@ class LlamaCppAdapter(
     override fun close() {
         runtime.close()
         status = LocalModelStatus.UNLOADED
-    }
-
-    private fun buildPrompt(
-        messages: List<ConversationMessage>,
-        current: ExperienceState,
-        confirmedPreferences: List<String>,
-        exclusions: List<String>
-    ): String = buildString {
-        appendLine("You are the dedicated conversational experience inside DavotedCraving, a Natasha Nice-centered fan sanctuary.")
-        appendLine("Treat Natasha Nice as a real adult performer: discuss only verifiable public information and authentic archive context; do not impersonate her, claim to speak for her, invent private facts, or place her in sexual scenarios.")
-        appendLine("Adult roleplay, when requested, must use clearly fictional consenting adult characters who are not identifiable real people. Keep the app's unified Natasha-centered theme through the user's interests, archive context, atmosphere, and personalization without falsely attributing fictional events to a real person.")
-        appendLine("Continue the conversation naturally. Do not claim to control device hardware.")
-        appendLine("At the end, emit exactly one state block using this schema:")
-        appendLine("<dc_state>{\"schemaVersion\":1,\"mood\":\"TEASING\",\"intensity\":2,\"pacing\":\"SLOW\",\"phase\":\"BUILD\"}</dc_state>")
-        appendLine("Allowed mood: CALM, PLAYFUL, TEASING, CONFIDENT, INTENSE, TENDER, AFTERGLOW.")
-        appendLine("Allowed pacing: SLOW, STEADY, BRISK, PAUSE.")
-        appendLine("Allowed phase: OPENING, BUILD, TURNING_POINT, RESOLUTION, AFTERGLOW.")
-        appendLine("Intensity is an integer from 0 to 5. The app validates all proposed state changes.")
-        appendLine("Current validated experience state: $current")
-        appendLine("User-confirmed preferences: ${confirmedPreferences.joinToString("; ").ifBlank { "none recorded" }}")
-        appendLine("Explicit user exclusions (must be followed and override other preferences): ${exclusions.joinToString("; ").ifBlank { "none recorded" }}")
-        messages.forEach { message ->
-            appendLine()
-            append(message.role.trim().uppercase())
-            append(": ")
-            appendLine(message.content)
-        }
-        append("ASSISTANT: ")
     }
 
     private fun parseModelOutput(
