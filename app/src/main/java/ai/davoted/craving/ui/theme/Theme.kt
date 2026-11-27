@@ -5,21 +5,25 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
-private val DavotedColors = darkColorScheme(
-    primary = Color(0xFFC9A227),
-    onPrimary = Color(0xFF0B0708),
-    secondary = Color(0xFFB98C83),
-    background = Color(0xFF0B0708),
-    surface = Color(0xFF140D0F),
-    onBackground = Color(0xFFE8DCC8),
-    onSurface = Color(0xFFE8DCC8),
-    error = Color(0xFFE2571F)
+private val UnBoundColors = darkColorScheme(
+    primary = Color(0xFFC7A66A),
+    onPrimary = Color(0xFF071321),
+    secondary = Color(0xFF35A6A0),
+    onSecondary = Color(0xFF06151C),
+    tertiary = Color(0xFF6F8FD0),
+    background = Color(0xFF071321),
+    surface = Color(0xFF0D2030),
+    surfaceVariant = Color(0xFF152D40),
+    onBackground = Color(0xFFE7EEF2),
+    onSurface = Color(0xFFE7EEF2),
+    onSurfaceVariant = Color(0xFFAFC3D1),
+    error = Color(0xFFE16D68)
 )
 
 @Composable
 fun CravingTheme(content: @Composable () -> Unit) {
     MaterialTheme(
-        colorScheme = DavotedColors,
+        colorScheme = UnBoundColors,
         content = content
     )
 }
