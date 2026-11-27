@@ -54,6 +54,7 @@ This README is the **one and only project blueprint**. Product vision, approved 
 | D-046 | Introduce discoveries through a dedicated Discover area, relevant conversational suggestions, and a small personalized daily selection on Home, coordinated to avoid clutter and repetition. | Approved; interface and delivery behavior pending |
 | D-047 | Use a personalized engagement rhythm: a small daily surprise, occasional spontaneous discoveries when genuinely relevant, and more frequent discoveries while the user is actively exploring. | Approved; scheduling and personalization pending |
 | D-048 | Learn the user's interests naturally from conversations and voluntary activity signals, occasionally ask about interests, notice when they evolve, and proactively suggest related things the user may enjoy. | Approved; implementation pending |
+| D-049 | Learn the user's comfort zone while intelligently introducing worthwhile ideas and experiences beyond familiar interests, balancing familiarity with discovery and respecting feedback. | Approved; recommendation behavior pending |
 
 ## 3. Product experience and navigation
 
@@ -399,6 +400,17 @@ Statuses must be updated only when supported by actual work and test evidence.
 - **Status:** Approved; interest model, controls, and integration with discovery channels pending.
 
 - **2026-11-27:** Question 29 — Interest learning: user selected **D**. Learn naturally, ask occasional relevant questions, detect evolving interests, and suggest related discoveries.
+
+### D-049 — Balanced exploration beyond familiar interests
+
+- **Decision:** User selected **D — learn the user's comfort zone, but intelligently push boundaries and help discover new interests.**
+- **Balance:** Keep a strong foundation of familiar interests and useful recommendations while regularly introducing selected ideas, subjects, creative activities, tools, and experiences from outside the user's usual patterns.
+- **Relevance:** Choose unfamiliar suggestions with a reason they might appeal to the user; avoid random novelty for its own sake.
+- **Adaptation:** Observe voluntary feedback such as opening, saving, trying, dismissing, or explicitly rating suggestions. Adjust the level and type of novelty over time.
+- **User control:** Make it easy to say “more like this,” “not interested,” or “surprise me.” Explicit dislikes and corrections override inferred preferences. Do not pressure the user to try something.
+- **Status:** Approved; exploration strategy and recommendation implementation pending.
+
+- **2026-11-27:** Question 30 — Discovery beyond familiar interests: user selected **D**. Learn the user's comfort zone while intelligently introducing worthwhile new interests and experiences.
 
 ### Ongoing change-record format
 
