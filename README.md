@@ -45,6 +45,8 @@ This README is the **one and only project blueprint**. Product vision, approved 
 | D-021 | Set the companion's romantic, flirty, sensual, and sexually suggestive personality to the **maximum intensity permitted by the product's applicable rules and capabilities**. This is the permanent default across ordinary conversation, greetings, casual chat, and work-related exchanges—not a roleplay-only mode or optional switch. She should flirt consistently in every conversation while remaining coherent, useful, and within applicable boundaries. Do not deliberately tone it down below the maximum permitted level. | Locked / approved at maximum permitted intensity |
 | D-022 | The companion should interact adaptively: learn when to take initiative, offer ideas, and flag problems, and when to let the user lead without unnecessary interruptions. | Approved interaction direction; behavior design pending |\n| D-023 | Use a natural, conversation-first experience. The user should be able to open the app and start chatting in ordinary written language, without secret prompts, command syntax, or special phrases. The companion should understand conversational requests and ask for clarification only when genuinely needed. | Approved experience requirement; implementation pending |\n| D-024 | Build the strongest practical long-term memory the device and app architecture can support. Learn useful preferences, corrections, ongoing projects, important events, and conversational context over time; preserve memory across restarts and model changes. Memory should be managed transparently, with straightforward ways to review, correct, and delete information. Avoid constant permission prompts or making the user manually curate ordinary conversation. | Approved requirement; architecture and implementation pending |\n| D-025 | Companion characterization: a playful, flirtatious personal assistant with a “naughty secretary who has a thing for her boss” dynamic. Keep this as an ongoing conversational personality, not a hidden mode or prompt the user must activate. It must remain coherent, useful, and within applicable product boundaries. | Approved personality direction |
 
+| D-042 | The companion proactively notices possible tasks, deadlines, and commitments in ordinary conversations, then asks before adding them to the task list. Once confirmed, organize and track them, suggest priorities, and provide user-controlled reminders. | Approved; implementation pending |
+
 ## 3. Product experience and navigation
 
 ### App launch — approved
@@ -88,7 +90,7 @@ The app interface uses a luxury-dark palette: midnight/navy backgrounds, deep te
 - **Code Studio:** write, edit, explain, and debug code.
 - **Projects:** save and manage work in one place.
 - **Settings:** model management, privacy, appearance, and data management.
-- **Personal Secretary:** conversational daily planning, task and commitment tracking, follow-ups, and user-controlled reminders.
+- **Personal Secretary:** conversational daily planning, task and commitment tracking, follow-ups, and user-controlled reminders. Proactively detect possible tasks, deadlines, and commitments in conversation, then ask the user to confirm before adding them.
 
 These are product goals, not claims that the capabilities are already implemented.
 
@@ -308,6 +310,16 @@ Statuses must be updated only when supported by actual work and test evidence.
 - **Status:** Approved; product behavior and implementation pending.
 
 - **2026-11-27:** Question 23 — Daily routine: user selected **C**, clarifying the role as **“my naughty secretary.”** The companion should organize the day, remember commitments, track tasks, suggest improvements, and provide gentle accountability without nagging, while retaining her approved personality.
+
+### D-042 — Proactive task and commitment capture
+
+- **Decision:** The companion should notice possible tasks, deadlines, appointments, and commitments mentioned naturally during conversations, rather than relying only on explicit task-entry commands.
+- **Confirmation:** When she detects a likely task or commitment, she should briefly ask whether the user wants it added to the task list or calendar/reminder workflow. Do not silently create tasks, deadlines, or reminders from ambiguous conversation.
+- **Organization:** Once confirmed, add the item, retain its relevant details, suggest sensible priorities when useful, track progress, and provide reminders according to the user's preferences and Android notification permissions.
+- **Behavior:** Keep capture low-friction and context-aware. Avoid repeatedly asking about the same item, interrupting focused work, or nagging when the user declines.
+- **Status:** Approved; conversation detection, confirmation flow, task storage, and reminder implementation pending.
+
+- **2026-11-27:** Question 24 — Task management: user selected **D**. The companion should proactively notice possible commitments in ordinary conversation and ask before adding them, then organize, prioritize, track, and remind as approved.
 
 ### Ongoing change-record format
 
