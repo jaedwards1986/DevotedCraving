@@ -53,6 +53,7 @@ This README is the **one and only project blueprint**. Product vision, approved 
 | D-045 | Keep UnBoundAI consistently engaging by learning what interests the user and adapting a mix of project support, fresh ideas, discoveries, activities, and playful interactions over time. | Approved; engagement system design and implementation pending |
 | D-046 | Introduce discoveries through a dedicated Discover area, relevant conversational suggestions, and a small personalized daily selection on Home, coordinated to avoid clutter and repetition. | Approved; interface and delivery behavior pending |
 | D-047 | Use a personalized engagement rhythm: a small daily surprise, occasional spontaneous discoveries when genuinely relevant, and more frequent discoveries while the user is actively exploring. | Approved; scheduling and personalization pending |
+| D-048 | Learn the user's interests naturally from conversations and voluntary activity signals, occasionally ask about interests, notice when they evolve, and proactively suggest related things the user may enjoy. | Approved; implementation pending |
 
 ## 3. Product experience and navigation
 
@@ -386,6 +387,18 @@ Statuses must be updated only when supported by actual work and test evidence.
 - **Status:** Approved; pacing logic, preference signals, and implementation pending.
 
 - **2026-11-27:** Question 28 — Discovery frequency: user selected **D**. Combine a daily surprise, occasional relevant spontaneous discoveries, and more activity during active exploration.
+
+### D-048 — Adaptive interest learning
+
+- **Decision:** User selected **D — learn interests naturally, occasionally ask what the user is interested in, notice when interests change, and introduce related things they may enjoy.**
+- **Natural learning:** Use relevant information the user shares in conversations and voluntary in-app activity signals, such as topics and projects they choose to explore, save, or revisit. Do not infer sensitive traits or treat a passing mention as a permanent preference.
+- **Check-ins:** Occasionally ask a simple, relevant question when it would improve recommendations. Avoid repeatedly asking for information already provided.
+- **Changing interests:** Allow interests to evolve. Give more weight to recent explicit preferences and corrections; let the user revise or remove learned interests.
+- **Discovery:** Use the interest profile to personalize daily selections, the Discover area, conversational suggestions, creative activities, and project ideas. Keep suggestions varied, useful, and non-repetitive.
+- **Privacy and control:** Make learned interests understandable and user-editable. Use only signals available within the app and permitted by the user's settings; do not imply background monitoring of unrelated activity.
+- **Status:** Approved; interest model, controls, and integration with discovery channels pending.
+
+- **2026-11-27:** Question 29 — Interest learning: user selected **D**. Learn naturally, ask occasional relevant questions, detect evolving interests, and suggest related discoveries.
 
 ### Ongoing change-record format
 
