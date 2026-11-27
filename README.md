@@ -38,6 +38,7 @@ This README is the **one and only project blueprint**. Product vision, approved 
 | D-015 | Default personality intensity is **C — Extremely**: strongly expressive, overtly flirtatious, sensual, and playfully provocative. | Approved |
 | D-010 | Keep all project documentation in this single GitHub document. | Approved |
 | D-016 | Logo direction: retain the flowing, sculptural U/infinity-style emblem and orbital sweep from the approved mockup; use midnight/navy blue, sapphire, and deep teal with metallic highlights. Remove the silk/fabric background. The overall treatment should feel sensual, provocative, luxurious, and cinematic. | Approved direction; production logo refinement pending |
+| D-017 | App interface visual style: **C — Luxury dark**. Use midnight blue, deep teal, and restrained metallic details throughout the Android interface. | Approved |
 
 ## 3. Product experience and navigation
 
@@ -72,7 +73,7 @@ This is the approved starting design, not a restriction against later refinement
 
 The user approved the latest UnBoundAI logo mockup as the visual direction. Preserve its distinctive flowing, sculptural U/infinity-style emblem and orbital sweep. The chosen palette is midnight/navy blue, sapphire, and deep teal with metallic highlights. Do not use a silk or fabric background. The intended mood is sensual, provocative, luxurious, and cinematic.
 
-The logo artwork is a concept reference, not yet a production-ready vector or app-icon asset. Refinement should preserve the emblem's recognizable silhouette and ensure it remains legible at small sizes. The user has approved this direction; do not reopen the basic concept unless they ask.
+The app interface uses a luxury-dark palette: midnight/navy backgrounds, deep teal and sapphire accents, restrained metallic highlights, and cool muted text. Avoid the former violet/electric-cyan palette. The logo artwork is a concept reference, not yet a production-ready vector or app-icon asset. Refinement should preserve the emblem's recognizable silhouette and ensure it remains legible at small sizes. The user has approved this direction; do not reopen the basic concept unless they ask.
 
 ## 4. Planned capabilities
 
@@ -109,10 +110,11 @@ Technical choices may be refined as implementation begins. Record approved chang
 | 2 | Welcome screen and initial interface prototype | Compose source committed; build not verified; dashboard design pending |
 | 3 | Android application identity and foundation | App label, Gradle project name, namespace, and application ID updated; build not verified |
 | 4 | Logo refinement and production assets | Approved visual direction; vector and app-icon assets pending |
-| 5 | Local model management and offline chat | Not started |
-| 6 | Projects, persistence, and workspace tools | Not started |
-| 7 | App Builder, Design Studio, and Code Studio workflows | Not started |
-| 8 | Pixel 9 Pro XL testing and installable APK validation | Not started |
+| 5 | Apply luxury-dark interface palette | Compose theme and welcome/workspace surfaces updated in source; build not verified |
+| 6 | Local model management and offline chat | Not started |
+| 7 | Projects, persistence, and workspace tools | Not started |
+| 8 | App Builder, Design Studio, and Code Studio workflows | Not started |
+| 9 | Pixel 9 Pro XL testing and installable APK validation | Not started |
 
 Statuses must be updated only when supported by actual work and test evidence.
 
@@ -135,6 +137,8 @@ Statuses must be updated only when supported by actual work and test evidence.
 - **2026-11-27:** Question 3 — Welcome screen content: selected **E**, combining four primary actions (Start Chat, Build an App, Design Something, Write Code) with user-customizable shortcuts.
 - **2026-11-27:** Question 4 — User specified an always-present seductive, sensual, flirty, sexy, and playfully provocative personality.
 - **2026-11-27:** Question 5 — Default personality intensity selected as **C — Extremely**.
+- **2026-11-27:** Question 7 — App interface visual style selected as **C — Luxury dark**: midnight blue, deep teal, and metallic details.
+- **2026-11-27:** Updated the Compose theme and welcome/workspace surfaces from violet/cyan to a midnight-blue and deep-teal palette. Build and device validation remain pending.
 - **2026-11-27:** User approved the latest logo mockup direction: the original flowing emblem and orbital sweep, shifted to dark blues and teals, without silk, with a more sensual and provocative visual treatment. Production asset refinement remains pending.
 - **2026-11-27:** User requested a single GitHub document as the durable project blueprint and decision record.
 - **2026-11-27:** User asked that approved decisions be implemented in code when repository context permits, with implementation and validation status recorded in this blueprint.
