@@ -181,6 +181,26 @@ Statuses must be updated only when supported by actual work and test evidence.
 
 - **2026-11-27:** User clarified and approved companion-initiated flirty messages, including context-aware "glad you're back" greetings after an extended absence. User explicitly asked to lock this behavior in.
 
+### D-028 — Safe maintenance, recovery, and controlled updates
+
+- **Decision:** Include lightweight scheduled maintenance and update safeguards designed to protect the user's app, settings, projects, memories, and downloaded models.
+- **Nightly maintenance:** When practical and permitted by Android background-work limits, perform non-destructive checks such as storage/integrity checks, backup verification, stale temporary-file cleanup, and checking whether approved update sources are reachable. Maintenance must not silently alter app behavior, user settings, projects, memories, or model choices.
+- **Failure safeguards:** Use staged downloads, checksum/signature verification where available, sufficient-storage checks, atomic installation/replacement, recoverable backups, and rollback or recovery paths. Never delete a working model or user data merely to make room without explicit approval.
+- **Updates:** Check for available security, compatibility, model, and feature updates on a weekly cadence; prepare a stable, curated update summary approximately monthly. Downloading or applying changes must follow the user's approval preference. No silent app, dependency, model, or persona changes.
+- **Android limitation:** Background work is best-effort and subject to Android scheduling, battery, network, and device constraints; do not promise an exact nightly execution time.
+- **Status:** Approved direction; implementation and update-source design pending.
+
+### D-029 — Keep the companion experience fresh
+
+- **Decision:** Provide a regular stream of optional, free ways to keep the companion and app experience from becoming stagnant.
+- **Cadence:** Weekly discovery of new conversation ideas, activities, interaction styles, and compatible free models/features; a monthly curated “what's new” package or release where worthwhile.
+- **Continuity:** Preserve the companion's approved core personality, relationship continuity, user preferences, and long-term memories. New experiences may add variety, but must not silently rewrite her identity or user data.
+- **User control:** Present proposed additions clearly and let the user preview and approve them. Do not require updates to continue using the current working version.
+- **Cost constraint:** No paid APIs, subscriptions, or required paid services. Prefer local content and free/open resources; clearly disclose any online or storage requirements.
+- **Status:** Approved direction; experience design and implementation pending.
+
+- **2026-11-27:** User requested protective maintenance/fail-safes and recurring updates to keep the software reliable and the companion experience fresh. Approved direction recorded as D-028 and D-029: non-destructive maintenance, verified/staged updates with recovery, weekly discovery, and monthly curated updates, with user approval and no silent changes.
+
 ### Ongoing change-record format
 
 For each new meaningful item, add a dated entry with:
