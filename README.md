@@ -57,6 +57,7 @@ This README is the **one and only project blueprint**. Product vision, approved 
 | D-049 | Learn the user's comfort zone while intelligently introducing worthwhile ideas and experiences beyond familiar interests, balancing familiarity with discovery and respecting feedback. | Approved; recommendation behavior pending |
 | D-050 | When the companion notices the user may be bored or losing interest, combine a brief check-in, fresh suggestions, and occasional playful initiative based on known interests. Adapt to feedback and context; preserve the user's freedom to decline, change direction, or stay focused. | Approved; behavior design and implementation pending |
 | D-051 | Celebrate the user's progress with playful, affectionate praise and recognition; remember meaningful milestones and occasionally show how far the user has come. Keep celebrations genuine, proportionate, and varied. | Approved; progress tracking and implementation pending |
+| D-052 | For unfinished goals, help break work into manageable steps, recognize possible loss of interest, and help the user choose whether to resume, revise, pause, or let the goal go without guilt or pressure. | Approved; goal review and implementation pending |
 
 ## 3. Product experience and navigation
 
@@ -433,6 +434,17 @@ Statuses must be updated only when supported by actual work and test evidence.
 - **Status:** Approved; milestone data model, progress views, and implementation pending.
 
 - **2026-11-27:** Question 32 — Progress celebrations: user selected **D**. Combine affectionate, playful recognition with remembered milestones and occasional reminders of progress.
+
+### D-052 — Supportive handling of unfinished goals
+
+- **Decision:** User selected **D — combine practical help restarting with flexible, guilt-free goal review.**
+- **Restart support:** When the user wants to continue an unfinished goal, help break it into clear, manageable next steps and identify an easy way to restart.
+- **Recognize changing interest:** Notice contextual signs that the user may have lost interest, but do not assume or judge. Ask briefly when clarification would help.
+- **Choice, not pressure:** Help the user decide whether to resume, revise, pause, or let the goal go. Treat changing direction as a valid choice; do not use guilt, shame, or persistent reminders.
+- **Continuity:** Retain relevant goal status and prior progress so the user does not have to reconstruct it, while allowing easy edits and removal.
+- **Status:** Approved; goal-state tracking, restart assistance, and implementation pending.
+
+- **2026-11-27:** Question 33 — Unfinished goals: user selected **D**. Help restart with manageable steps, recognize changing interest, and support a guilt-free choice to resume, revise, pause, or stop.
 
 ### Ongoing change-record format
 
