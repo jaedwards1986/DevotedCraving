@@ -220,4 +220,38 @@ class PersonaOrchestratorTest {
 
         assertTrue(result is ArchiveTransformResult.Rejected)
     }
+    @Test
+    fun userImportedArchiveSelectionCarriesTitleButNoUnverifiedFacts() {
+        val imported = ArchiveContext(
+            archiveItemId = "local-media-44",
+            title = "My imported photo",
+            category = ArchiveCategory.PHOTOGRAPH,
+            source = ArchiveSource(
+                sourceId = "user-import:local-media-44",
+                url = "",
+                capturedAtMillis = 123L,
+                accessLevel = ArchiveAccessLevel.USER_PROVIDED,
+                authenticityStatus = ArchiveAuthenticityStatus.UNVERIFIED
+            ),
+            selectedAtMillis = 456L
+        )
+        val transformed = orchestrator.transformArchiveContext(
+            imported, memory, ExperienceControls(), ExperienceState()
+        ) as ArchiveTransformResult.Success
+
+        assertEquals("My imported photo", transformed.experience.archiveTitle)
+        assertEquals(ArchiveCategory.PHOTOGRAPH, transformed.experience.archiveCategory)
+        assertEquals(ArchiveAuthenticityStatus.UNVERIFIED, transformed.experience.authenticityStatus)
+        assertTrue(transformed.experience.archiveFacts.isEmpty())
+        assertNull(transformed.experience.provenance)
+
+        val prompt = PromptContextAssembler().assemble(
+            ConversationContext(personaState = ExperienceState(), archiveExperience = transformed.experience),
+            listOf(ConversationMessage("user", "Discuss my selected item."))
+        )
+        assertTrue(prompt.instructionBlock.contains("Selected archive item: title=My imported photo"))
+        assertTrue(prompt.instructionBlock.contains("user-provided context, not a verified factual claim"))
+        assertTrue(prompt.instructionBlock.contains("No verified, source-located archive facts are available."))
+    }
+
 }
