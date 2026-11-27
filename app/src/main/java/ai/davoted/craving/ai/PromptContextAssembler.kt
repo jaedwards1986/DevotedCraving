@@ -28,7 +28,7 @@ class PromptContextAssembler {
         val effectivePreferences = (confirmedPreferences + archiveExperience?.confirmedPreferences.orEmpty())
             .map { it.trim() }.filter { it.isNotBlank() }.distinct().sorted()
         val effectiveExclusions = (exclusions + archiveExperience?.exclusions.orEmpty())
-            .map(String::trim).filter(String::isNotBlank).distinct().sorted()
+            .map { it.trim() }.filter { it.isNotBlank() }.distinct().sorted()
 
         // Precedence 1: exclusions and corrections.
         appendLine("PRIORITY 1 — EXPLICIT EXCLUSIONS AND CORRECTIONS (absolute veto): ${effectiveExclusions.joinToString("; ").ifBlank { "none recorded" }}")
