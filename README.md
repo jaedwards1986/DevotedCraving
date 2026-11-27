@@ -271,6 +271,17 @@ Statuses must be updated only when supported by actual work and test evidence.
 
 - **2026-11-27:** Question 19 — Disagreements: user selected **C**, preferring playful challenges, teasing, and honest opinions within an affectionate, respectful relationship.
 
+### D-038 — Maximum practical long-term conversational memory
+
+- **Decision:** Build the strongest practical long-term memory the device and app architecture can support, prioritizing continuity across conversations, app restarts, and model changes.
+- **Remember:** Meaningful conversations and shared experiences; preferences and dislikes; explicit corrections; inside jokes; important moments and durable events; ongoing projects, decisions, and progress; and context that helps the companion maintain a coherent conversational relationship over time.
+- **Learn naturally:** Identify useful memory candidates from ordinary conversation without requiring secret prompts or constant manual curation. Distinguish confirmed facts from uncertain inferences, and give explicit user corrections and exclusions priority over inferred information.
+- **Memory quality and control:** Retrieve relevant memories when they matter rather than indiscriminately injecting everything into every prompt. Provide clear ways to review, correct, and delete memories, with privacy-conscious local storage and backup/recovery safeguards. Be transparent about device storage, context-window, and model limitations; do not promise perfect verbatim recall of every message.
+- **Continuity:** Memory belongs to UnBoundAI, not to an individual model. Switching models must not reset the user's preferences, memories, or ongoing context.
+- **Status:** Approved; architecture refinement and implementation pending.
+
+- **2026-11-27:** Question 20 — Long-term memory: user selected **C — maximum practical long-term memory**, including meaningful conversations, inside jokes, preferences, corrections, important moments, ongoing projects, and relationship continuity, learned naturally over time.
+
 ### Ongoing change-record format
 
 For each new meaningful item, add a dated entry with:
