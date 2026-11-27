@@ -202,4 +202,21 @@ class PromptContextAssemblerTest {
         assertTrue(result.instructionBlock.contains("PRIORITY 5 — HISTORY"))
     }
 
+    @Test
+    fun fictionalPromptStreamDoesNotReceiveArchiveFacts() {
+        val result = assembler.assemble(
+            context = ConversationContext(
+                personaState = ExperienceState(),
+                confirmedPreferences = listOf("cinematic pacing"),
+                exclusions = listOf("no humiliation"),
+                archiveExperience = null
+            ),
+            messages = listOf(ConversationMessage("user", "Continue the fictional scene."))
+        )
+
+        assertTrue(result.serializedPrompt.contains("No verified, source-located archive facts are available."))
+        assertTrue(!result.serializedPrompt.contains("Public interview fact."))
+        assertTrue(result.serializedPrompt.contains("cinematic pacing"))
+    }
+
 }
