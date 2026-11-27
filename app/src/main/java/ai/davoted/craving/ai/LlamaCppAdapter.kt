@@ -83,7 +83,11 @@ class LlamaCppAdapter(
         }
     }
 
-    suspend fun generate(messages: List<ConversationMessage>): Result<LocalChatTurn> =
+    suspend fun generate(
+        messages: List<ConversationMessage>,
+        confirmedPreferences: List<String> = emptyList(),
+        exclusions: List<String> = emptyList()
+    ): Result<LocalChatTurn> =
         withContext(Dispatchers.IO) {
             operationMutex.withLock {
                 if (status != LocalModelStatus.READY) {
@@ -95,7 +99,7 @@ class LlamaCppAdapter(
                 try {
                     require(messages.isNotEmpty()) { "At least one conversation message is required." }
                     val raw = runtime.generate(
-                        prompt = buildPrompt(messages, experienceState),
+                        prompt = buildPrompt(messages, experienceState, confirmedPreferences, exclusions),
                         maxTokens = configuration.maxTokens,
                         temperature = configuration.temperature
                     )
@@ -130,7 +134,9 @@ class LlamaCppAdapter(
 
     private fun buildPrompt(
         messages: List<ConversationMessage>,
-        current: ExperienceState
+        current: ExperienceState,
+        confirmedPreferences: List<String>,
+        exclusions: List<String>
     ): String = buildString {
         appendLine("You are the local conversation model for DavotedCraving.")
         appendLine("Continue the conversation naturally. Do not claim to control device hardware.")
@@ -141,6 +147,8 @@ class LlamaCppAdapter(
         appendLine("Allowed phase: OPENING, BUILD, TURNING_POINT, RESOLUTION, AFTERGLOW.")
         appendLine("Intensity is an integer from 0 to 5. The app validates all proposed state changes.")
         appendLine("Current validated experience state: $current")
+        appendLine("User-confirmed preferences: ${confirmedPreferences.joinToString("; ").ifBlank { "none recorded" }}")
+        appendLine("Explicit user exclusions (must be followed and override other preferences): ${exclusions.joinToString("; ").ifBlank { "none recorded" }}")
         messages.forEach { message ->
             appendLine()
             append(message.role.trim().uppercase())
