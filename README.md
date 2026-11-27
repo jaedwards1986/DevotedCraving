@@ -201,6 +201,17 @@ Statuses must be updated only when supported by actual work and test evidence.
 
 - **2026-11-27:** User requested protective maintenance/fail-safes and recurring updates to keep the software reliable and the companion experience fresh. Approved direction recorded as D-028 and D-029: non-destructive maintenance, verified/staged updates with recovery, weekly discovery, and monthly curated updates, with user approval and no silent changes.
 
+### D-030 — Explicit update decisions and non-destructive changes
+
+- **Decision:** Every proposed app, model, feature, content, or companion-experience update must be presented for an explicit user decision with three clear choices: **Accept**, **Deny**, or **Maybe Later**.
+- **No silent changes:** The app must not install, activate, or apply a proposed update without the user's acceptance. “Maybe Later” leaves the current version unchanged and keeps the proposal available for review; “Deny” declines that proposal.
+- **Non-destructive by default:** Updates must be additive and backward-compatible wherever possible. They must not overwrite, remove, disable, reset, or silently change existing features, settings, projects, memories, downloaded models, or the companion's established identity and personality.
+- **Conflict handling:** If an update genuinely requires changing or replacing existing behavior or data, explain exactly what would change and why, preserve a recoverable backup, and request separate explicit approval. If safe coexistence or rollback cannot be guaranteed, do not apply the update.
+- **Versioning and recovery:** Keep prior working versions or a viable rollback path where technically practical. Verify downloads and update packages before activation.
+- **Status:** Approved; implementation pending.
+
+- **2026-11-27:** User clarified update consent: each proposal must offer **Accept / Deny / Maybe Later**, and no update may override or replace anything already in the app without a separate, explicit decision. Recorded as D-030.
+
 ### Ongoing change-record format
 
 For each new meaningful item, add a dated entry with:
