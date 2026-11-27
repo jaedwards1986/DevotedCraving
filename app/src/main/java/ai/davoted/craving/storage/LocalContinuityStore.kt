@@ -74,17 +74,21 @@ class LocalContinuityStore(context: Context) {
             val encrypted = cipher.doFinal(json.encodeToString(snapshot).encodeToByteArray())
             val payload = cipher.iv + encrypted
             val temporary = File(directory, "continuity.enc.tmp")
+            val backup = File(directory, "continuity.enc.bak")
             try {
                 FileOutputStream(temporary).use { stream ->
                     stream.write(payload)
                     stream.fd.sync()
                 }
-                if (file.exists() && !file.delete()) {
-                    throw IllegalStateException("Could not replace previous continuity snapshot.")
+                if (file.exists()) {
+                    if (backup.exists()) backup.delete()
+                    check(file.renameTo(backup)) { "Could not preserve previous continuity snapshot." }
                 }
                 if (!temporary.renameTo(file)) {
+                    if (backup.exists()) backup.renameTo(file)
                     throw IllegalStateException("Could not commit continuity snapshot.")
                 }
+                backup.delete()
             } finally {
                 if (temporary.exists()) temporary.delete()
             }
