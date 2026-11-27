@@ -13,6 +13,7 @@ import ai.davoted.craving.ai.ExperienceMood
 import ai.davoted.craving.ai.ExperiencePacing
 import ai.davoted.craving.ai.LlamaCppAdapter
 import ai.davoted.craving.ai.LlamaCppRuntime
+import ai.davoted.craving.ai.LocalModelStatus
 import ai.davoted.craving.ai.LocalModelConfiguration
 import ai.davoted.craving.ai.ScenarioPhase
 import ai.davoted.craving.ai.UserArchiveFraming
@@ -111,7 +112,8 @@ class ConversationServiceIntegrationTest {
         store: LocalContinuityStore
     ): File {
         val model = File(context.filesDir, "conversation-integration-fake.gguf")
-        check(model.writeText("test-only fake model marker"))
+        model.writeText("test-only fake model marker")
+        check(model.isFile)
         store.save(
             ContinuitySnapshot(
                 selectedModelPath = model.absolutePath,
