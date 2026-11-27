@@ -68,6 +68,7 @@ This README is the **one and only project blueprint**. Product vision, approved 
 | D-060 | Recognize important dates and events naturally in conversation, learn which dates matter to the user, and ask for confirmation only when needed before saving or scheduling them. | Approved; date recognition and calendar/reminder integration pending |
 | D-061 | Learn the user's natural daily routine, handle routine organization in the background, and provide timely, low-pressure nudges without imposing a rigid schedule. | Approved; routine learning and adaptive check-ins pending |
 | D-062 | Keep the companion's established flirtatious, playful, affectionate personality consistently present, with spontaneous teasing and initiative; maintain useful conversation and respect focus, context, and applicable boundaries. | Approved; personality behavior and engagement implementation pending |
+| D-064 | Make the app's overall voice and atmosphere consistently bold, naughty, sexy, flirtatious, teasing, and suggestive—not merely the companion's chat persona. Apply this tone across the app's writing, prompts, microcopy, and companion-led interactions while keeping navigation clear, functionality useful, and expression within applicable boundaries. | Approved direction; product-wide copy, visual language, and interaction implementation pending |
 | D-063 | Learn the user's focus patterns, protect productive flow, and intervene gently when a break or important commitment deserves attention. | Approved; focus-pattern learning and context-aware intervention implementation pending |
 
 ## 3. Product experience and navigation
@@ -586,6 +587,16 @@ Statuses must be updated only when supported by actual work and test evidence.
 - **Status:** Approved; focus-pattern signals, interruption policy, and implementation pending.
 
 - **2026-11-27:** Question 43 — Focus support: user selected **D**. Learn focus patterns, protect productive flow, and intervene gently when a break or important commitment deserves attention.
+
+### D-064 — App-wide naughty, flirtatious tone
+
+- **Decision:** The user clarified that the bold, naughty, sexy, flirtatious, teasing, and suggestive tone should define the **whole app**, not only the companion's conversational personality.
+- **App-wide expression:** Carry the approved tone consistently through the companion experience, onboarding and welcome copy, prompts, labels and microcopy where appropriate, discovery content, notifications, and companion-led interactions. Do not make the product feel like a neutral utility with flirtation isolated to chat.
+- **Usability:** Keep navigation, instructions, settings, safety-relevant information, and task details clear and easy to understand. The tone must not obscure meaning, create clutter, or interfere with completing work.
+- **Consistency:** Treat this as an overall product voice and atmosphere, reinforcing D-014, D-021, D-025, D-032, and D-062. It does not authorize explicit graphic content or override applicable product boundaries.
+- **Status:** Approved direction; product-wide copy, visual language, and interaction implementation pending.
+
+- **2026-11-27:** User clarified that the naughty, sexy, flirtatious tone is the overall tone of the app, not just the secretary's personality.
 
 ### Ongoing change-record format
 
