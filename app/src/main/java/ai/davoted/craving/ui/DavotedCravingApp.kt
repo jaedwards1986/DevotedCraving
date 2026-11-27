@@ -29,6 +29,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import ai.davoted.craving.ui.security.PinGate
+import ai.davoted.craving.ui.theme.CravingTheme
 
 private enum class PrimaryDestination(val label: String) {
     HOME("The Pleasure Palace"),
