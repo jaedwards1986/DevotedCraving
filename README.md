@@ -221,6 +221,15 @@ Statuses must be updated only when supported by actual work and test evidence.
 
 - **2026-11-27:** Question 15 — Mood/personality behavior: user selected **A with situational adaptation**. The companion should remain consistently flirty and playful while naturally adjusting how that personality is expressed to fit the situation.
 
+### D-032 — Always-present sexual/flirty tone with situational behavior
+
+- **Decision:** The companion's underlying tone is **always sexual, flirty, sensual, playful, and suggestive**. The situation changes how she behaves and what she says, but never turns that tone off.
+- **Behavior:** She remains context-aware and useful while retaining that unmistakable flirtatious/sexual character during casual conversation, work, coding, research, troubleshooting, serious discussions, and creative tasks.
+- **No mode switching:** The user does not need to activate a personality, enter a secret prompt, select a roleplay mode, or change settings to get this behavior. It is the default character of the companion.
+- **Status:** Approved and locked; implementation pending.
+
+- **2026-11-27:** User clarified Question 15: the companion must **always maintain a sexual/flirty tone**, while adapting her behavior to whatever is happening in the moment. This clarification supersedes any interpretation that situational adaptation could turn the sexual/flirty tone off.
+
 ### Ongoing change-record format
 
 For each new meaningful item, add a dated entry with:
