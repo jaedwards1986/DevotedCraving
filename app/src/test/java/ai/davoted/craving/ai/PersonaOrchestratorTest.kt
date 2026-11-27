@@ -1,0 +1,114 @@
+package ai.davoted.craving.ai
+
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
+import org.junit.Test
+
+class PersonaOrchestratorTest {
+    private val orchestrator = PersonaOrchestrator()
+    private val memory = ArchiveMemoryState(
+        stateId = "memory-17",
+        confirmedPreferences = listOf("cinematic atmosphere"),
+        exclusions = listOf("career speculation")
+    )
+
+    private fun context(
+        authenticity: ArchiveAuthenticityStatus = ArchiveAuthenticityStatus.VERIFIED
+    ) = ArchiveContext(
+        archiveItemId = "archive-142",
+        title = "Public interview",
+        category = ArchiveCategory.INTERVIEW,
+        source = ArchiveSource(
+            sourceId = "source-31",
+            url = "https://example.org/interview",
+            publisher = "Example Publisher",
+            capturedAtMillis = 100L,
+            authenticityStatus = authenticity,
+            verifiedAtMillis = if (authenticity == ArchiveAuthenticityStatus.VERIFIED) 200L else null
+        ),
+        factualContext = ArchiveFactualContext(
+            summary = "Interview summary",
+            claims = listOf(
+                ArchiveFactClaim("A source-supported career statement.", "transcript:12"),
+                ArchiveFactClaim("Unsupported claim without locator.", ""),
+                ArchiveFactClaim("Career speculation about future projects.", "transcript:18", listOf("career speculation"))
+            )
+        ),
+        userFraming = UserArchiveFraming(ArchiveTheme.INTIMATE, "Use as fictional thematic inspiration."),
+        selectedAtMillis = 300L
+    )
+
+    @Test
+    fun verifiedContextKeepsOnlyLocatedNonExcludedFactsAndProvenance() {
+        val result = orchestrator.transformArchiveContext(
+            context(), memory, ExperienceControls(), ExperienceState()
+        ) as ArchiveTransformResult.Success
+
+        assertEquals(1, result.experience.archiveFacts.size)
+        assertEquals("transcript:12", result.experience.archiveFacts.single().sourceLocator)
+        assertEquals("source-31", result.experience.provenance?.sourceId)
+        assertEquals("memory-17", result.experience.memoryStateId)
+    }
+
+    @Test
+    fun unverifiedContextCannotEnterFactualGrounding() {
+        val result = orchestrator.transformArchiveContext(
+            context(ArchiveAuthenticityStatus.UNVERIFIED),
+            memory,
+            ExperienceControls(),
+            ExperienceState()
+        ) as ArchiveTransformResult.Success
+
+        assertTrue(result.experience.archiveFacts.isEmpty())
+        assertNull(result.experience.provenance)
+        assertEquals(ArchiveTheme.INTIMATE, result.experience.userFraming?.theme)
+    }
+
+    @Test
+    fun rejectedArchiveItemIsRejected() {
+        val result = orchestrator.transformArchiveContext(
+            context(ArchiveAuthenticityStatus.REJECTED),
+            memory,
+            ExperienceControls(),
+            ExperienceState()
+        )
+
+        assertTrue(result is ArchiveTransformResult.Rejected)
+    }
+
+    @Test
+    fun controlsArePersistentInputsAndThemeModifiersAreBounded() {
+        val result = orchestrator.transformArchiveContext(
+            context(),
+            memory,
+            ExperienceControls(intensity = 5, intimacy = 5, playfulness = 5),
+            ExperienceState()
+        ) as ArchiveTransformResult.Success
+
+        assertEquals(5, result.experience.presentation.intensity)
+        assertEquals(5, result.experience.presentation.intimacy)
+        assertEquals(5, result.experience.presentation.playfulness)
+    }
+
+    @Test
+    fun missingArchiveSelectionFallsBackWithoutArchiveContext() {
+        val result = orchestrator.transformArchiveContext(
+            null, memory, ExperienceControls(), ExperienceState()
+        )
+
+        assertTrue(result is ArchiveTransformResult.NoArchiveContext)
+    }
+
+    @Test
+    fun invalidSourceUrlIsRejected() {
+        val invalid = context().copy(
+            source = context().source.copy(url = "file:///private/archive")
+        )
+        val result = orchestrator.transformArchiveContext(
+            invalid, memory, ExperienceControls(), ExperienceState()
+        )
+
+        assertTrue(result is ArchiveTransformResult.Rejected)
+    }
+}
