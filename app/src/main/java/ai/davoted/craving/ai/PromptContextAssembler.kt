@@ -26,7 +26,7 @@ class PromptContextAssembler {
         appendLine("Current validated experience state: $currentState")
 
         val effectivePreferences = (confirmedPreferences + archiveExperience?.confirmedPreferences.orEmpty())
-            .map(String::trim).filter(String::isNotBlank).distinct().sorted()
+            .map { it.trim() }.filter { it.isNotBlank() }.distinct().sorted()
         val effectiveExclusions = (exclusions + archiveExperience?.exclusions.orEmpty())
             .map(String::trim).filter(String::isNotBlank).distinct().sorted()
 
