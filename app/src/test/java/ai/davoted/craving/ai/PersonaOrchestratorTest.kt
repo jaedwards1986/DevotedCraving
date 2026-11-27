@@ -167,6 +167,14 @@ class PersonaOrchestratorTest {
         assertTrue(assembled.instructionBlock.contains("No verified, source-located archive facts are available."))
         assertTrue(assembled.instructionBlock.contains("Archive context status: unavailable."))
         assertTrue(assembled.systemPrompt.contains("career speculation"))
+        val availableVariant = PromptContextAssembler().assemble(
+            ConversationContext(
+                personaState = persona,
+                archiveExperience = result.experience.copy(isArchiveContextAvailable = true)
+            ),
+            listOf(ConversationMessage("user", "Continue without archive material."))
+        )
+        assertTrue(assembled.contextFingerprint != availableVariant.contextFingerprint)
     }
 
     @Test
