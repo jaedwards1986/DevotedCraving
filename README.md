@@ -62,6 +62,7 @@ This README is the **one and only project blueprint**. Product vision, approved 
 | D-054 | When the user has many thoughts or tasks competing for attention, capture them, organize them into clear categories, and help identify one manageable next step. | Approved; focus-support workflow pending |
 | D-055 | Present information using all three layers: concise summaries, small clearly separated sections, and optional deeper details, with one clear next action. | Approved; interface behavior and implementation pending |
 | D-056 | Adapt the Home screen to what matters most right now, keeping other destinations and information easy to find without clutter. | Approved; personalization and implementation pending |
+| D-057 | Support quick capture from Home, a persistent app-wide capture control, and natural conversational capture, all feeding one organized inbox. | Approved; capture UI and integration pending |
 
 ## 3. Product experience and navigation
 
@@ -495,6 +496,18 @@ Statuses must be updated only when supported by actual work and test evidence.
 - **Status:** Approved; prioritization rules, Home layout behavior, and implementation pending.
 
 - **2026-11-27:** Question 37 — Home screen priorities: user selected **D**. Adapt Home to what matters most in the moment while keeping everything else easy to find.
+
+### D-057 — Capture from anywhere
+
+- **Decision:** User selected **D — combine all three capture methods**: a quick Home action, a persistent capture control available throughout the app, and natural capture through conversation.
+- **Quick capture:** Provide a fast entry point on Home for thoughts, ideas, tasks, appointments, and reminders.
+- **App-wide access:** Keep a consistent capture control available from relevant app screens so the user can save something without navigating away from the current activity.
+- **Conversational capture:** Let the user tell the companion naturally in chat. The companion should recognize potential items and use the confirmation behavior in D-042 and D-054 before turning ambiguous statements into commitments or reminders.
+- **One destination:** Route captured items into one organized inbox or capture queue. Preserve the original thought and then help categorize it; do not require the user to decide its category at capture time.
+- **Low interruption:** Capture should be quick, uncluttered, and preserve the user's current context. Make review and organization available when convenient.
+- **Status:** Approved; capture component, unified inbox, and conversational integration pending.
+
+- **2026-11-27:** Question 38 — Quick capture: user selected **D**. Provide capture from Home, a persistent control throughout the app, and natural conversational capture, all organized in one place.
 
 ### Ongoing change-record format
 
