@@ -124,7 +124,10 @@ data class AssembledArchiveExperience(
     val characterState: ExperienceState,
     val memoryStateId: String,
     val isArchiveContextAvailable: Boolean = true,
-    val framingVetoApplied: Boolean = false
+    val framingVetoApplied: Boolean = false,
+    val archiveTitle: String = "",
+    val archiveCategory: ArchiveCategory? = null,
+    val authenticityStatus: ArchiveAuthenticityStatus? = null
 )
 
 sealed interface ArchiveTransformResult {
@@ -157,8 +160,17 @@ class PersonaOrchestrator {
         if (context.subject != "Natasha Nice") {
             return ArchiveTransformResult.Rejected("Archive subject does not match the configured subject.")
         }
-        if (context.source.sourceId.isBlank() || !isHttpUrl(context.source.url)) {
-            return ArchiveTransformResult.Rejected("A source identifier and valid HTTP(S) source URL are required.")
+        if (context.source.sourceId.isBlank()) {
+            return ArchiveTransformResult.Rejected("A source identifier is required.")
+        }
+        if (context.source.url.isNotBlank() && !isHttpUrl(context.source.url)) {
+            return ArchiveTransformResult.Rejected("Archive source URL must be a valid HTTP(S) URL.")
+        }
+        if (context.source.url.isBlank() &&
+            (context.source.accessLevel != ArchiveAccessLevel.USER_PROVIDED ||
+                context.source.authenticityStatus != ArchiveAuthenticityStatus.UNVERIFIED)
+        ) {
+            return ArchiveTransformResult.Rejected("A missing source URL is allowed only for unverified user-provided media.")
         }
         if (context.source.authenticityStatus == ArchiveAuthenticityStatus.REJECTED) {
             return ArchiveTransformResult.Rejected("Archive item has been rejected as inauthentic.")
@@ -192,7 +204,7 @@ class PersonaOrchestrator {
             confidence = controls.confidence.coerceIn(0, 5)
         )
 
-        val provenance = if (verified) {
+        val provenance = if (verified && context.source.url.isNotBlank()) {
             ArchiveProvenance(
                 archiveItemId = context.archiveItemId,
                 sourceId = context.source.sourceId,
@@ -217,7 +229,10 @@ class PersonaOrchestrator {
                 characterState = personaState,
                 memoryStateId = memory.stateId,
                 isArchiveContextAvailable = true,
-                framingVetoApplied = reconciledFraming.second
+                framingVetoApplied = reconciledFraming.second,
+                archiveTitle = context.title,
+                archiveCategory = context.category,
+                authenticityStatus = context.source.authenticityStatus
             )
         )
     }
