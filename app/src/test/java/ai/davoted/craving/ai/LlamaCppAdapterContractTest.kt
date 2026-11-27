@@ -73,4 +73,32 @@ class LlamaCppAdapterContractTest {
             closed = true
         }
     }
+    @Test
+    fun restoresValidatedExperienceStateIndependentlyOfModelSelection() {
+        val adapter = LlamaCppAdapter(runtime = RecordingRuntime())
+        try {
+            adapter.restoreExperienceState(
+                mood = "PLAYFUL",
+                intensity = 4,
+                pacing = "BRISK",
+                phase = "BUILD"
+            )
+            assertEquals(ExperienceMood.PLAYFUL, adapter.experienceState.mood)
+            assertEquals(4, adapter.experienceState.intensity)
+            assertEquals(ExperiencePacing.BRISK, adapter.experienceState.pacing)
+            assertEquals(ScenarioPhase.BUILD, adapter.experienceState.phase)
+
+            adapter.restoreExperienceState(
+                mood = "NOT_A_REAL_MOOD",
+                intensity = 99,
+                pacing = "BRISK",
+                phase = "BUILD"
+            )
+            assertEquals(ExperienceMood.PLAYFUL, adapter.experienceState.mood)
+            assertEquals(4, adapter.experienceState.intensity)
+        } finally {
+            adapter.close()
+        }
+    }
+
 }
