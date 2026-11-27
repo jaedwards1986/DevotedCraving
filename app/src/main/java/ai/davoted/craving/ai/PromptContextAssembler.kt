@@ -132,6 +132,9 @@ class PromptContextAssembler {
     private fun buildInstructionBlock(context: ConversationContext): String = buildString {
         val archive = context.archiveExperience
         appendLine("PRIORITY 3 — DIRECTIVE: USER FRAMING AND PRESENTATION")
+        if (archive?.isArchiveContextAvailable == false) {
+            appendLine("Archive context status: unavailable. Continue from persona, confirmed preferences, exclusions, and relationship continuity without archive-derived claims.")
+        }
         if (archive?.userFraming != null) {
             appendLine("User-selected archive inspiration (fictional framing only): theme=${archive.userFraming.theme}; direction=${archive.userFraming.direction}")
         } else {
@@ -172,7 +175,7 @@ class PromptContextAssembler {
     ): String {
         val archive = context.archiveExperience
         return buildJsonObject {
-            put("schemaVersion", JsonPrimitive("DavotedCraving.PromptAssembly.v2"))
+            put("schemaVersion", JsonPrimitive("DavotedCraving.PromptAssembly.v3"))
             put("serializedPrompt", JsonPrimitive(serializedPrompt))
             put("personaState", buildJsonObject {
                 put("mood", JsonPrimitive(context.personaState.mood.name))
@@ -194,6 +197,8 @@ class PromptContextAssembler {
                 context.relationshipContext.forEach { add(JsonPrimitive(it)) }
             })
             put("archiveItemId", archive?.archiveItemId?.let(::JsonPrimitive) ?: JsonNull)
+            put("isArchiveContextAvailable", JsonPrimitive(archive?.isArchiveContextAvailable ?: false))
+            put("framingVetoApplied", JsonPrimitive(archive?.framingVetoApplied ?: false))
             put("userFraming", archive?.userFraming?.let { framing ->
                 buildJsonObject {
                     put("theme", JsonPrimitive(framing.theme.name))
@@ -242,7 +247,7 @@ class PromptContextAssembler {
                     })
                 }
             })
-        }.toString().let { "DavotedCraving.PromptAssembly.v2\u0000$it" }
+        }.toString().let { "DavotedCraving.PromptAssembly.v3\u0000$it" }
     }
 
     private fun List<String>.normalizedEntries(): List<String> =
