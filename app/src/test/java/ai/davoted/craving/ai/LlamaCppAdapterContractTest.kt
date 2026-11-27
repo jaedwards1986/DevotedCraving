@@ -101,4 +101,48 @@ class LlamaCppAdapterContractTest {
         }
     }
 
+    @Test
+    fun forwardsVerifiedArchiveFactsAndProvenanceIntoNativePrompt() = runBlocking {
+        val runtime = RecordingRuntime()
+        val adapter = LlamaCppAdapter(runtime = runtime)
+        val archive = ArchiveContext(
+            archiveItemId = "archive-test-1",
+            title = "Public interview",
+            category = ArchiveCategory.INTERVIEW,
+            source = ArchiveSource(
+                sourceId = "source-test-1",
+                url = "https://example.org/interview",
+                capturedAtMillis = 100L,
+                authenticityStatus = ArchiveAuthenticityStatus.VERIFIED,
+                verifiedAtMillis = 200L
+            ),
+            factualContext = ArchiveFactualContext(
+                claims = listOf(
+                    ArchiveFactClaim("VERIFIED_ARCHIVE_SENTINEL", "transcript:12")
+                )
+            ),
+            selectedAtMillis = 300L
+        )
+        val transformed = PersonaOrchestrator().transformArchiveContext(
+            archive,
+            ArchiveMemoryState("memory-test"),
+            ExperienceControls(),
+            ExperienceState()
+        ) as ArchiveTransformResult.Success
+
+        try {
+            assertTrue(adapter.loadModel("/test/model.gguf").isSuccess)
+            val result = adapter.generate(
+                messages = listOf(ConversationMessage("user", "Summarize the selected interview.")),
+                archiveExperience = transformed.experience
+            )
+            assertTrue("Generation should succeed: $result", result.isSuccess)
+            assertTrue(runtime.receivedPrompt.contains("VERIFIED_ARCHIVE_SENTINEL"))
+            assertTrue(runtime.receivedPrompt.contains("transcript:12"))
+            assertTrue(runtime.receivedPrompt.contains("https://example.org/interview"))
+        } finally {
+            adapter.close()
+        }
+    }
+
 }
