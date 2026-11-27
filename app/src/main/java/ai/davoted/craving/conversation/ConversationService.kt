@@ -104,12 +104,15 @@ class ConversationService(
 
     suspend fun importAndLoad(uri: Uri) = operationMutex.withLock {
         publish(_state.value.copy(isBusy = true, statusMessage = "Importing model into private app storage…"))
+        var importedFile: File? = null
         try {
             val file = importGguf(uri)
+            importedFile = file
             publish(_state.value.copy(modelName = file.name, statusMessage = "Loading GGUF on device…"))
             val result = adapter.loadModel(file.absolutePath)
             result.fold(
                 onSuccess = {
+                    importedFile = null
                     publish(_state.value.copy(
                         modelName = file.name,
                         modelStatus = adapter.status,
@@ -120,6 +123,7 @@ class ConversationService(
                 },
                 onFailure = {
                     file.delete()
+                    importedFile = null
                     publish(_state.value.copy(
                         modelStatus = adapter.status,
                         statusMessage = "Model load failed: ${it.message ?: "unknown error"}"
@@ -127,8 +131,10 @@ class ConversationService(
                 }
             )
         } catch (cancelled: CancellationException) {
+            importedFile?.delete()
             throw cancelled
         } catch (failure: Exception) {
+            importedFile?.delete()
             publish(_state.value.copy(statusMessage = "Model import failed: ${failure.message ?: "unknown error"}"))
         } finally {
             publish(_state.value.copy(isBusy = false))
