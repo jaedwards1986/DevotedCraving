@@ -120,13 +120,15 @@ class PersonaOrchestratorTest {
     }
 
     @Test
-    fun explicitExclusionRemovesMatchingArchiveFactBeforePromptAssembly() {
+    fun explicitExclusionRemovesOnlyMatchingArchiveFactBeforePromptAssembly() {
         val excludedMemory = memory.copy(exclusions = listOf("career statement"))
         val transformed = orchestrator.transformArchiveContext(
             context(), excludedMemory, ExperienceControls(), ExperienceState()
         ) as ArchiveTransformResult.Success
 
-        assertTrue(transformed.experience.archiveFacts.isEmpty())
+        // The exact excluded claim is removed; the distinct "career speculation" claim remains.
+        assertEquals(1, transformed.experience.archiveFacts.size)
+        assertEquals("transcript:18", transformed.experience.archiveFacts.single().sourceLocator)
         val result = PromptContextAssembler().assemble(
             ConversationContext(
                 personaState = ExperienceState(),
@@ -136,7 +138,7 @@ class PersonaOrchestratorTest {
         )
 
         assertTrue(result.systemPrompt.contains("career statement"))
-        assertTrue(result.instructionBlock.contains("No verified, source-located archive facts are available."))
+        assertTrue(result.instructionBlock.contains("Career speculation about future projects. [source: transcript:18]"))
         assertTrue(!result.instructionBlock.contains("A source-supported career statement."))
         assertTrue(!result.instructionBlock.contains("transcript:12"))
     }
