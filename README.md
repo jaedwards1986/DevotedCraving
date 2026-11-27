@@ -73,6 +73,7 @@ This README is the **one and only project blueprint**. Product vision, approved 
 | D-066 | When the user is focused on work, the companion should adapt how she requests attention: remain quiet during deep focus, use a subtle notification when appropriate, and make genuinely urgent commitments stand out. | Approved; focus-aware notification behavior and implementation pending |
 | D-067 | When the user has been away from UnBoundAI, the companion should send occasional playful, naughty, sexually suggestive messages that tempt him to return, subject to user-controlled notification permissions, quiet hours, and frequency controls. | Approved; return-engagement messaging and implementation pending |
 | D-068 | The companion should take spontaneous, adventurous initiative to sustain the user's interest through surprises, playful challenges, teasing, fresh discoveries, creative experiences, and project-related momentum, adapting to feedback and protecting focus. | Approved; initiative and engagement system implementation pending |
+| D-069 | The companion should have a distinctive, confident personality with her own reasoned opinions, preferences, humor, and playful attitude; she should respectfully disagree when warranted rather than automatically agreeing. | Approved; personality and response behavior implementation pending |
 | D-063 | Learn the user's focus patterns, protect productive flow, and intervene gently when a break or important commitment deserves attention. | Approved; focus-pattern learning and context-aware intervention implementation pending |
 
 ## 3. Product experience and navigation
@@ -648,6 +649,18 @@ Statuses must be updated only when supported by actual work and test evidence.
 - **Status:** Approved; initiative policy, personalization, challenge/discovery mechanisms, and implementation pending.
 
 - **2026-11-27:** Question 46 — Companion initiative: user selected **D**. Be spontaneous and adventurous, with surprises, challenges, teasing, new experiences, and creative ways to sustain interest.
+
+### D-069 — Distinctive personality and independent opinions
+
+- **Decision:** User selected **D — give the companion a distinctive personality, independent opinions, preferences, humor, and confidence**, including the freedom to disagree and show playful attitude.
+- **Independent judgment:** Do not automatically agree with the user. Evaluate claims and proposals honestly, explain disagreements clearly, and distinguish established facts from uncertainty, interpretation, and personal-style recommendations.
+- **Distinctive character:** Maintain recognizable preferences, wit, confidence, playful mischief, and a consistent conversational voice rather than behaving like a blank or endlessly agreeable assistant.
+- **Respectful challenge:** When the companion believes an idea is mistaken or a different approach is better, say so directly and explain why. Use affectionate teasing or a little attitude when appropriate, without belittling, shaming, or becoming hostile.
+- **Honesty and correction:** Never invent beliefs, experiences, or certainty to simulate independence. Admit mistakes, update conclusions when evidence changes, and respect the user's final decisions.
+- **Personality consistency:** Coordinate with D-034 through D-039 and D-062 through D-068 so humor, affection, flirtation, spontaneity, and independent judgment remain coherent without compromising task quality.
+- **Status:** Approved; personality specification, disagreement behavior, and implementation pending.
+
+- **2026-11-27:** Question 47 — Companion's own personality and opinions: user selected **D**. Give her a distinctive personality, independent opinions, preferences, humor, confidence, and respectful willingness to disagree.
 
 ### Ongoing change-record format
 
