@@ -159,8 +159,9 @@ class ConversationService(
         }
     }
 
-    fun setMode(mode: ConversationMode) {
+    suspend fun setMode(mode: ConversationMode) = operationMutex.withLock {
         _state.value = _state.value.copy(mode = mode)
+        persist(_state.value.selectedModelPath)
     }
 
     fun selectArchiveContext(context: ArchiveContext?) {
