@@ -84,7 +84,6 @@ private enum class Destination(val label: String) {
     CHATS("Chats"), CHARACTERS("Characters"), MODELS("Models"), SETTINGS("Settings")
 }
 
-private data class ChatLine(val speaker: String, val text: String)
 
 private val NexoraColors = darkColorScheme(
     primary = androidx.compose.ui.graphics.Color(0xFF65D6CB),
@@ -119,6 +118,7 @@ private fun NexoraScreen() {
     val engine = remember { AiChat.getInferenceEngine(context) }
     val engineState by engine.state.collectAsState()
     val scope = rememberCoroutineScope()
+    val dataStore = remember { NexoraDataStore(context) }
 
     var destination by remember { mutableStateOf(Destination.CHATS) }
     var models by remember { mutableStateOf<List<LocalModel>>(emptyList()) }
@@ -126,7 +126,8 @@ private fun NexoraScreen() {
     var status by remember { mutableStateOf("Your conversations stay on this device.") }
     var systemPrompt by remember { mutableStateOf("") }
     var draft by remember { mutableStateOf("") }
-    var messages by remember { mutableStateOf(emptyList<ChatLine>()) }
+    var messages by remember { mutableStateOf(dataStore.loadMessages()) }
+    var characters by remember { mutableStateOf(dataStore.loadCharacters()) }
     var generating by remember { mutableStateOf(false) }
     var modelLoaded by remember { mutableStateOf(engineState is InferenceEngine.State.ModelReady) }
 
@@ -156,6 +157,8 @@ private fun NexoraScreen() {
         refreshModels()
         modelLoaded = engine.state.value is InferenceEngine.State.ModelReady
     }
+    LaunchedEffect(messages) { dataStore.saveMessages(messages) }
+    LaunchedEffect(characters) { dataStore.saveCharacters(characters) }
 
     fun loadModel(fileName: String) {
         scope.launch {
@@ -177,7 +180,6 @@ private fun NexoraScreen() {
                 if (systemPrompt.isNotBlank()) engine.setSystemPrompt(systemPrompt)
                 store.select(fileName)
                 selected = fileName
-                messages = emptyList()
                 modelLoaded = true
                 destination = Destination.CHATS
                 status = "Model ready. Generation runs locally."
@@ -192,7 +194,7 @@ private fun NexoraScreen() {
         val message = draft.trim()
         if (message.isEmpty() || generating || !modelLoaded) return
         draft = ""
-        messages = messages + ChatLine("You", message) + ChatLine("NEXORA", "")
+        messages = messages + SavedMessage("You", message) + SavedMessage("NEXORA", "")
         generating = true
         scope.launch {
             try {
@@ -280,7 +282,7 @@ private fun NexoraScreen() {
                 onSend = { sendMessage() },
                 onOpenModels = { destination = Destination.MODELS }
             )
-            Destination.CHARACTERS -> CharactersScreen(Modifier.padding(innerPadding))
+            Destination.CHARACTERS -> CharactersScreen(Modifier.padding(innerPadding), characters) { characters = it }
             Destination.MODELS -> ModelsScreen(
                 modifier = Modifier.padding(innerPadding),
                 models = models,
@@ -321,7 +323,7 @@ private fun ChatScreen(
     modifier: Modifier,
     modelName: String?,
     modelLoaded: Boolean,
-    messages: List<ChatLine>,
+    messages: List<SavedMessage>,
     draft: String,
     generating: Boolean,
     status: String,
@@ -515,23 +517,115 @@ private fun ModelsScreen(
 }
 
 @Composable
-private fun CharactersScreen(modifier: Modifier) {
-    Column(
-        modifier = modifier.fillMaxSize().padding(18.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        Text("Characters", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
-        Text("Create distinct personalities, scenarios, and conversation styles.", color = MaterialTheme.colorScheme.onSurfaceVariant)
-        EmptyStateCard(
-            icon = { Icon(Icons.Outlined.PersonOutline, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(34.dp)) },
-            title = "Your character library",
-            body = "Character cards will let you define a name, personality, greeting, example dialogue, and scenario. They will remain yours when you switch models.",
-            action = null,
-            onAction = {}
-        )
+private fun CharactersScreen(
+    modifier: Modifier,
+    characters: List<CharacterCard>,
+    onSave: (List<CharacterCard>) -> Unit
+) {
+    var editing by remember { mutableStateOf<CharacterCard?>(null) }
+    var creating by remember { mutableStateOf(false) }
+    var name by remember { mutableStateOf("") }
+    var description by remember { mutableStateOf("") }
+    var personality by remember { mutableStateOf("") }
+    var scenario by remember { mutableStateOf("") }
+    var greeting by remember { mutableStateOf("") }
+    var examples by remember { mutableStateOf("") }
+    var prompt by remember { mutableStateOf("") }
+
+    fun beginEdit(card: CharacterCard?) {
+        editing = card
+        creating = true
+        name = card?.name.orEmpty()
+        description = card?.description.orEmpty()
+        personality = card?.personality.orEmpty()
+        scenario = card?.scenario.orEmpty()
+        greeting = card?.greeting.orEmpty()
+        examples = card?.exampleDialogue.orEmpty()
+        prompt = card?.systemPrompt.orEmpty()
+    }
+
+    if (creating) {
+        Column(modifier = modifier.fillMaxSize().padding(18.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(if (editing == null) "New character" else "Edit character", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+                TextButton(onClick = { creating = false }) { Text("Cancel") }
+            }
+            LazyColumn(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                item {
+                    OutlinedTextField(name, { name = it }, modifier = Modifier.fillMaxWidth(), label = { Text("Name") }, singleLine = true)
+                    Spacer(Modifier.height(8.dp))
+                    OutlinedTextField(description, { description = it }, modifier = Modifier.fillMaxWidth(), label = { Text("Short description") }, minLines = 2)
+                    Spacer(Modifier.height(8.dp))
+                    OutlinedTextField(personality, { personality = it }, modifier = Modifier.fillMaxWidth(), label = { Text("Personality") }, minLines = 3)
+                    Spacer(Modifier.height(8.dp))
+                    OutlinedTextField(scenario, { scenario = it }, modifier = Modifier.fillMaxWidth(), label = { Text("Scenario / setting") }, minLines = 3)
+                    Spacer(Modifier.height(8.dp))
+                    OutlinedTextField(greeting, { greeting = it }, modifier = Modifier.fillMaxWidth(), label = { Text("First message / greeting") }, minLines = 3)
+                    Spacer(Modifier.height(8.dp))
+                    OutlinedTextField(examples, { examples = it }, modifier = Modifier.fillMaxWidth(), label = { Text("Example dialogue") }, minLines = 3)
+                    Spacer(Modifier.height(8.dp))
+                    OutlinedTextField(prompt, { prompt = it }, modifier = Modifier.fillMaxWidth(), label = { Text("Additional instructions") }, minLines = 3)
+                    Spacer(Modifier.height(12.dp))
+                    Button(
+                        onClick = {
+                            val prior = editing
+                            val saved = CharacterCard(
+                                id = prior?.id ?: java.util.UUID.randomUUID().toString(),
+                                name = name.trim(),
+                                description = description.trim(),
+                                personality = personality.trim(),
+                                scenario = scenario.trim(),
+                                greeting = greeting.trim(),
+                                exampleDialogue = examples.trim(),
+                                systemPrompt = prompt.trim()
+                            )
+                            if (prior == null) onSave(characters + saved)
+                            else onSave(characters.map { if (it.id == prior.id) saved else it })
+                            creating = false
+                        },
+                        enabled = name.isNotBlank(),
+                        modifier = Modifier.fillMaxWidth()
+                    ) { Text("Save character") }
+                }
+            }
+        }
+    } else {
+        Column(modifier = modifier.fillMaxSize().padding(18.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text("Characters", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
+                    Text("Character cards are saved on this device and stay separate from the model.", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+                }
+                Button(onClick = { beginEdit(null) }) { Text("Create") }
+            }
+            if (characters.isEmpty()) {
+                EmptyStateCard(
+                    icon = { Icon(Icons.Outlined.PersonOutline, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(34.dp)) },
+                    title = "Build your first character",
+                    body = "Define a personality, scenario, greeting, example dialogue, and custom instructions. Your cards remain available when you change models.",
+                    action = "Create character",
+                    onAction = { beginEdit(null) }
+                )
+            } else {
+                LazyColumn(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    items(characters, key = { it.id }) { card ->
+                        Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface), shape = RoundedCornerShape(18.dp)) {
+                            Column(Modifier.fillMaxWidth().padding(15.dp), verticalArrangement = Arrangement.spacedBy(7.dp)) {
+                                Text(card.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                                if (card.description.isNotBlank()) Text(card.description, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                if (card.personality.isNotBlank()) Text("Personality: " + card.personality, maxLines = 2, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.bodySmall)
+                                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    OutlinedButton(onClick = { beginEdit(card) }, modifier = Modifier.weight(1f)) { Text("Edit") }
+                                    TextButton(onClick = { onSave(characters.filterNot { it.id == card.id }) }) { Text("Delete") }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }
-
 @Composable
 private fun SettingsScreen(
     modifier: Modifier,
