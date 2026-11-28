@@ -282,9 +282,17 @@ private fun ChatScreen(store: AppStore, modelManager: LocalModelManager, engine:
                 scope.launch {
                     try {
                         val history = store.messages().takeLast(20).joinToString("\n")
+                        val savedMemories = store.memories().takeLast(100)
+                        val systemContext = buildString {
+                            append("You are the private fictional DavotedCraving companion. Maintain continuity using the app-owned memory below. Do not claim to be Natasha Nice or claim private knowledge about her. Treat explicit user corrections and dislikes as authoritative.\\n\\n")
+                            if (savedMemories.isNotEmpty()) {
+                                append("APP-OWNED LONG-TERM MEMORY:\\n")
+                                savedMemories.forEach { append("- ").append(it).append('\\n') }
+                            }
+                        }
                         val response = engine.generate(
                             model.absolutePath,
-                            "You are the private DavotedCraving companion. Maintain continuity with the app's stored context. Do not claim to be Natasha Nice or claim private knowledge about her.",
+                            systemContext,
                             history
                         )
                         store.addMessage("Assistant: \$response")
