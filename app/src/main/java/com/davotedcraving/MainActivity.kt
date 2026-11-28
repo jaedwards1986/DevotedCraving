@@ -223,7 +223,7 @@ private fun ChatScreen(store: AppStore, modelManager: LocalModelManager, engine:
     var error by remember { mutableStateOf("") }
     val messages = remember(refresh) { store.messages() }
     val scope = rememberCoroutineScope()
-    val model = modelManager.models().firstOrNull()
+    val model = modelManager.selectedModel()
 
     Column(Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
@@ -272,7 +272,7 @@ private fun ChatScreen(store: AppStore, modelManager: LocalModelManager, engine:
                 val prompt = draft.trim()
                 draft = ""
                 error = ""
-                store.addMessage("You: \$prompt")
+                store.addMessage("You: $prompt")
                 refresh++
                 if (model == null) {
                     error = "No GGUF model is installed."
@@ -358,8 +358,9 @@ private fun ModelsScreen(modelManager: LocalModelManager) {
             scope.launch {
                 try {
                     val name = uri.lastPathSegment?.substringAfterLast('/') ?: "imported-model.gguf"
-                    modelManager.importUri(uri, name)
-                    status = "Imported ${name.substringAfterLast('/')}"
+                    val imported = modelManager.importUri(uri, name)
+                    modelManager.selectModel(imported)
+                    status = "Imported and selected ${imported.name}"
                     refresh++
                 } catch (t: Throwable) {
                     status = "Import failed: ${t.message ?: "unknown error"}"
@@ -380,10 +381,19 @@ private fun ModelsScreen(modelManager: LocalModelManager) {
         if (installed.isNotEmpty()) {
             Text("INSTALLED", color = Ember, fontWeight = FontWeight.Bold, fontSize = 11.sp)
             installed.forEach { file ->
-                Surface(color = Raised, shape = RoundedCornerShape(12.dp), modifier = Modifier.fillMaxWidth()) {
+                val selected = modelManager.selectedModel()?.name == file.name
+                Surface(
+                    color = if (selected) Raised else Panel,
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.fillMaxWidth().clickable {
+                        modelManager.selectModel(file)
+                        refresh++
+                    }
+                ) {
                     Column(Modifier.padding(14.dp)) {
-                        Text(file.name, color = Cream, fontWeight = FontWeight.Bold)
-                        Text("${file.length() / (1024 * 1024)} MB · ready for local chat", color = Muted, fontSize = 12.sp)
+                        Text(file.name, color = if (selected) Ember else Cream, fontWeight = FontWeight.Bold)
+                        Text("${file.length() / (1024 * 1024)} MB · ${if (selected) "selected for chat" else "tap to select"}",
+                            color = Muted, fontSize = 12.sp)
                     }
                 }
             }
