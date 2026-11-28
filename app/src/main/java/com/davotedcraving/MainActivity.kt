@@ -3,8 +3,10 @@ package com.davotedcraving
 import android.content.Context
 import android.os.Bundle
 import android.view.WindowManager
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -16,6 +18,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -139,6 +142,9 @@ private enum class Section(val label: String, val icon: ImageVector) {
 
 @Composable
 private fun DavotedApp(store: AppStore) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val modelManager = remember { LocalModelManager(context) }
+    val llamaEngine = remember { LocalLlamaEngine() }
     var section by remember { mutableStateOf(Section.HOME) }
     Scaffold(containerColor = Ink, bottomBar = {
         NavigationBar(containerColor = Panel) {
@@ -161,10 +167,10 @@ private fun DavotedApp(store: AppStore) {
             }
             when (section) {
                 Section.HOME -> HomeScreen { section = it }
-                Section.CHAT -> ChatScreen(store)
+                Section.CHAT -> ChatScreen(store, modelManager, llamaEngine)
                 Section.MEMORY -> MemoryScreen(store)
                 Section.ARCHIVE -> ArchiveScreen()
-                Section.MODELS -> ModelsScreen()
+                Section.MODELS -> ModelsScreen(modelManager)
                 Section.SETTINGS -> SettingsScreen()
             }
         }
@@ -210,33 +216,86 @@ private fun SectionCard(title: String, subtitle: String, icon: ImageVector, clic
 }
 
 @Composable
-private fun ChatScreen(store: AppStore) {
+private fun ChatScreen(store: AppStore, modelManager: LocalModelManager, engine: LocalLlamaEngine) {
     var draft by remember { mutableStateOf("") }
     var refresh by remember { mutableIntStateOf(0) }
+    var generating by remember { mutableStateOf(false) }
+    var error by remember { mutableStateOf("") }
     val messages = remember(refresh) { store.messages() }
+    val scope = rememberCoroutineScope()
+    val model = modelManager.models().firstOrNull()
+
     Column(Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
-        Text("Conversation history is stored locally on this device.", color = Muted, fontSize = 12.sp)
-        LazyColumn(Modifier.weight(1f).fillMaxWidth(), contentPadding = PaddingValues(vertical = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+            Text(
+                if (model != null) "Local GGUF: \${model.name}" else "No local GGUF model installed",
+                color = if (model != null) Ember else Muted,
+                fontSize = 12.sp,
+                modifier = Modifier.weight(1f)
+            )
+            if (generating) CircularProgressIndicator(modifier = Modifier.size(18.dp), color = Ember, strokeWidth = 2.dp)
+        }
+        if (error.isNotBlank()) Text(error, color = Ember, fontSize = 12.sp, modifier = Modifier.padding(top = 6.dp))
+        LazyColumn(
+            Modifier.weight(1f).fillMaxWidth(),
+            contentPadding = PaddingValues(vertical = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
             items(messages) { line ->
                 val user = line.startsWith("You: ")
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = if (user) Arrangement.End else Arrangement.Start) {
                     Surface(color = if (user) Red else Raised, shape = RoundedCornerShape(16.dp)) {
-                        Text(line.substringAfter(": "), Modifier.widthIn(max = 290.dp).padding(12.dp), color = Cream)
+                        Text(line.substringAfter(": "), Modifier.widthIn(max = 300.dp).padding(12.dp), color = Cream)
                     }
                 }
             }
             if (messages.isEmpty()) item {
-                Text("Chat UI is ready. Generated replies will activate when the local GGUF runtime is integrated.",
-                    color = Muted, modifier = Modifier.padding(top = 24.dp))
+                Text(
+                    if (model != null) "Local inference is ready. Send a message."
+                    else "Import a GGUF model from Models before starting local inference.",
+                    color = Muted,
+                    modifier = Modifier.padding(top = 24.dp)
+                )
             }
         }
         Row(Modifier.padding(bottom = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-            OutlinedTextField(draft, { draft = it }, modifier = Modifier.weight(1f),
-                placeholder = { Text("Write a message…") }, colors = fieldColors(), maxLines = 4)
-            IconButton(onClick = {
-                if (draft.isNotBlank()) { store.addMessage("You: " + draft.trim()); draft = ""; refresh++ }
-            }) { Icon(Icons.Default.Send, "Save message", tint = Ember) }
+            OutlinedTextField(
+                draft,
+                { draft = it },
+                modifier = Modifier.weight(1f),
+                placeholder = { Text("Write a message…") },
+                colors = fieldColors(),
+                maxLines = 4,
+                enabled = !generating
+            )
+            IconButton(enabled = !generating && draft.isNotBlank(), onClick = {
+                val prompt = draft.trim()
+                draft = ""
+                error = ""
+                store.addMessage("You: \$prompt")
+                refresh++
+                if (model == null) {
+                    error = "No GGUF model is installed."
+                    return@IconButton
+                }
+                generating = true
+                scope.launch {
+                    try {
+                        val history = store.messages().takeLast(20).joinToString("\n")
+                        val response = engine.generate(
+                            model.absolutePath,
+                            "You are the private DavotedCraving companion. Maintain continuity with the app's stored context. Do not claim to be Natasha Nice or claim private knowledge about her.",
+                            history
+                        )
+                        store.addMessage("Assistant: \$response")
+                        refresh++
+                    } catch (t: Throwable) {
+                        error = "Local generation failed: \${t.message ?: "unknown error"}"
+                    } finally {
+                        generating = false
+                    }
+                }
+            }) { Icon(Icons.Default.Send, "Send", tint = Ember) }
         }
     }
 }
@@ -282,20 +341,58 @@ private fun ArchiveScreen() {
 }
 
 @Composable
-private fun ModelsScreen() {
+private fun ModelsScreen(modelManager: LocalModelManager) {
+    var refresh by remember { mutableIntStateOf(0) }
+    var status by remember { mutableStateOf("") }
+    val scope = rememberCoroutineScope()
+    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null) {
+            scope.launch {
+                try {
+                    val name = uri.lastPathSegment?.substringAfterLast('/') ?: "imported-model.gguf"
+                    modelManager.importUri(uri, name)
+                    status = "Imported \${name.substringAfterLast('/')}"
+                    refresh++
+                } catch (t: Throwable) {
+                    status = "Import failed: \${t.message ?: "unknown error"}"
+                }
+            }
+        }
+    }
+    val installed = remember(refresh) { modelManager.models() }
+
     Column(Modifier.fillMaxSize().padding(18.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Text("DEFAULT MODEL CANDIDATE", color = Ember, fontWeight = FontWeight.Bold, fontSize = 11.sp)
-        Text("Llama 3 8B Instruct – Uncensored", color = Cream, fontSize = 21.sp, fontWeight = FontWeight.Bold)
-        Text("Q4_K_S · not yet installed or verified on this device", color = Muted)
+        Text("LOCAL GGUF MODELS", color = Ember, fontWeight = FontWeight.Bold, fontSize = 11.sp)
+        Text("On-device inference", color = Cream, fontSize = 25.sp, fontWeight = FontWeight.Bold)
+        Text("Models remain in the app's private storage. Chat uses the selected local model and does not require a remote inference service.", color = Muted)
+        Button(onClick = { launcher.launch(arrayOf("*/*")) }, colors = ButtonDefaults.buttonColors(containerColor = Red)) {
+            Text("IMPORT GGUF")
+        }
+        if (status.isNotBlank()) Text(status, color = Ember, fontSize = 12.sp)
+        if (installed.isNotEmpty()) {
+            Text("INSTALLED", color = Ember, fontWeight = FontWeight.Bold, fontSize = 11.sp)
+            installed.forEach { file ->
+                Surface(color = Raised, shape = RoundedCornerShape(12.dp), modifier = Modifier.fillMaxWidth()) {
+                    Column(Modifier.padding(14.dp)) {
+                        Text(file.name, color = Cream, fontWeight = FontWeight.Bold)
+                        Text("\${file.length() / (1024 * 1024)} MB · ready for local chat", color = Muted, fontSize = 12.sp)
+                    }
+                }
+            }
+        } else {
+            Text("No GGUF models installed yet.", color = Muted)
+        }
         HorizontalDivider(color = Raised)
-        Text("ALTERNATIVES TO TEST", color = Ember, fontWeight = FontWeight.Bold, fontSize = 11.sp)
+        Text("DEFAULT MODEL CANDIDATE", color = Ember, fontWeight = FontWeight.Bold, fontSize = 11.sp)
+        Text("Llama 3 8B Instruct – Uncensored", color = Cream, fontSize = 19.sp, fontWeight = FontWeight.Bold)
+        Text("Q4_K_S · import the GGUF file to use it", color = Muted)
+        Text("ALTERNATIVES", color = Ember, fontWeight = FontWeight.Bold, fontSize = 11.sp)
         listOf("Llama 3 8B · Q5_K_M", "Roleplay-Llama-3-8B", "Qwen3.5 9B NSFW RP",
             "SageV2 8B NSFW RP", "Dolphin 2.9.3 Mistral 7B", "Hermes 2 Pro Llama 3 8B").forEach {
             Surface(color = Panel, shape = RoundedCornerShape(12.dp), modifier = Modifier.fillMaxWidth()) {
                 Text(it, Modifier.padding(14.dp), color = Cream)
             }
         }
-        Text("Local llama.cpp runtime and Pixel performance validation are pending.", color = Muted, fontSize = 12.sp)
     }
 }
 
