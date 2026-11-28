@@ -1,18 +1,35 @@
 # NEXORA
 
-NEXORA is an Android AI chat project centered on Natasha, a fictional adult AI character with a sophisticated, playful personality and a consistent visual identity.
+NEXORA is a native Android app for running local GGUF language models directly on your device.
 
-The first working prototype uses the free, community-powered AI Horde network for remote text generation. The app handles model discovery, asynchronous generation, conversation context, and cancellation. This prototype requires an internet connection and sends prompts to volunteer-operated workers; it is not private local inference or an offline chat implementation.
+The goal is a straightforward, private, offline-first AI chat experience with character cards, customizable roleplay, persistent conversation history, and local model management. Model discovery and downloads may use the internet, but chat generation is intended to run on-device through llama.cpp.
 
-No paid API or subscription is required for initial testing. AI Horde supports anonymous requests, although a personal key may improve queue priority.
+## Project goals
+
+- Native Android interface built with Kotlin and Jetpack Compose
+- Local GGUF inference through llama.cpp
+- Import and manage local models
+- Character cards, scenarios, and editable prompts
+- Persistent chats and continuity across model changes
+- Transparent settings with no undisclosed prompt rewriting
+- No paid APIs, subscriptions, accounts, or mandatory cloud inference
+
+## Target device
+
+Initial development and performance testing target: Google Pixel 9 Pro XL.
 
 ## Current status
 
-- Kotlin and Jetpack Compose Android project scaffold added.
-- AI Horde text API client added with model discovery, async submit/status polling, and cancellation.
-- Basic chat screen added with model selection, API-key entry, and in-memory conversation context.
-- GitHub Actions debug-build workflow added.
-- **Build status:** CI run is queued; no APK has been verified or installed yet.
-- Persistent history, secure API-key storage, streaming, and device validation remain outstanding.
+This repository has been reset from its AI Horde prototype to a clean Android foundation. The current app is a starter shell; local inference, model import, persistence, and character features are not yet implemented or validated.
 
-See [docs/BLUEPRINT.md](docs/BLUEPRINT.md) for the product definition and [docs/AI_HORDE_PROTOTYPE.md](docs/AI_HORDE_PROTOTYPE.md) for the approved prototype direction and its limitations.
+## Build
+
+Open the project in Android Studio with JDK 17 and Android SDK 35, or run:
+
+```bash
+gradle :app:assembleDebug
+```
+
+## Architecture direction
+
+See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
