@@ -7,23 +7,52 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.weight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.ChatBubbleOutline
+import androidx.compose.material.icons.outlined.DeleteOutline
+import androidx.compose.material.icons.outlined.FolderOpen
+import androidx.compose.material.icons.outlined.Memory
+import androidx.compose.material.icons.outlined.PersonOutline
+import androidx.compose.material.icons.outlined.Send
+import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material.icons.outlined.SmartToy
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Divider
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -35,10 +64,12 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.platform.LocalContext
 import com.arm.aichat.AiChat
 import com.arm.aichat.InferenceEngine
 import com.nexora.app.model.LocalModel
@@ -49,15 +80,38 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 
+private enum class Destination(val label: String) {
+    CHATS("Chats"), CHARACTERS("Characters"), MODELS("Models"), SETTINGS("Settings")
+}
+
 private data class ChatLine(val speaker: String, val text: String)
+
+private val NexoraColors = darkColorScheme(
+    primary = androidx.compose.ui.graphics.Color(0xFF65D6CB),
+    onPrimary = androidx.compose.ui.graphics.Color(0xFF062B2A),
+    secondary = androidx.compose.ui.graphics.Color(0xFF91BFC0),
+    background = androidx.compose.ui.graphics.Color(0xFF0B121B),
+    surface = androidx.compose.ui.graphics.Color(0xFF121D29),
+    surfaceVariant = androidx.compose.ui.graphics.Color(0xFF1B2A38),
+    onSurface = androidx.compose.ui.graphics.Color(0xFFE8F0F5),
+    onSurfaceVariant = androidx.compose.ui.graphics.Color(0xFFA7B8C5),
+    outline = androidx.compose.ui.graphics.Color(0xFF344858)
+)
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContent { MaterialTheme { NexoraScreen() } }
+        window.statusBarColor = android.graphics.Color.rgb(11, 18, 27)
+        window.navigationBarColor = android.graphics.Color.rgb(11, 18, 27)
+        setContent {
+            MaterialTheme(colorScheme = NexoraColors) {
+                NexoraScreen()
+            }
+        }
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun NexoraScreen() {
     val context = LocalContext.current
@@ -66,16 +120,17 @@ private fun NexoraScreen() {
     val engineState by engine.state.collectAsState()
     val scope = rememberCoroutineScope()
 
+    var destination by remember { mutableStateOf(Destination.CHATS) }
     var models by remember { mutableStateOf<List<LocalModel>>(emptyList()) }
     var selected by remember { mutableStateOf(store.selectedModel()) }
-    var status by remember { mutableStateOf("Import a GGUF model to begin.") }
+    var status by remember { mutableStateOf("Your conversations stay on this device.") }
     var systemPrompt by remember { mutableStateOf("") }
     var draft by remember { mutableStateOf("") }
     var messages by remember { mutableStateOf(emptyList<ChatLine>()) }
-    var chatMode by remember { mutableStateOf(false) }
     var generating by remember { mutableStateOf(false) }
+    var modelLoaded by remember { mutableStateOf(engineState is InferenceEngine.State.ModelReady) }
 
-    fun refresh() {
+    fun refreshModels() {
         scope.launch {
             models = store.list()
             selected = store.selectedModel()
@@ -89,7 +144,7 @@ private fun NexoraScreen() {
             status = "Importing model…"
             try {
                 val model = store.import(uri, queryDisplayName(context, uri))
-                refresh()
+                refreshModels()
                 status = "Imported ${model.fileName}."
             } catch (error: Exception) {
                 status = error.message ?: "Model import failed."
@@ -97,35 +152,37 @@ private fun NexoraScreen() {
         }
     }
 
-    LaunchedEffect(Unit) { refresh() }
+    LaunchedEffect(Unit) {
+        refreshModels()
+        modelLoaded = engine.state.value is InferenceEngine.State.ModelReady
+    }
 
     fun loadModel(fileName: String) {
         scope.launch {
-            status = "Starting local inference runtime…"
+            status = "Preparing local runtime…"
             try {
                 val ready = withTimeout(180_000L) {
                     engine.state.first {
-                        it is InferenceEngine.State.Initialized || it is InferenceEngine.State.Error
+                        it is InferenceEngine.State.Initialized ||
+                            it is InferenceEngine.State.Error ||
+                            it is InferenceEngine.State.ModelReady
                     }
                 }
                 if (ready is InferenceEngine.State.Error) throw ready.exception
-
-                val priorState = engine.state.value
-                if (priorState is InferenceEngine.State.ModelReady ||
-                    priorState is InferenceEngine.State.Error
-                ) {
+                if (engine.state.value is InferenceEngine.State.ModelReady) {
                     withContext(Dispatchers.IO) { engine.cleanUp() }
                 }
-
                 status = "Loading $fileName…"
                 engine.loadModel(store.modelFile(fileName).absolutePath)
                 if (systemPrompt.isNotBlank()) engine.setSystemPrompt(systemPrompt)
                 store.select(fileName)
                 selected = fileName
                 messages = emptyList()
-                chatMode = true
-                status = "Model loaded locally. No cloud inference is used."
+                modelLoaded = true
+                destination = Destination.CHATS
+                status = "Model ready. Generation runs locally."
             } catch (error: Exception) {
+                modelLoaded = false
                 status = error.message ?: "Could not load model."
             }
         }
@@ -133,7 +190,7 @@ private fun NexoraScreen() {
 
     fun sendMessage() {
         val message = draft.trim()
-        if (message.isEmpty() || generating) return
+        if (message.isEmpty() || generating || !modelLoaded) return
         draft = ""
         messages = messages + ChatLine("You", message) + ChatLine("NEXORA", "")
         generating = true
@@ -153,121 +210,397 @@ private fun NexoraScreen() {
         }
     }
 
-    Surface(
-        modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background
-    ) {
-        if (chatMode) {
-            Column(
-                modifier = Modifier.fillMaxSize().padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
+    Scaffold(
+        contentWindowInsets = WindowInsets.navigationBars,
+        containerColor = MaterialTheme.colorScheme.background,
+        topBar = {
+            TopAppBar(
+                title = {
+                    Column(verticalArrangement = Arrangement.spacedBy(1.dp)) {
+                        Text("NEXORA", fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
+                        Text(
+                            when (destination) {
+                                Destination.CHATS -> "Your private space"
+                                Destination.CHARACTERS -> "Character library"
+                                Destination.MODELS -> "Local model library"
+                                Destination.SETTINGS -> "Preferences"
+                            },
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.background
+                )
+            )
+        },
+        bottomBar = {
+            NavigationBar(
+                containerColor = MaterialTheme.colorScheme.surface,
+                contentColor = MaterialTheme.colorScheme.onSurface
             ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text("NEXORA", fontSize = 25.sp, fontWeight = FontWeight.Bold)
-                    OutlinedButton(onClick = { chatMode = false }) { Text("Models") }
+                NavigationBarItem(
+                    selected = destination == Destination.CHATS,
+                    onClick = { destination = Destination.CHATS },
+                    icon = { Icon(Icons.Outlined.ChatBubbleOutline, contentDescription = null) },
+                    label = { Text("Chats", maxLines = 1) }
+                )
+                NavigationBarItem(
+                    selected = destination == Destination.CHARACTERS,
+                    onClick = { destination = Destination.CHARACTERS },
+                    icon = { Icon(Icons.Outlined.PersonOutline, contentDescription = null) },
+                    label = { Text("Characters", maxLines = 1) }
+                )
+                NavigationBarItem(
+                    selected = destination == Destination.MODELS,
+                    onClick = { destination = Destination.MODELS },
+                    icon = { Icon(Icons.Outlined.Memory, contentDescription = null) },
+                    label = { Text("Models", maxLines = 1) }
+                )
+                NavigationBarItem(
+                    selected = destination == Destination.SETTINGS,
+                    onClick = { destination = Destination.SETTINGS },
+                    icon = { Icon(Icons.Outlined.Settings, contentDescription = null) },
+                    label = { Text("Settings", maxLines = 1) }
+                )
+            }
+        }
+    ) { innerPadding ->
+        when (destination) {
+            Destination.CHATS -> ChatScreen(
+                modifier = Modifier.padding(innerPadding),
+                modelName = selected,
+                modelLoaded = modelLoaded,
+                messages = messages,
+                draft = draft,
+                generating = generating,
+                status = status,
+                onDraftChange = { draft = it },
+                onSend = { sendMessage() },
+                onOpenModels = { destination = Destination.MODELS }
+            )
+            Destination.CHARACTERS -> CharactersScreen(Modifier.padding(innerPadding))
+            Destination.MODELS -> ModelsScreen(
+                modifier = Modifier.padding(innerPadding),
+                models = models,
+                selected = selected,
+                status = status,
+                systemPrompt = systemPrompt,
+                onPromptChange = { systemPrompt = it },
+                onImport = { importLauncher.launch(arrayOf("*/*")) },
+                onLoad = { loadModel(it) },
+                onDelete = { fileName ->
+                    scope.launch {
+                        try {
+                            store.delete(fileName)
+                            if (selected == fileName) {
+                                selected = null
+                                modelLoaded = false
+                            }
+                            refreshModels()
+                            status = "Deleted $fileName."
+                        } catch (error: Exception) {
+                            status = error.message ?: "Could not delete model."
+                        }
+                    }
                 }
-                Text(selected ?: "Local model", style = MaterialTheme.typography.titleSmall)
-                Text(status, style = MaterialTheme.typography.bodySmall)
+            )
+            Destination.SETTINGS -> SettingsScreen(
+                modifier = Modifier.padding(innerPadding),
+                selectedModel = selected,
+                modelLoaded = modelLoaded,
+                status = status
+            )
+        }
+    }
+}
+
+@Composable
+private fun ChatScreen(
+    modifier: Modifier,
+    modelName: String?,
+    modelLoaded: Boolean,
+    messages: List<ChatLine>,
+    draft: String,
+    generating: Boolean,
+    status: String,
+    onDraftChange: (String) -> Unit,
+    onSend: () -> Unit,
+    onOpenModels: () -> Unit
+) {
+    Column(
+        modifier = modifier.fillMaxSize().padding(horizontal = 18.dp, vertical = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text("Conversation", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
+                Text(
+                    if (modelLoaded) modelName ?: "Local model ready" else "No model loaded",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+            if (modelLoaded) {
+                Box(
+                    modifier = Modifier.clip(CircleShape).background(MaterialTheme.colorScheme.surfaceVariant).padding(horizontal = 11.dp, vertical = 7.dp)
+                ) {
+                    Text("LOCAL", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
+                }
+            }
+        }
+
+        if (!modelLoaded) {
+            Spacer(Modifier.height(22.dp))
+            EmptyStateCard(
+                icon = { Icon(Icons.Outlined.SmartToy, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(34.dp)) },
+                title = "Your AI. On your device.",
+                body = "Import a GGUF model to start a private conversation. NEXORA does not send your chats to a remote inference service.",
+                action = "Choose a model",
+                onAction = onOpenModels
+            )
+            Spacer(Modifier.weight(1f))
+        } else {
+            if (messages.isEmpty()) {
+                Box(modifier = Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Icon(Icons.Outlined.ChatBubbleOutline, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(34.dp))
+                        Text("Start a conversation", style = MaterialTheme.typography.titleMedium)
+                        Text("Your messages will appear here.", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+                    }
+                }
+            } else {
                 LazyColumn(
                     modifier = Modifier.weight(1f).fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     items(messages) { line ->
-                        Card(modifier = Modifier.fillMaxWidth()) {
-                            Column(modifier = Modifier.padding(12.dp)) {
-                                Text(line.speaker, fontWeight = FontWeight.SemiBold)
-                                Text(line.text)
+                        val isUser = line.speaker == "You"
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = if (isUser) Arrangement.End else Arrangement.Start
+                        ) {
+                            Column(
+                                modifier = Modifier.fillMaxWidth(0.88f)
+                                    .clip(RoundedCornerShape(18.dp))
+                                    .background(if (isUser) MaterialTheme.colorScheme.primary.copy(alpha = 0.16f) else MaterialTheme.colorScheme.surface)
+                                    .padding(14.dp),
+                                verticalArrangement = Arrangement.spacedBy(5.dp)
+                            ) {
+                                Text(
+                                    line.speaker,
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = if (isUser) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary
+                                )
+                                Text(line.text, style = MaterialTheme.typography.bodyLarge)
                             }
                         }
                     }
                 }
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    TextField(
-                        value = draft,
-                        onValueChange = { draft = it },
-                        modifier = Modifier.weight(1f),
-                        placeholder = { Text("Message your local model") },
-                        enabled = !generating
-                    )
-                    Button(onClick = { sendMessage() }, enabled = !generating && draft.isNotBlank()) {
-                        Text("Send")
-                    }
-                }
             }
-        } else {
-            Column(
-                modifier = Modifier.fillMaxSize().padding(20.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+        }
+
+        if (modelLoaded) {
+            Row(
+                modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(24.dp)).background(MaterialTheme.colorScheme.surface).padding(6.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("NEXORA", fontSize = 30.sp, fontWeight = FontWeight.Bold)
-                Text("Local model library", style = MaterialTheme.typography.titleLarge)
-                Text(
-                    "GGUF models are stored privately on this device. Chat generation runs through the bundled llama.cpp runtime.",
-                    style = MaterialTheme.typography.bodyMedium
-                )
-                OutlinedTextField(
-                    value = systemPrompt,
-                    onValueChange = { systemPrompt = it },
-                    modifier = Modifier.fillMaxWidth(),
-                    label = { Text("Optional system prompt (visible and editable)") },
-                    minLines = 2
+                TextField(
+                    value = draft,
+                    onValueChange = onDraftChange,
+                    modifier = Modifier.weight(1f),
+                    placeholder = { Text("Message NEXORA…") },
+                    enabled = !generating,
+                    maxLines = 5,
+                    shape = RoundedCornerShape(20.dp)
                 )
                 Button(
-                    onClick = { importLauncher.launch(arrayOf("*/*")) },
-                    modifier = Modifier.fillMaxWidth()
-                ) { Text("Import GGUF model") }
-                Text(status, style = MaterialTheme.typography.bodySmall)
-                if (models.isEmpty()) {
-                    Text("No models imported yet.", modifier = Modifier.padding(vertical = 12.dp))
-                } else {
-                    LazyColumn(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                        items(models, key = { it.fileName }) { model ->
-                            Card(modifier = Modifier.fillMaxWidth()) {
-                                Column(
-                                    modifier = Modifier.padding(14.dp),
-                                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
-                                    Text(model.fileName, fontWeight = FontWeight.SemiBold)
-                                    Text(formatBytes(model.sizeBytes), style = MaterialTheme.typography.bodySmall)
-                                    if (selected == model.fileName) {
-                                        Text("Selected model", color = MaterialTheme.colorScheme.primary)
-                                    }
-                                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                        Button(onClick = { loadModel(model.fileName) }) {
-                                            Text("Load & Chat")
-                                        }
-                                        OutlinedButton(onClick = {
-                                            scope.launch {
-                                                try {
-                                                    store.delete(model.fileName)
-                                                    refresh()
-                                                    status = "Deleted ${model.fileName}."
-                                                } catch (error: Exception) {
-                                                    status = error.message ?: "Could not delete model."
-                                                }
-                                            }
-                                        }) { Text("Delete") }
-                                    }
+                    onClick = onSend,
+                    enabled = !generating && draft.isNotBlank(),
+                    modifier = Modifier.padding(start = 6.dp).size(48.dp),
+                    shape = CircleShape,
+                    contentPadding = androidx.compose.foundation.layout.PaddingValues(0.dp)
+                ) {
+                    Icon(Icons.Outlined.Send, contentDescription = "Send")
+                }
+            }
+            Text(status, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+    }
+}
+
+@Composable
+private fun ModelsScreen(
+    modifier: Modifier,
+    models: List<LocalModel>,
+    selected: String?,
+    status: String,
+    systemPrompt: String,
+    onPromptChange: (String) -> Unit,
+    onImport: () -> Unit,
+    onLoad: (String) -> Unit,
+    onDelete: (String) -> Unit
+) {
+    Column(
+        modifier = modifier.fillMaxSize().padding(horizontal = 18.dp, vertical = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp)
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text("Your models", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
+            Text("Models are stored in private app storage on this device.", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+        }
+        Button(onClick = onImport, modifier = Modifier.fillMaxWidth()) {
+            Icon(Icons.Outlined.FolderOpen, contentDescription = null)
+            Spacer(Modifier.width(8.dp))
+            Text("Import GGUF model")
+        }
+        if (models.isEmpty()) {
+            EmptyStateCard(
+                icon = { Icon(Icons.Outlined.Memory, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(32.dp)) },
+                title = "No models yet",
+                body = "Choose a GGUF file from your device. Large models may take several minutes to import.",
+                action = "Browse files",
+                onAction = onImport
+            )
+        } else {
+            LazyColumn(
+                modifier = Modifier.weight(1f, fill = false),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                items(models, key = { it.fileName }) { model ->
+                    Card(
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                        shape = RoundedCornerShape(18.dp)
+                    ) {
+                        Column(modifier = Modifier.fillMaxWidth().padding(15.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(Icons.Outlined.Memory, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                                Spacer(Modifier.width(10.dp))
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(model.fileName, fontWeight = FontWeight.SemiBold, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                                    Text(formatBytes(model.sizeBytes), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.labelSmall)
+                                }
+                                if (selected == model.fileName) {
+                                    Text("SELECTED", color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.labelSmall)
+                                }
+                            }
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Button(onClick = { onLoad(model.fileName) }, modifier = Modifier.weight(1f)) { Text("Load & chat") }
+                                OutlinedButton(onClick = { onDelete(model.fileName) }) {
+                                    Icon(Icons.Outlined.DeleteOutline, contentDescription = "Delete model")
                                 }
                             }
                         }
                     }
                 }
-                Spacer(modifier = Modifier.height(2.dp))
-                Text(
-                    "Initial runtime integration. Device performance and model compatibility still require Pixel testing.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
             }
+        }
+        Divider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.45f))
+        Text("Prompt controls", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+        OutlinedTextField(
+            value = systemPrompt,
+            onValueChange = onPromptChange,
+            modifier = Modifier.fillMaxWidth(),
+            label = { Text("System prompt") },
+            placeholder = { Text("Optional instructions for the model…") },
+            minLines = 2,
+            maxLines = 4
+        )
+        Text("This text is visible and editable. It is applied when a model is loaded.", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.labelSmall)
+        Text(status, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.labelSmall)
+    }
+}
+
+@Composable
+private fun CharactersScreen(modifier: Modifier) {
+    Column(
+        modifier = modifier.fillMaxSize().padding(18.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        Text("Characters", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
+        Text("Create distinct personalities, scenarios, and conversation styles.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+        EmptyStateCard(
+            icon = { Icon(Icons.Outlined.PersonOutline, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(34.dp)) },
+            title = "Your character library",
+            body = "Character cards will let you define a name, personality, greeting, example dialogue, and scenario. They will remain yours when you switch models.",
+            action = null,
+            onAction = {}
+        )
+    }
+}
+
+@Composable
+private fun SettingsScreen(
+    modifier: Modifier,
+    selectedModel: String?,
+    modelLoaded: Boolean,
+    status: String
+) {
+    Column(
+        modifier = modifier.fillMaxSize().padding(18.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp)
+    ) {
+        Text("Settings", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
+        Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
+            Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("Privacy & runtime", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                SettingRow("Inference", "On-device")
+                SettingRow("Cloud chat services", "Not used")
+                SettingRow("Model status", if (modelLoaded) "Loaded" else "Not loaded")
+            }
+        }
+        Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
+            Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("Current model", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                Text(selectedModel ?: "No model selected", color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        }
+        Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
+            Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Text("NEXORA", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
+                Text("Local-first AI chat", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("Version 0.3.0 · Android", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        }
+        Text(status, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    }
+}
+
+@Composable
+private fun SettingRow(label: String, value: String) {
+    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+        Text(label, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(value, fontWeight = FontWeight.Medium)
+    }
+}
+
+@Composable
+private fun EmptyStateCard(
+    icon: @Composable () -> Unit,
+    title: String,
+    body: String,
+    action: String?,
+    onAction: () -> Unit
+) {
+    Card(
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        shape = RoundedCornerShape(22.dp)
+    ) {
+        Column(
+            modifier = Modifier.fillMaxWidth().padding(22.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Box(
+                modifier = Modifier.size(64.dp).clip(CircleShape).background(MaterialTheme.colorScheme.surfaceVariant),
+                contentAlignment = Alignment.Center
+            ) { icon() }
+            Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+            Text(body, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium)
+            if (action != null) Button(onClick = onAction, modifier = Modifier.fillMaxWidth()) { Text(action) }
         }
     }
 }
