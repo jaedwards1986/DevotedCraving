@@ -228,7 +228,7 @@ private fun ChatScreen(store: AppStore, modelManager: LocalModelManager, engine:
     Column(Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
             Text(
-                if (model != null) "Local GGUF: \${model.name}" else "No local GGUF model installed",
+                if (model != null) "Local GGUF: ${model.name}" else "No local GGUF model installed",
                 color = if (model != null) Ember else Muted,
                 fontSize = 12.sp,
                 modifier = Modifier.weight(1f)
@@ -284,9 +284,9 @@ private fun ChatScreen(store: AppStore, modelManager: LocalModelManager, engine:
                         val history = store.messages().takeLast(20).joinToString("\n")
                         val savedMemories = store.memories().takeLast(100)
                         val systemContext = buildString {
-                            append("You are the private fictional DavotedCraving companion. Maintain continuity using the app-owned memory below. Do not claim to be Natasha Nice or claim private knowledge about her. Treat explicit user corrections and dislikes as authoritative.\\n\\n")
+                            append("You are the private fictional DavotedCraving companion. Maintain continuity using the app-owned memory below. Do not claim to be Natasha Nice or claim private knowledge about her. Treat explicit user corrections and dislikes as authoritative.\n\n")
                             if (savedMemories.isNotEmpty()) {
-                                append("APP-OWNED LONG-TERM MEMORY:\\n")
+                                append("APP-OWNED LONG-TERM MEMORY:\n")
                                 savedMemories.forEach { append("- ").append(it).append('\n') }
                             }
                         }
@@ -298,7 +298,7 @@ private fun ChatScreen(store: AppStore, modelManager: LocalModelManager, engine:
                         store.addMessage("Assistant: $response")
                         refresh++
                     } catch (t: Throwable) {
-                        error = "Local generation failed: \${t.message ?: "unknown error"}"
+                        error = "Local generation failed: ${t.message ?: "unknown error"}"
                     } finally {
                         generating = false
                     }
@@ -359,10 +359,10 @@ private fun ModelsScreen(modelManager: LocalModelManager) {
                 try {
                     val name = uri.lastPathSegment?.substringAfterLast('/') ?: "imported-model.gguf"
                     modelManager.importUri(uri, name)
-                    status = "Imported \${name.substringAfterLast('/')}"
+                    status = "Imported ${name.substringAfterLast('/')}"
                     refresh++
                 } catch (t: Throwable) {
-                    status = "Import failed: \${t.message ?: "unknown error"}"
+                    status = "Import failed: ${t.message ?: "unknown error"}"
                 }
             }
         }
@@ -383,7 +383,7 @@ private fun ModelsScreen(modelManager: LocalModelManager) {
                 Surface(color = Raised, shape = RoundedCornerShape(12.dp), modifier = Modifier.fillMaxWidth()) {
                     Column(Modifier.padding(14.dp)) {
                         Text(file.name, color = Cream, fontWeight = FontWeight.Bold)
-                        Text("\${file.length() / (1024 * 1024)} MB · ready for local chat", color = Muted, fontSize = 12.sp)
+                        Text("${file.length() / (1024 * 1024)} MB · ready for local chat", color = Muted, fontSize = 12.sp)
                     }
                 }
             }
