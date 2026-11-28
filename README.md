@@ -36,3 +36,7 @@ gradle :app:assembleDebug
 ```
 
 APK output: `app/build/outputs/apk/debug/app-debug.apk`.
+
+
+## Build status
+Local GGUF inference integration is being wired through the on-device llama.cpp runtime.
