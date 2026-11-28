@@ -108,16 +108,21 @@ private fun NexoraScreen() {
                         it is InferenceEngine.State.Initialized || it is InferenceEngine.State.Error
                     }
                 }
-                if (ready is InferenceEngine.State.Error) {
-                    throw ready.exception
-                }
-                if (engine.state.value is InferenceEngine.State.ModelReady) {
+                if (ready is InferenceEngine.State.Error) throw ready.exception
+
+                val priorState = engine.state.value
+                if (priorState is InferenceEngine.State.ModelReady ||
+                    priorState is InferenceEngine.State.Error
+                ) {
                     withContext(Dispatchers.IO) { engine.cleanUp() }
                 }
+
                 status = "Loading $fileName…"
                 engine.loadModel(store.modelFile(fileName).absolutePath)
                 if (systemPrompt.isNotBlank()) engine.setSystemPrompt(systemPrompt)
+                store.select(fileName)
                 selected = fileName
+                messages = emptyList()
                 chatMode = true
                 status = "Model loaded locally. No cloud inference is used."
             } catch (error: Exception) {
