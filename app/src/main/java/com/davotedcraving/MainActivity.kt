@@ -287,7 +287,7 @@ private fun ChatScreen(store: AppStore, modelManager: LocalModelManager, engine:
                             append("You are the private fictional DavotedCraving companion. Maintain continuity using the app-owned memory below. Do not claim to be Natasha Nice or claim private knowledge about her. Treat explicit user corrections and dislikes as authoritative.\\n\\n")
                             if (savedMemories.isNotEmpty()) {
                                 append("APP-OWNED LONG-TERM MEMORY:\\n")
-                                savedMemories.forEach { append("- ").append(it).append('\\n') }
+                                savedMemories.forEach { append("- ").append(it).append('\n') }
                             }
                         }
                         val response = engine.generate(
@@ -295,7 +295,7 @@ private fun ChatScreen(store: AppStore, modelManager: LocalModelManager, engine:
                             systemContext,
                             history
                         )
-                        store.addMessage("Assistant: \$response")
+                        store.addMessage("Assistant: $response")
                         refresh++
                     } catch (t: Throwable) {
                         error = "Local generation failed: \${t.message ?: "unknown error"}"
