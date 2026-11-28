@@ -81,6 +81,7 @@ class LocalModelManager(private val context: Context) {
                     }
                 }
                 val sha256 = digest.digest().joinToString("") { "%02x".format(it) }
+                destination.delete()
                 check(temporary.renameTo(destination)) { "Unable to finalize imported model." }
                 preferences.edit()
                     .putString("selected_model", destination.name)
