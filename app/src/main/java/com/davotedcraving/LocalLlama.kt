@@ -1,6 +1,7 @@
 package com.davotedcraving
 
 import android.content.Context
+import android.net.Uri
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import dev.ffmpegkit.llama.Llama
@@ -23,6 +24,15 @@ class LocalModelManager(private val context: Context) {
         require(source.extension.equals("gguf", true)) { "Only GGUF model files are supported." }
         val destination = destinationFor(name)
         source.inputStream().use { input -> destination.outputStream().use { output -> input.copyTo(output) } }
+        destination
+    }
+
+    suspend fun importUri(uri: Uri, name: String): File = withContext(Dispatchers.IO) {
+        require(name.lowercase().endsWith(".gguf")) { "Only GGUF model files are supported." }
+        val destination = destinationFor(name)
+        context.contentResolver.openInputStream(uri)?.use { input ->
+            destination.outputStream().use { output -> input.copyTo(output) }
+        } ?: error("Unable to open selected model file.")
         destination
     }
 
