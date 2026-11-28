@@ -1,13 +1,18 @@
 # NEXORA
 
-NEXORA is a clean-start Android project centered on Natasha, a fictional adult AI character with a sophisticated, seductive, provocative personality and a consistent visual identity.
+NEXORA is an Android AI chat project centered on Natasha, a fictional adult AI character with a sophisticated, playful personality and a consistent visual identity.
 
-The core technical goal is private, on-device AI conversation. No paid APIs, subscriptions, remote inference, or required accounts. Internet may be optional for obtaining model files; normal chat should work offline once a compatible local model is installed.
+The first working prototype uses the free, community-powered AI Horde network for remote text generation. The app handles model discovery, asynchronous generation, conversation context, and cancellation. This prototype requires an internet connection and sends prompts to volunteer-operated workers; it is not private local inference or an offline chat implementation.
 
-**Project status:** Blueprint established. Previous project contents have been cleared from the current project tree. A fresh Android implementation has not yet been added.
+No paid API or subscription is required for initial testing. AI Horde supports anonymous requests, although a personal key may improve queue priority.
 
-See **[docs/BLUEPRINT.md](docs/BLUEPRINT.md)** for the approved character brief, product constraints, proposed architecture, build sequence, acceptance criteria, and open decisions.
+## Current status
 
-## Current milestone
+- Kotlin and Jetpack Compose Android project scaffold added.
+- AI Horde text API client added with model discovery, async submit/status polling, and cancellation.
+- Basic chat screen added with model selection, API-key entry, and in-memory conversation context.
+- GitHub Actions debug-build workflow added.
+- **Build status:** CI run is queued; no APK has been verified or installed yet.
+- Persistent history, secure API-key storage, streaming, and device validation remain outstanding.
 
-Create a minimal Android app and prove local GGUF inference on the confirmed target device before expanding the feature set.
+See [docs/BLUEPRINT.md](docs/BLUEPRINT.md) for the product definition and [docs/AI_HORDE_PROTOTYPE.md](docs/AI_HORDE_PROTOTYPE.md) for the approved prototype direction and its limitations.
