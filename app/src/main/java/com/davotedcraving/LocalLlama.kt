@@ -5,6 +5,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import dev.ffmpegkit.llama.Llama
 import dev.ffmpegkit.llama.LlamaConfig
+import dev.ffmpegkit.llama.LlamaModel
 import java.io.File
 
 class LocalModelManager(private val context: Context) {
@@ -29,11 +30,10 @@ class LocalModelManager(private val context: Context) {
 }
 
 class LocalLlamaEngine {
-    private var model: Any? = null
+    private var model: LlamaModel? = null
 
     suspend fun generate(modelPath: String, systemPrompt: String, prompt: String): String {
         return withContext(Dispatchers.Default) {
-            @Suppress("UNCHECKED_CAST")
             val loaded = model ?: Llama.loadModel(
                 modelPath = modelPath,
                 config = LlamaConfig(contextSize = 4096, threads = 6)
@@ -51,7 +51,6 @@ class LocalLlamaEngine {
     suspend fun release() {
         val loaded = model ?: return
         withContext(Dispatchers.Default) {
-            @Suppress("UNCHECKED_CAST")
             Llama.releaseModel(loaded)
             model = null
         }
