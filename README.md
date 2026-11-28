@@ -16,20 +16,33 @@ The goal is a straightforward, private, offline-first AI chat experience with ch
 
 ## Target device
 
-Initial development and performance testing target: Google Pixel 9 Pro XL.
+Initial development and performance testing target: Google Pixel 9 Pro XL (arm64-v8a).
 
-## Current status
+## Current implementation
 
-This repository has been reset from its AI Horde prototype to a clean Android foundation. The current app is a starter shell; local inference, model import, persistence, and character features are not yet implemented or validated.
+- Android/Compose app shell
+- Import GGUF files into app-private storage
+- Basic GGUF magic-header validation and SHA-256 calculation
+- Model library with select/delete controls
+- Initial llama.cpp Android native runtime integration
+- Basic local chat screen with optional visible/editable system prompt
+
+The native runtime is an initial integration, not yet verified on a physical Pixel. Model compatibility, streaming, cancellation, memory use, and performance still require device testing. Chat persistence, character cards, and durable memory are planned but not yet implemented.
 
 ## Build
 
-Open the project in Android Studio with JDK 17 and Android SDK 35, or run:
+Clone with submodules so the pinned llama.cpp source is present:
+
+```bash
+git clone --recurse-submodules https://github.com/jaedwards1986/NEXORA.git
+```
+
+Open in Android Studio with JDK 17, Android SDK 35, NDK 29.0.13113456, and CMake 3.31.6. Or run:
 
 ```bash
 gradle :app:assembleDebug
 ```
 
-## Architecture direction
+## Native runtime
 
-See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+NEXORA integrates the Android JNI binding from ggml-org/llama.cpp, pinned as a Git submodule. See docs/ARCHITECTURE.md.
