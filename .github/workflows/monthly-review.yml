@@ -1,0 +1,62 @@
+name: Monthly product and model review
+
+on:
+  schedule:
+    - cron: "31 9 1 * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  open-review:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create monthly review
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const now = new Date();
+            const month = now.toISOString().slice(0, 7);
+            const title = `Monthly DavotedCraving review — ${month}`;
+            const existing = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: "all",
+              per_page: 100
+            });
+            if (existing.data.some(issue => issue.title === title)) {
+              core.info("Monthly review already exists.");
+              return;
+            }
+            const body = [
+              "Review candidates only. Do not merge, install, or activate changes without owner approval.",
+              "",
+              "## Model review",
+              "- Check current free GGUF model releases and licenses.",
+              "- Reassess Llama 3 8B Instruct Uncensored Q4_K_S as the default.",
+              "- Treat Q5_K_M and the five named alternatives as test candidates until device-tested.",
+              "- Record Pixel 9 Pro XL memory use, speed, context behavior, and compatibility evidence.",
+              "",
+              "## Android and app features",
+              "- Check Android/Compose/llama.cpp compatibility and security advisories.",
+              "- Identify genuinely useful free features; reject paid-service dependencies.",
+              "- Review accessibility, reduced-motion, storage, backup, and privacy improvements.",
+              "",
+              "## Archive sources",
+              "- Review official/public feeds, permitted APIs, and authorized embeds.",
+              "- Record provenance, access terms, and last-checked time.",
+              "- Exclude leaks, unauthorized copies, access-control bypass, and fabricated private interactions.",
+              "",
+              "## Approval gate",
+              "- Propose changes with evidence, cost, privacy impact, and rollback plan.",
+              "- No automatic app, model, setting, or source changes."
+            ].join("\n");
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title,
+              body,
+              labels: ["monthly-review"]
+            });
